@@ -27,8 +27,8 @@ service cloud.firestore {
     function isAdmin() { return isAtLeastAdmin(); }
 
     match /recharge_requests/{requestId} {
-      allow get: if isSignedIn() && (isAtLeastAdmin() || resource.data.studentId == request.auth.uid);
-      allow list: if isSignedIn() && (isAtLeastAdmin() || resource.data.studentId == request.auth.uid);
+      allow get: if isAtLeastAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow list: if isAtLeastAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
       allow create: if isSignedIn() && incoming().studentId == request.auth.uid && isValidId(requestId);
       allow update: if isAtLeastAdmin();
       allow delete: if isAtLeastAdmin();
@@ -55,7 +55,7 @@ service cloud.firestore {
       allow update: if (isSuperAdmin()) || (
         isSignedIn() && request.auth.uid == userId && (
           (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt', 'avatar', 'bannerColor', 'theme'])) ||
-          (incoming().diff(existing()).affectedKeys().hasAny(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'updatedAt']) && 
+          (incoming().diff(existing()).affectedKeys().hasAny(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'lastCollectionTime', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'updatedAt']) && 
            !incoming().diff(existing()).affectedKeys().hasAny(['role', 'email', 'createdAt']))
         )
       ) || (
@@ -79,8 +79,8 @@ service cloud.firestore {
     }
 
     match /enrollments/{enrollmentId} {
-      allow get: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAtLeastAdmin());
-      allow list: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAtLeastAdmin());
+      allow get: if isAtLeastAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+      allow list: if isAtLeastAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
       allow create: if isSignedIn() && (incoming().studentId == request.auth.uid || isAtLeastAdmin()) && isValidId(enrollmentId);
       allow update: if isAtLeastAdmin() || (
           existing().studentId == request.auth.uid && (
@@ -92,8 +92,8 @@ service cloud.firestore {
     }
 
     match /submissions/{submissionId} {
-      allow get: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAtLeastAdmin() || resource.data.status == 'assessed');
-      allow list: if isSignedIn() && (resource.data.studentId == request.auth.uid || isAtLeastAdmin() || resource.data.status == 'assessed');
+      allow get: if isAtLeastAdmin() || (isSignedIn() && (resource.data.studentId == request.auth.uid || resource.data.status == 'assessed'));
+      allow list: if isAtLeastAdmin() || (isSignedIn() && (resource.data.studentId == request.auth.uid || resource.data.status == 'assessed'));
       allow create: if isSignedIn() && incoming().studentId == request.auth.uid && isValidId(submissionId);
       allow update: if isAtLeastAdmin() || (
           existing().studentId == request.auth.uid && existing().status in ['pending', 'assessed'] && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'attachments', 'updatedAt', 'aiScore', 'aiFeedback', 'status'])
@@ -102,8 +102,8 @@ service cloud.firestore {
     }
 
     match /transactions/{transactionId} {
-      allow get: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAtLeastAdmin());
-      allow list: if isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid || isAtLeastAdmin());
+      allow get: if isAtLeastAdmin() || (isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid));
+      allow list: if isAtLeastAdmin() || (isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid));
       allow create: if isAtLeastAdmin() || (
         isSignedIn() && isValidId(transactionId) && 
         (incoming().senderId == request.auth.uid || (incoming().senderId == 'SYSTEM' && incoming().receiverId == request.auth.uid))
@@ -113,8 +113,8 @@ service cloud.firestore {
     }
 
     match /notifications/{notificationId} {
-      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAtLeastAdmin());
-      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAtLeastAdmin());
+      allow get: if isAtLeastAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isAtLeastAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow create: if isSignedIn() && isValidId(notificationId);
       allow update: if (isSignedIn() && resource.data.userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read'])) || isAtLeastAdmin();
       allow delete: if (isSignedIn() && resource.data.userId == request.auth.uid) || isAtLeastAdmin();

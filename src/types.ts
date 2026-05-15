@@ -19,6 +19,7 @@ export interface User {
   streak?: number;
   lastActive?: string;
   lastRewardClaimed?: string;
+  lastCollectionTime?: number;
   lastMissedSweep?: number;
   lastSeenVersion?: string;
   xp?: number;

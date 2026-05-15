@@ -2105,9 +2105,9 @@ const UsersManager = () => {
             setUsers(all);
 
             try {
-                const { collection, getDocs, getFirestore } = await import('firebase/firestore');
-                const db = getFirestore();
-                const snap = await getDocs(collection(db, 'pre_registered_users'));
+                const { collection, getDocs } = await import('firebase/firestore');
+                const { db: fireDb } = await import('../services/firebase');
+                const snap = await getDocs(collection(fireDb, 'pre_registered_users'));
                 setPreRegistered(snap.docs.map(d => ({ ...d.data(), id: d.id })));
             } catch (e) {
                 console.warn("Could not fetch pre_registered_users", e);

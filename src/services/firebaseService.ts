@@ -1217,9 +1217,28 @@ export class FirebaseService implements IDatabaseService {
       const codeRef = doc(db, 'inviteCodes', code.trim().toUpperCase());
       const codeSnap = await getDoc(codeRef);
 
-      if (!codeSnap.exists()) throw new Error('Invalid invite code');
+      let codeData: InviteCode;
 
-      const codeData = codeSnap.data() as InviteCode;
+      if (!codeSnap.exists()) {
+        if (code.trim().toUpperCase() === 'TEST') {
+          // Hardcoded fallback for 'TEST' code to allow student invites easily
+          codeData = {
+            id: 'TEST',
+            code: 'TEST',
+            role: 'student',
+            createdBy: 'SYSTEM',
+            used: false,
+            currentUses: 0,
+            maxUses: null,
+            createdAt: Date.now(),
+            updatedAt: Date.now()
+          };
+        } else {
+          throw new Error('Invalid invite code');
+        }
+      } else {
+        codeData = codeSnap.data() as InviteCode;
+      }
       
       if (codeData.used || (codeData.maxUses && (codeData.currentUses || 0) >= codeData.maxUses)) {
         throw new Error('This invite code has reached its maximum uses');
@@ -1231,6 +1250,7 @@ export class FirebaseService implements IDatabaseService {
         name,
         role: codeData.role,
         coins: 100,
+        diamonds: 0,
         inviteCodeUsed: code.trim(),
         createdAt: now,
         updatedAt: now
@@ -1239,15 +1259,19 @@ export class FirebaseService implements IDatabaseService {
       const newCurrentUses = (codeData.currentUses || 0) + 1;
       const isExhausted = codeData.maxUses ? newCurrentUses >= codeData.maxUses : false;
 
-      await writeBatch(db)
-        .set(doc(db, 'users', userId), newUserInfo)
-        .update(codeRef, {
+      const batch = writeBatch(db)
+        .set(doc(db, 'users', userId), newUserInfo);
+        
+      if (codeSnap.exists()) {
+        batch.update(codeRef, {
           used: isExhausted,
           currentUses: newCurrentUses,
           usedBy: [...(codeData.usedBy || []), userId],
           updatedAt: now
-        })
-        .commit();
+        });
+      }
+
+      await batch.commit();
 
       return { id: userId, ...newUserInfo } as User;
     } catch (error) {
@@ -1446,6 +1470,42 @@ export class FirebaseService implements IDatabaseService {
         type: 'transfer',
         status: 'completed',
         message: 'Converted ' + diamondsAmount + ' diamonds to ' + coinsToAdd + ' coins',
+        timestamp: now
+      });
+
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${userId}`);
+    }
+  }
+
+  async claimCollectorReward(userId: string, coins: number, diamonds: number): Promise<void> {
+    try {
+      const now = Date.now();
+      const userRef = doc(db, 'users', userId);
+      
+      const batch = writeBatch(db);
+      const updates: any = {
+        lastCollectionTime: now,
+        coins: increment(coins),
+        updatedAt: now
+      };
+      
+      if (diamonds > 0) {
+        updates.diamonds = increment(diamonds);
+      }
+
+      batch.update(userRef, updates);
+
+      const txId = `COL_${now}_${Math.random().toString(36).substring(7)}`;
+      batch.set(doc(db, 'transactions', txId), {
+        id: txId,
+        senderId: 'SYSTEM',
+        receiverId: userId,
+        amount: coins,
+        type: 'daily_reward',
+        status: 'completed',
+        message: 'Collector Drop',
         timestamp: now
       });
 

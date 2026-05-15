@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { AssignmentGroupCard } from "../components/AssignmentGroupCard";
 import { CompletedMissionsStack } from "../components/CompletedMissionsStack";
+import { ResourceCollector } from "../components/ResourceCollector";
 import { motion } from "motion/react";
 import { cn, getUserLevelAndXP, getVIPLevel } from "../lib/utils";
 import { DashboardSkeleton } from "../components/Skeletons";
@@ -493,6 +494,10 @@ export const Dashboard = () => {
           </div>
         </motion.div>
       </motion.div>
+
+      <div className="mb-8">
+        <ResourceCollector />
+      </div>
 
       <div className="grid md:grid-cols-3 gap-6 md:gap-8">
         {/* Recent Assignments section */}

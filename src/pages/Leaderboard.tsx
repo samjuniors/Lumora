@@ -12,12 +12,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { ListSkeleton } from '../components/Skeletons';
 import { UserProfileModal } from '../components/UserProfileModal';
 
-const getTierInfo = (coins: number) => {
-  if (coins >= 3000) return { name: 'Diamond', color: 'text-cyan-500', bg: 'bg-cyan-100', border: 'border-cyan-300', shadow: 'shadow-cyan-200/50' };
-  if (coins >= 1000) return { name: 'Platinum', color: 'text-slate-600', bg: 'bg-slate-200', border: 'border-slate-400', shadow: 'shadow-slate-300/50' };
-  if (coins >= 500) return { name: 'Gold', color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-400', shadow: 'shadow-yellow-300/50' };
-  if (coins >= 300) return { name: 'Silver', color: 'text-text-secondary', bg: 'bg-border-main', border: 'border-border-main', shadow: 'shadow-black/5/50' };
-  if (coins >= 100) return { name: 'Bronze', color: 'text-brand-gold', bg: 'bg-brand-gold/20', border: 'border-amber-400', shadow: 'shadow-amber-200/50' };
+const getTierInfo = (diamonds: number) => {
+  if (diamonds >= 100) return { name: 'Diamond', color: 'text-cyan-500', bg: 'bg-cyan-100', border: 'border-cyan-300', shadow: 'shadow-cyan-200/50' };
+  if (diamonds >= 50) return { name: 'Platinum', color: 'text-slate-600', bg: 'bg-slate-200', border: 'border-slate-400', shadow: 'shadow-slate-300/50' };
+  if (diamonds >= 25) return { name: 'Gold', color: 'text-yellow-600', bg: 'bg-yellow-100', border: 'border-yellow-400', shadow: 'shadow-yellow-300/50' };
+  if (diamonds >= 10) return { name: 'Silver', color: 'text-text-secondary', bg: 'bg-border-main', border: 'border-border-main', shadow: 'shadow-black/5/50' };
+  if (diamonds >= 5) return { name: 'Bronze', color: 'text-brand-gold', bg: 'bg-brand-gold/20', border: 'border-amber-400', shadow: 'shadow-amber-200/50' };
   return { name: 'Wood', color: 'text-amber-900', bg: 'bg-orange-50', border: 'border-orange-200', shadow: 'shadow-none' };
 };
 
@@ -41,7 +41,7 @@ const itemVariants = {
   show: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" as const } }
 };
 
-const Podium = ({ leaders, type, setSelectedUser }: { leaders: any[], type: 'coins' | 'grades', setSelectedUser: (user: any) => void }) => {
+const Podium = ({ leaders, type, setSelectedUser }: { leaders: any[], type: 'diamonds' | 'grades', setSelectedUser: (user: any) => void }) => {
     if (leaders.length === 0) return null;
     const top3 = [leaders[1], leaders[0], leaders[2]]; // 2nd, 1st, 3rd
 
@@ -109,7 +109,7 @@ const Podium = ({ leaders, type, setSelectedUser }: { leaders: any[], type: 'coi
                </div>
                
                <div className={cn("mt-4 font-black flex items-center gap-1.5", isFirst ? "text-3xl text-amber-400" : "text-2xl")}>
-                 {type === 'coins' ? (
+                 {type === 'diamonds' ? (
                    <>{student.diamonds || 0} <Gem className={cn("w-5 h-5", isFirst ? 'text-cyan-400' : iconColor)}/></>
                  ) : (
                    <>{student.averageGrade}% <GraduationCap className={cn("w-5 h-5", iconColor)}/></>
@@ -128,7 +128,7 @@ export const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
-  const activeTab = (searchParams.get('tab') as 'coins' | 'grades') || 'coins';
+  const activeTab = (searchParams.get('tab') as 'diamonds' | 'grades') || 'diamonds';
 
   const setActiveTab = (tab: string) => {
     setSearchParams({ tab });
@@ -215,7 +215,7 @@ export const Leaderboard = () => {
 
 
 
-  const renderList = (leadersList: any[], type: 'coins' | 'grades') => (
+  const renderList = (leadersList: any[], type: 'diamonds' | 'grades') => (
     <div className="space-y-4 lg:space-y-6 relative mt-10">
       <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} />
       
@@ -288,7 +288,7 @@ export const Leaderboard = () => {
               
               <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t border-border-main/50 md:border-0 pt-4 md:pt-0 mt-3 md:mt-0 relative z-10 shrink-0">
                 <div className="font-bold text-2xl flex items-center gap-2 min-w-[120px] justify-end tracking-tight">
-                  {type === 'coins' ? (
+                  {type === 'diamonds' ? (
                     <span className="text-text-primary flex items-center gap-2">
                        {student.diamonds || 0} <Gem className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"/>
                     </span>
@@ -354,13 +354,13 @@ export const Leaderboard = () => {
           className="flex flex-wrap items-center justify-center gap-2 mt-10 z-20 relative bg-[#0A1128]/50 backdrop-blur-md p-1.5 justify-between w-full max-w-sm mx-auto rounded-full border border-white/10 shadow-inner"
         >
           <button
-            onClick={() => setActiveTab('coins')}
+            onClick={() => setActiveTab('diamonds')}
             className={cn(
               "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-              activeTab === 'coins' ? "bg-cyan-500 text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
+              activeTab === 'diamonds' ? "bg-cyan-500 text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
             )}
           >
-            <Gem className={cn("w-4 h-4")} /> Wealth
+            <Gem className={cn("w-4 h-4")} /> Diamonds
           </button>
           <button
             onClick={() => setActiveTab('grades')}
@@ -382,7 +382,7 @@ export const Leaderboard = () => {
           exit={{ opacity: 0, y: -20 }}
           className="transition-all"
         >
-          {activeTab === 'coins' && renderList(coinLeaders, 'coins')}
+          {activeTab === 'diamonds' && renderList(coinLeaders, 'diamonds')}
           {activeTab === 'grades' && renderList(gradeLeaders, 'grades')}
         </motion.div>
       </AnimatePresence>
@@ -392,7 +392,7 @@ export const Leaderboard = () => {
         <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-6 left-0 right-0 px-4 z-40 pointer-events-none flex justify-center">
           <div className="w-full max-w-4xl pointer-events-auto">
              {(() => {
-                const list = activeTab === 'coins' ? coinLeaders : gradeLeaders;
+                const list = activeTab === 'diamonds' ? coinLeaders : gradeLeaders;
                 const myIndex = list.findIndex(u => u.id === currentUser.id);
                 const me = list[myIndex];
                 if (!me) return null;
@@ -434,7 +434,7 @@ export const Leaderboard = () => {
                       </div>
                     </div>
                     <div className="font-bold text-lg md:text-xl z-10 whitespace-nowrap bg-[#D4AF37]/10 px-4 md:px-6 py-2 md:py-3 rounded-xl flex items-center gap-2 border border-[#D4AF37]/30 text-[#D4AF37] shadow-sm">
-                      {activeTab === 'coins' ? (
+                      {activeTab === 'diamonds' ? (
                         <span className="flex items-center gap-2 text-cyan-400">
                           {me.diamonds || 0} <Gem className="w-4 h-4 md:w-5 md:h-5"/>
                         </span>

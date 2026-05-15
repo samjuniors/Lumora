@@ -99,6 +99,7 @@ export interface IDatabaseService {
   spendCoins(userId: string, amount: number, type: TransactionType, message: string): Promise<void>;
   transferCoins(senderId: string, receiverId: string, amount: number): Promise<void>;
   claimDailyReward(userId: string, reward: { type: string, value: number | string }): Promise<void>;
+  claimCollectorReward(userId: string, coins: number, diamonds: number): Promise<void>;
   checkAndClaimPreRegistration(email: string, userId: string, defaultName: string): Promise<User | null>;
   redeemInviteCode(code: string, userId: string, name: string, email: string): Promise<User>;
   revokeTransaction(transactionId: string, adminId: string): Promise<void>;

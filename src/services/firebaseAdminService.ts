@@ -383,6 +383,14 @@ export class FirebaseAdminService implements IDatabaseService {
     await batch.commit();
   }
 
+  async adjustUserDiamonds(userId: string, amount: number, adminId: string, reason: string): Promise<void> {
+    throw new Error('Not implemented on Admin service');
+  }
+
+  async claimCollectorReward(userId: string, coins: number, diamonds: number): Promise<void> {
+    throw new Error('Not implemented on Admin service');
+  }
+
   async adjustUserXP(userId: string, amount: number, adminId: string, reason: string): Promise<void> {
     const now = Date.now();
     const batch = this.db.batch();
