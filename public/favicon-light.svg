@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient: Clean White to Light Gray -->
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#F8FAFC" />
+    </linearGradient>
+
+    <!-- Radiant Gold Gradient for the App Icon Motif -->
+    <linearGradient id="luminaGold" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#C58E2B" />
+      <stop offset="50%" stop-color="#E5A93C" />
+      <stop offset="100%" stop-color="#F3C677" />
+    </linearGradient>
+  </defs>
+
+  <!-- App Icon Background Frame (Squircle Shape) -->
+  <rect width="512" height="512" rx="115" fill="url(#bgGradient)" />
+
+  <!-- Centered Lumina AI Emblem -->
+  <g transform="translate(56, 75)" fill="url(#luminaGold)" stroke="url(#luminaGold)" stroke-width="1" stroke-linejoin="round">
+    <path d="M 200,50 C 225,100 225,150 200,180 C 175,150 175,100 200,50 Z" />
+    <path d="M 200,70 L 200,160 M 193,105 L 200,95 L 207,105" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <path d="M 135,80 C 170,105 185,150 170,185 C 140,165 120,120 135,80 Z" />
+    <path d="M 146,103 L 178,155" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 265,80 C 230,105 215,150 230,185 C 260,165 280,120 265,80 Z" />
+    <path d="M 254,103 L 222,155" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 80,135 C 120,140 140,175 130,205 C 95,200 270,170 80,135 Z" />
+    <path d="M 98,154 L 142,183" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 320,135 C 280,140 260,175 270,205 C 305,200 320,170 320,135 Z" />
+    <path d="M 302,154 L 258,183" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M 115,230 C 150,200 250,200 285,230 C 245,215 155,215 115,230 Z" />
+  </g>
+</svg>

@@ -1,0 +1,190 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the application (student, admin, or superadmin).",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin", "superadmin"] },
+        "coins": { "type": "number" },
+        "xp": { "type": "number" },
+        "xpBoosterUntil": { "type": "number" },
+        "vipExp": { "type": "number" },
+        "vipLevel": { "type": "number" },
+        "streak": { "type": "number" },
+        "lastActive": { "type": "string" },
+        "inventory": { "type": "array", "items": { "type": "string" } },
+        "achievements": { "type": "array", "items": { "type": "string" } },
+        "inviteCodeUsed": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["email", "name", "role", "coins", "createdAt", "updatedAt"]
+    },
+    "InviteCode": {
+      "title": "InviteCode",
+      "description": "Invite code to register users with specific roles.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "role": { "type": "string", "enum": ["student", "admin", "superadmin"] },
+        "createdBy": { "type": "string" },
+        "used": { "type": "boolean" },
+        "usedBy": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["code", "role", "createdBy", "used", "createdAt"]
+    },
+    "Assignment": {
+      "title": "Assignment",
+      "description": "An assignment created by an admin for students.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "dueDate": { "type": "number" },
+        "startDate": { "type": "number" },
+        "entryFee": { "type": "number" },
+        "penaltyFee": { "type": "number" },
+        "bonusReward": { "type": "number" },
+        "xpReward": { "type": "number" },
+        "isBonus": { "type": "boolean" },
+        "isDuoBonus": { "type": "boolean" },
+        "duoId": { "type": "string" },
+        "isGlobal": { "type": "boolean" },
+        "allowedStudents": { "type": "array", "items": { "type": "string" } },
+        "bonusType": { "type": "string", "enum": ["presentation", "test"] },
+        "missionNumber": { "type": "number" },
+        "creatorId": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["title", "description", "dueDate", "isBonus", "creatorId", "createdAt", "updatedAt"]
+    },
+    "Submission": {
+      "title": "Submission",
+      "description": "A student's submission for an assignment.",
+      "type": "object",
+      "properties": {
+        "assignmentId": { "type": "string" },
+        "studentId": { "type": "string" },
+        "content": { "type": "string" },
+        "aiScore": { "type": "number" },
+        "aiFeedback": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "evaluating", "assessed", "pending_review"] },
+        "submittedAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["assignmentId", "studentId", "content", "status", "submittedAt", "updatedAt"]
+    },
+    "PreRegisteredUser": {
+      "title": "PreRegisteredUser",
+      "description": "Users who are invited/pre-registered but haven't signed up yet.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "joined"] },
+        "role": { "type": "string" },
+        "inviteCode": { "type": "string" },
+        "createdAt": { "type": "number" }
+      }
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A coin transaction between users or a system recharge.",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["transfer", "recharge", "spend", "achievement_reward", "daily_reward"] },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["senderId", "receiverId", "amount", "type", "timestamp"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "Real-time notifications for users.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "alert"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "Template": {
+      "title": "Template",
+      "description": "Mission templates created by AI or admin.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "instructions": { "type": "string" },
+        "isBonus": { "type": "boolean" },
+        "reward": { "type": "number" },
+        "category": { "type": "string" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["name", "description", "instructions", "createdBy", "createdAt"]
+    },
+    "RechargeRequest": {
+      "title": "Recharge Request",
+      "description": "A student's request for a coin recharge via manual payment.",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "amount": { "type": "number" },
+        "coins": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "paymentScreenshot": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["studentId", "amount", "coins", "status", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles. Accessible by the owner and admins."
+    },
+    "/inviteCodes/{codeId}": {
+      "schema": { "$ref": "#/entities/InviteCode" },
+      "description": "Invite codes registry."
+    },
+    "/assignments/{assignmentId}": {
+      "schema": { "$ref": "#/entities/Assignment" },
+      "description": "Global assignments collection."
+    },
+    "/submissions/{submissionId}": {
+      "schema": { "$ref": "#/entities/Submission" },
+      "description": "Student submissions."
+    },
+    "/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Ledger of coin transactions."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "User notifications."
+    },
+    "/templates/{templateId}": {
+      "schema": { "$ref": "#/entities/Template" },
+      "description": "Mission templates."
+    },
+    "/recharge_requests/{requestId}": {
+      "schema": { "$ref": "#/entities/RechargeRequest" },
+      "description": "Pending and past coin recharge requests."
+    }
+  }
+}
