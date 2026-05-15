@@ -9,6 +9,7 @@
         "name": { "type": "string" },
         "role": { "type": "string", "enum": ["student", "admin", "superadmin"] },
         "coins": { "type": "number" },
+        "diamonds": { "type": "number" },
         "xp": { "type": "number" },
         "xpBoosterUntil": { "type": "number" },
         "vipExp": { "type": "number" },

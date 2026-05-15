@@ -87,6 +87,7 @@ export interface IDatabaseService {
 
   // Admin Batch Operations
   adjustUserBalance(userId: string, amount: number, isPenalty: boolean, adminId: string, reason: string): Promise<void>;
+  adjustUserDiamonds(userId: string, amount: number, adminId: string, reason: string): Promise<void>;
   adjustUserXP(userId: string, amount: number, adminId: string, reason: string): Promise<void>;
   grantGift(userId: string, gift: any, adminId: string, reason: string): Promise<void>;
   revokeSubmission(submissionId: string, penalty: number, adminId: string): Promise<void>;

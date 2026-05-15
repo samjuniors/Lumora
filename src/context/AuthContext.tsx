@@ -45,12 +45,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         unsubscribeSnapshot = dbService.subscribeToUser(fUser.uid, (data) => {
           if (data) {
             // Force superadmin for hardcoded email if not already set
-            if ((fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') && data.role !== 'superadmin') {
+            if ((fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') && data.role !== 'superadmin') {
               dbService.updateUser(fUser.uid, { role: 'superadmin' });
             }
             setUser(data);
             setLoading(false);
-          } else if (fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') {
+          } else if (fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') {
             // Auto create superadmin
             const createAdmin = async () => {
               try {

@@ -67,7 +67,15 @@ export const DailyRewardModal = () => {
          label: `-${penaltyVal} Coins (Unlucky Drop!)`,
          icon: <Zap className="w-10 h-10 text-red-500" />
       };
-    } else if (roll < 0.6) { // 25% chance for XP boost
+    } else if (roll < 0.50) { // 15% chance for diamonds
+      const diamondVal = Math.floor(Math.random() * 5) + 1; // 1 to 5 diamonds
+      return {
+        type: 'diamonds' as any,
+        value: diamondVal,
+        label: `${diamondVal} Diamonds`,
+        icon: <Star className="w-10 h-10 text-cyan-400" />
+      };
+    } else if (roll < 0.7) { // 20% chance for XP boost
       const xpVal = Math.floor(Math.random() * 100) + 1; // 1 to 100 XP
       return {
         type: 'xp',
@@ -75,7 +83,7 @@ export const DailyRewardModal = () => {
         label: `${xpVal} Mission XP`,
         icon: <Star className="w-10 h-10 text-indigo-400" />
       };
-    } else { // 40% chance for coins
+    } else { // 30% chance for coins
       const coinVal = Math.floor(Math.random() * 10) + 1; // 1 to 10 coins
       return {
         type: 'coins',

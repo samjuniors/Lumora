@@ -697,6 +697,46 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
+  async adjustUserDiamonds(userId: string, amount: number, adminId: string, reason: string): Promise<void> {
+    try {
+      const now = Date.now();
+      const userRef = doc(db, 'users', userId);
+      
+      const batch = writeBatch(db);
+      batch.update(userRef, {
+        diamonds: increment(amount),
+        updatedAt: now
+      });
+      
+      const txId = `ADMIN_DIA_${now}_${Math.random().toString(36).substring(7)}`;
+      batch.set(doc(db, 'transactions', txId), {
+        id: txId,
+        senderId: amount < 0 ? userId : adminId,
+        receiverId: amount < 0 ? 'SYSTEM' : userId,
+        amount: Math.abs(amount),
+        type: amount < 0 ? 'penalty' : 'assignment_reward',
+        status: 'completed',
+        message: reason,
+        timestamp: now,
+        utr: 'ADMIN_MANUAL_DIAMONDS'
+      });
+
+      const notifRef = doc(collection(db, 'notifications'));
+      batch.set(notifRef, {
+        id: notifRef.id,
+        userId,
+        title: amount > 0 ? '💎 Diamonds Received' : '⚠️ Diamonds Adjusted',
+        message: amount > 0 ? `Admin granted you ${amount} diamonds for: ${reason}` : `Admin deducted ${Math.abs(amount)} diamonds. Reason: ${reason}`,
+        type: amount > 0 ? 'success' : 'alert',
+        read: false,
+        createdAt: now
+      });
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'users');
+    }
+  }
+
   async adjustUserXP(userId: string, amount: number, adminId: string, reason: string): Promise<void> {
     try {
       const now = Date.now();
@@ -1436,6 +1476,8 @@ export class FirebaseService implements IDatabaseService {
 
       if (reward.type === 'coins') {
         updates.coins = increment(reward.value as number);
+      } else if (reward.type === 'diamonds') {
+        updates.diamonds = increment(reward.value as number);
       } else if (reward.type === 'penalty') {
         const penaltyAmount = Math.min(Math.abs(reward.value as number), 50);
         const penaltyToApply = Math.min(penaltyAmount, currentCoins);
@@ -1449,7 +1491,7 @@ export class FirebaseService implements IDatabaseService {
       
       batch.update(userRef, updates);
 
-      if (reward.type === 'coins' || reward.type === 'penalty') {
+      if (reward.type === 'coins' || reward.type === 'penalty' || reward.type === 'diamonds') {
         const txId = 'tx_rew_' + now;
         batch.set(doc(db, 'transactions', txId), {
           id: txId,
@@ -1458,7 +1500,7 @@ export class FirebaseService implements IDatabaseService {
           amount: Math.abs(finalValue as number),
           type: (reward.type === 'penalty' ? 'penalty' : 'daily_reward') as any,
           status: 'completed',
-          message: reward.type === 'penalty' ? 'Daily Drop Penalty (Capped)' : 'Daily Drop collect',
+          message: reward.type === 'penalty' ? 'Daily Drop Penalty (Capped)' : reward.type === 'diamonds' ? 'Daily Drop Diamonds' : 'Daily Drop collect',
           timestamp: now
         });
       }

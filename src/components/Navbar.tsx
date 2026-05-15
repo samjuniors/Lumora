@@ -77,6 +77,20 @@ export const Navbar = () => {
                   <span>Invite</span>
                 </button>
                 
+                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-cyan-500 px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-cyan-500/20 group shrink-0">
+                  <div className="p-0.5 sm:p-1 bg-cyan-500/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
+                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
+                  </div>
+                  <span className="font-black text-[10px] sm:text-xs md:text-sm tracking-tight truncate">{user.diamonds || 0}</span>
+                </div>
+
+                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-brand-gold px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-brand-gold/20 group shrink-0">
+                  <div className="p-0.5 sm:p-1 bg-brand-gold/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
+                    <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />
+                  </div>
+                  <span className="font-black text-[10px] sm:text-xs md:text-sm tracking-tight truncate">{user.coins || 0}</span>
+                </div>
+
                 <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-indigo-500 px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-border-main/50 group shrink-0">
                   <div className="p-0.5 sm:p-1 bg-indigo-500/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
                     <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
