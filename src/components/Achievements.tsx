@@ -12,13 +12,18 @@ type InfiniteAchievementDef = {
   icon: React.ReactNode;
   getDescription: (tier: number, goal: number) => string;
   getGoal: (tier: number) => number;
-  getReward: (tier: number) => { coins: number, xp: number };
+  getReward: (tier: number) => { coins: number, diamonds: number };
 };
 
 const REWARD_FN = (tier: number) => {
-  const coins = Math.min(20, Math.floor(10 * Math.pow(1.1, tier - 1)));
-  const xp = Math.min(20, Math.floor(10 * Math.pow(1.1, tier - 1)));
-  return { coins, xp };
+  // Coins are extremely precious: scaling is non-linear to prevent inflation at low tiers 
+  // but rewarding for dedicated masters.
+  const coins = Math.min(100, 5 + Math.floor(Math.pow(tier, 1.2)));
+  
+  // Diamonds scale better as they are the primary currency for high-end skips
+  const diamonds = Math.min(50, 3 + Math.floor(tier * 1.5));
+  
+  return { coins, diamonds };
 };
 
 export const INFINITE_ACHIEVEMENTS: InfiniteAchievementDef[] = [
@@ -103,7 +108,7 @@ export const Achievements = () => {
     fetchProgress();
   }, [user]);
 
-  const claimAchievement = async (achievementId: string, exactClaimId: string, reward: { coins: number, xp: number }) => {
+  const claimAchievement = async (achievementId: string, exactClaimId: string, reward: { coins: number, diamonds: number }) => {
     if (!user) return;
     setClaiming(exactClaimId);
     
@@ -111,8 +116,8 @@ export const Achievements = () => {
       await dbService.claimAchievement(user.id, exactClaimId, reward);
       
       const newAchievements = [...(user.achievements || []), exactClaimId];
-      setUser({ ...user, achievements: newAchievements, coins: user.coins + Math.round(reward.coins), xp: (user.xp || 0) + reward.xp });
-      toast.success(`Leveled up badge! Earned ${Math.round(reward.coins)} coins & ${reward.xp} XP! 🎉`);
+      setUser({ ...user, achievements: newAchievements, coins: user.coins + Math.round(reward.coins), diamonds: (user.diamonds || 0) + reward.diamonds });
+      toast.success(`Leveled up badge! Earned ${Math.round(reward.coins)} coins & ${reward.diamonds} Diamonds! 💎`);
     } catch (err: any) {
       console.error(err);
       toast.error("Failed to claim achievement. Please try again.");
@@ -192,8 +197,8 @@ export const Achievements = () => {
                     <span className="font-bold text-yellow-600 bg-yellow-50 px-3 py-1 rounded-xl text-sm shadow-sm border border-yellow-100/50">
                       +{reward.coins} 🪙
                     </span>
-                    <span className="font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-xl text-sm shadow-sm border border-indigo-100/50">
-                      +{reward.xp} ⚡
+                    <span className="font-bold text-cyan-600 bg-cyan-50 px-3 py-1 rounded-xl text-sm shadow-sm border border-cyan-100/50">
+                      +{reward.diamonds} 💎
                     </span>
                   </div>
                   <p className="text-sm text-text-secondary font-medium leading-relaxed">{def.getDescription(currentTier, goal)}</p>

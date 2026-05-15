@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RulesModal } from '../components/RulesModal';
 
 export const Wallet = () => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
   const [showTransfer, setShowTransfer] = useState(false);
@@ -257,13 +257,20 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
     e.preventDefault();
     if (!amount || amount <= 0) return;
     
+    // Calculate final coins based on requested packages
+    const finalCoins = amount === 120 ? 69 : amount === 500 ? 780 : 0;
+    
+    if (finalCoins === 0) {
+       return toast.error("Please select a valid package.");
+    }
+    
     setLoading(true);
     try {
       await dbService.createRechargeRequest({
         studentId: user!.id,
         studentName: user!.name,
         amount: amount,
-        coins: amount,
+        coins: finalCoins,
         status: 'pending',
         paymentScreenshot: utr,
         createdAt: Date.now(),
@@ -316,30 +323,35 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
             {!hasPaymentMethod && user?.role !== 'superadmin' && (
                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4">Payment details are not configured by the admin yet.</div>
             )}
-            <p className="text-text-secondary text-sm font-medium">Select or enter amount of coins to recharge</p>
-            <div className="grid grid-cols-3 gap-3">
-              {[50, 100, 500].map(val => (
-                <button 
-                  type="button"
-                  key={val} 
-                  onClick={() => setAmount(val)} 
-                  className={cn("py-3 rounded-xl border-2 font-bold text-lg transition", amount === val ? "border-indigo-600 text-brand-gold bg-brand-gold-secondary-hover" : "border-border-main text-text-secondary hover:border-border-main")}
-                >
-                  {val}
-                </button>
-              ))}
+            <p className="text-text-secondary text-sm font-medium">Select a recharge package</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button 
+                type="button"
+                onClick={() => { setAmount(120); }} 
+                className={cn("py-3 px-2 rounded-xl border-2 font-bold transition flex flex-col items-center", amount === 120 ? "border-brand-gold text-brand-gold bg-brand-gold/10" : "border-border-main text-text-secondary hover:border-border-main")}
+              >
+                <span className="text-sm">Starter</span>
+                <span className="text-lg">₹120</span>
+                <span className="text-[10px] opacity-70">69 Coins</span>
+              </button>
+              <button 
+                type="button"
+                onClick={() => { setAmount(500); }} 
+                className={cn("py-3 px-2 rounded-xl border-2 font-bold transition flex flex-col items-center relative overflow-hidden", amount === 500 ? "border-brand-gold text-brand-gold bg-brand-gold/10" : "border-border-main text-text-secondary hover:border-border-main")}
+              >
+                <div className="absolute top-0 right-0 bg-brand-gold text-bg-main text-[8px] px-1.5 py-0.5 rounded-bl-lg font-black uppercase">Best Value</div>
+                <span className="text-sm">Premium</span>
+                <span className="text-lg">₹500</span>
+                <span className="text-[10px] opacity-70">780 Coins</span>
+              </button>
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1 mt-4">Custom Amount</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary font-bold">{user?.role === 'superadmin' ? '🌟' : '₹'}</span>
-                <input 
-                  type="number" 
-                  min="1"
-                  value={amount || ''}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  className="w-full pl-8 pr-4 py-3 border border-border-main rounded-xl outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 font-bold text-text-primary"
-                />
+              <label className="block text-sm font-medium text-text-secondary mb-1 mt-4">Calculated Coins</label>
+              <div className="bg-bg-main p-4 rounded-xl border border-border-main flex justify-between items-center">
+                 <span className="text-text-secondary text-xs uppercase font-black">Estimated Value</span>
+                 <span className="text-xl font-black text-brand-gold flex items-center gap-1">
+                    <Coins className="w-5 h-5" /> {amount === 120 ? 69 : amount === 500 ? 780 : 0}
+                 </span>
               </div>
             </div>
             {user?.role === 'superadmin' ? (
@@ -487,7 +499,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
 }
 
 const TransferModal = ({ onClose, onComplete }: any) => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<{id: string, name: string, email: string} | null>(null);
   const [students, setStudents] = useState<{id: string, name: string, email: string}[]>([]);
@@ -533,75 +545,13 @@ const TransferModal = ({ onClose, onComplete }: any) => {
 
     setLoading(true);
     try {
-      const admins = await dbService.getUsersByRole('superadmin');
-      const superAdminId = admins.length > 0 ? admins[0].id : null;
+      await dbService.transferCoins(user!.id, selectedStudent.id, val);
 
-      const receiverId = selectedStudent.id;
-      const taxAmount = Math.floor(val * 0.1);
-      const receiveAmount = val - taxAmount;
-
-      // 1. Deduct sender
-      if (user!.role !== 'admin' && user!.role !== 'superadmin') {
-         await dbService.updateUser(user!.id, {
-           coins: user!.coins - val,
-           xp: (user!.xp || 0) + val,
-           updatedAt: Date.now()
-         });
-      }
-
-      // 2. Add receiver diamonds
-      const receiverData = await dbService.getUser(receiverId);
-      if (receiverData) {
-        await dbService.updateUser(receiverId, {
-          diamonds: (receiverData.diamonds || 0) + receiveAmount,
-          updatedAt: Date.now()
-        });
-      }
-
-      // 3. Create transaction doc
-      await dbService.createTransaction({
-        senderId: user!.id,
-        receiverId,
-        amount: receiveAmount,
-        type: 'transfer',
-        status: 'completed',
-        timestamp: Date.now()
-      });
-
-      // 4. Handle super admin tax
-      if (superAdminId && taxAmount > 0) {
-        const adminData = await dbService.getUser(superAdminId);
-        if (adminData) {
-            await dbService.updateUser(superAdminId, {
-              taxWallet: (adminData.taxWallet || 0) + taxAmount,
-              updatedAt: Date.now()
-            });
-        }
-        
-        await dbService.createTransaction({
-          senderId: user!.id,
-          receiverId: superAdminId,
-          amount: taxAmount,
-          type: 'tax',
-          status: 'completed',
-          timestamp: Date.now(),
-        });
-      }
-
-      // 5. Create Notification for receiver
-      await dbService.createNotification({
-        userId: receiverId,
-        title: '💎 Diamonds Received!',
-        message: `${user!.name} sent you ${receiveAmount} diamonds.`,
-        type: 'success',
-        read: false,
-        createdAt: Date.now()
-      });
-
-      updateUserBalance(user!.coins - val);
+      // We still update local state
+      updateResources({ coins: user!.coins - val });
       onComplete();
       onClose();
-      toast.success(`Sent ${receiveAmount} coins to ${selectedStudent.name} (${taxAmount} tax)`);
+      toast.success(`Sent transferring coins to ${selectedStudent.name}`);
     } catch(err: any) {
       handleFirestoreError(err, OperationType.WRITE, 'transfer/transactions');
     } finally {
@@ -741,7 +691,7 @@ const TransferModal = ({ onClose, onComplete }: any) => {
 }
 
 const ConvertModal = ({ onClose, onComplete }: any) => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -752,59 +702,23 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
     
     if (val > (user?.diamonds || 0)) return toast.error("Insufficient diamonds!");
 
-    if (!window.confirm(`Convert ${val} diamonds into ${Math.floor(val * 0.6)} coins? (${Math.floor(val * 0.4)} tax)`)) {
+    const coinsToAdd = Math.floor(val / 7);
+    if (!window.confirm(`Convert ${val} diamonds into ${coinsToAdd} coins?`)) {
         return;
     }
 
     setLoading(true);
     try {
-      const admins = await dbService.getUsersByRole('superadmin');
-      const superAdminId = admins.length > 0 ? admins[0].id : null;
-
-      const receivedCoins = Math.floor(val * 0.6);
-      const taxAmount = Math.floor(val * 0.4);
-
-      // 1. Deduct diamonds and add coins to user
-      await dbService.updateUser(user!.id, {
-        diamonds: (user!.diamonds || 0) - val,
-        coins: (user!.coins || 0) + receivedCoins,
-        updatedAt: Date.now()
+      await dbService.convertDiamondsToCoins(user!.id, val);
+      
+      updateResources({ 
+        diamonds: (user?.diamonds || 0) - val,
+        coins: (user?.coins || 0) + coinsToAdd 
       });
 
-      // 2. Create transaction doc
-      await dbService.createTransaction({
-        senderId: user!.id,
-        receiverId: user!.id,
-        amount: receivedCoins,
-        type: 'convert',
-        status: 'completed',
-        timestamp: Date.now()
-      });
-
-      // 3. Handle super admin tax
-      if (superAdminId && taxAmount > 0) {
-        const adminData = await dbService.getUser(superAdminId);
-        if (adminData) {
-            await dbService.updateUser(superAdminId, {
-              taxWallet: (adminData.taxWallet || 0) + taxAmount,
-              updatedAt: Date.now()
-            });
-        }
-        
-        await dbService.createTransaction({
-          senderId: user!.id,
-          receiverId: superAdminId,
-          amount: taxAmount,
-          type: 'tax',
-          status: 'completed',
-          timestamp: Date.now(),
-        });
-      }
-
-      updateUserBalance(user!.coins + receivedCoins); // Update client balance state
       onComplete();
       onClose();
-      toast.success(`Converted ${val} diamonds into ${receivedCoins} coins!`);
+      toast.success(`Converted ${val} diamonds into ${coinsToAdd} coins!`);
     } catch(err: any) {
       handleFirestoreError(err, OperationType.WRITE, 'convert/transactions');
     } finally {
@@ -831,9 +745,9 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
            <h2 className="text-xl font-bold tracking-tight">Convert Diamonds</h2>
            <button onClick={onClose} className="p-2 hover:bg-border-main rounded-full transition-colors"><X className="w-5 h-5 text-text-secondary/80" /></button>
         </div>
-        <div className="bg-brand-gold/10 text-brand-gold font-medium text-xs p-3 rounded-xl mb-4 border border-brand-gold/20 flex gap-2">
+        <div className="bg-cyan-500/10 text-cyan-500 font-medium text-xs p-3 rounded-xl mb-4 border border-cyan-500/20 flex gap-2">
            <ArrowRightLeft className="w-4 h-4 shrink-0" />
-           <p>Conversion Rate: 100 Diamonds = 60 Coins. <br/>(40% processing tax applies)</p>
+           <p>Conversion Rate: 7 Diamonds = 1 Coin (350 for 50). <br/>Academic success builds your legacy!</p>
         </div>
         <div className="overflow-y-auto flex-1 no-scrollbar pb-2">
         <form onSubmit={handleConvert} className="space-y-4">
@@ -858,11 +772,7 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
              <div className="bg-bg-main p-4 rounded-xl border border-border-main text-sm mt-4">
                 <div className="flex justify-between mb-1">
                    <span className="text-text-secondary">You get:</span>
-                   <span className="font-bold text-brand-gold">{Math.floor(parseInt(amount) * 0.6)} Coins</span>
-                </div>
-                <div className="flex justify-between">
-                   <span className="text-text-secondary">Tax:</span>
-                   <span className="font-bold text-rose-500">{Math.floor(parseInt(amount) * 0.4)} Diamonds</span>
+                   <span className="font-bold text-brand-gold">{Math.floor(parseInt(amount) / 7)} Coins</span>
                 </div>
              </div>
            )}

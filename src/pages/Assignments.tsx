@@ -953,9 +953,9 @@ const PRESET_TEMPLATES = [
     isBonus: true,
     isDuoBonus: true,
     testInstructions: "Technical Mesh Assessment: Submit high-res screenshots of your project in (1) Grayscale Shaded view to show silhouette clarity, and (2) Wireframe (Quads) view to show topology flow. Focus on Medium-Poly detail for assets/weapons.",
-    testEntryFee: 25,
-    testReward: 150,
-    testPenalty: 40,
+    testEntryFee: 30,
+    testReward: 100,
+    testPenalty: 50,
     testRubric: [
       { name: "Topology Flow", description: "Check for clean edge-loops, all-quads construction, and absence of N-gons.", weight: 20 },
       { name: "Silhouette & Form", description: "Evaluate the fidelity of the asset against standard product proportions.", weight: 20 },
@@ -965,9 +965,9 @@ const PRESET_TEMPLATES = [
       { name: "Technical Cleanup", description: "Freeze transforms, delete history, and correct pivot placement for engine export.", weight: 15 }
     ],
     presInstructions: "Modeling Theory & Pipeline PDF: Import a PDF containing your process breakdown. Must cover: Modular Kit theory, Environment scaling logic, and your asset pipeline from block-out to final mesh.",
-    presEntryFee: 15,
-    presReward: 100,
-    presPenalty: 20,
+    presEntryFee: 20,
+    presReward: 70,
+    presPenalty: 30,
     presRubric: [
       { name: "Concept Theory", description: "Depth of knowledge in Maya-specific modeling logic and modularity.", weight: 20 },
       { name: "Pipeline Clarity", description: "Clear explanation of the production steps and problem-solving.", weight: 20 },
@@ -989,13 +989,13 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: { onClose: () => v
   const [instructions, setInstructions] = useState('');
   const [subject, setSubject] = useState('');
   const [frequency, setFrequency] = useState('one_time');
-  const [xpReward, setXpReward] = useState<number>(50);
+  const [xpReward, setXpReward] = useState<number>(60);
   const [startDateStr, setStartDateStr] = useState('');
   const [dueDateStr, setDueDateStr] = useState('');
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<number>(0);
-  const [entryFee, setEntryFee] = useState<number>(10);
-  const [bonusReward, setBonusReward] = useState<number>(50);
-  const [penaltyFee, setPenaltyFee] = useState<number>(20);
+  const [entryFee, setEntryFee] = useState<number>(15);
+  const [bonusReward, setBonusReward] = useState<number>(30);
+  const [penaltyFee, setPenaltyFee] = useState<number>(25);
   const [isBonus, setIsBonus] = useState<boolean>(false);
   const [isDuoBonus, setIsDuoBonus] = useState<boolean>(false);
   const [bonusType, setBonusType] = useState<'presentation' | 'test'>('test');
@@ -1173,6 +1173,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: { onClose: () => v
           duoId,
           bonusType: 'test',
           missionNumber: Number(missionNumber),
+          xpReward: Number(xpReward),
           campaignId,
           isGlobal,
           creatorId: user!.id,
@@ -1201,6 +1202,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: { onClose: () => v
           duoId,
           bonusType: 'presentation',
           missionNumber: Number(missionNumber),
+          xpReward: Number(xpReward),
           campaignId,
           isGlobal,
           creatorId: user!.id,
@@ -1223,6 +1225,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: { onClose: () => v
            entryFee: Number(entryFee),
            bonusReward: Number(bonusReward),
            penaltyFee: Number(penaltyFee),
+           xpReward: Number(xpReward),
            isBonus,
            isDuoBonus: isBonus ? isDuoBonus : false,
            campaignId,

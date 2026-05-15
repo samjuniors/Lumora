@@ -4,7 +4,7 @@ import { dbService } from "../services/dbProvider";
 import { Assignment, Enrollment } from "../types";
 import { Link, Navigate } from "react-router-dom";
 import { toast } from 'react-hot-toast';
-import {
+import { 
   ArrowRight,
   BookOpen,
   Trophy,
@@ -15,11 +15,19 @@ import {
   Crown,
   Flame,
   Lock,
+  AlertTriangle,
+  ZapOff,
+  Bell,
+  ArrowUpRight,
+  Target,
+  Search,
+  Compass
 } from "lucide-react";
 import { AssignmentGroupCard } from "../components/AssignmentGroupCard";
 import { CompletedMissionsStack } from "../components/CompletedMissionsStack";
 import { ResourceCollector } from "../components/ResourceCollector";
-import { motion } from "motion/react";
+import { TheOracle } from "../components/TheOracle";
+import { motion, AnimatePresence } from "motion/react";
 import { cn, getUserLevelAndXP, getVIPLevel } from "../lib/utils";
 import { DashboardSkeleton } from "../components/Skeletons";
 
@@ -29,13 +37,27 @@ import {
 } from "../lib/performance";
 
 export const Dashboard = () => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { currentLevel } = getUserLevelAndXP(user);
+  const levelData = getUserLevelAndXP(user);
+  const { currentLevel, xpCurrent, xpMax, xpProgress, nextRewardLevel } = levelData;
   const sweepPerformed = React.useRef(false);
+
+  const [platformEvents, setPlatformEvents] = useState<any[]>([]);
+
+  useEffect(() => {
+    const events = [
+      { id: 1, text: "Avery J. earned an A+ in Physics!", icon: "🎓", color: "text-amber-500" },
+      { id: 2, text: "Marcus L. collected 50 Coins!", icon: "⛏️", color: "text-cyan-400" },
+      { id: 3, text: "Global Mission: 'Mesh Theory' is active!", icon: "🌐", color: "text-indigo-400" },
+      { id: 4, text: "Sarah K. found a 'Rare Badge'!", icon: "💎", color: "text-fuchsia-400" },
+      { id: 5, text: "System: Weekly leaderboard reset in 2 days", icon: "⏰", color: "text-orange-400" }
+    ];
+    setPlatformEvents(events);
+  }, []);
 
   if (user?.role === "admin" || user?.role === "superadmin") {
     return <Navigate to="/admin" replace />;
@@ -109,7 +131,7 @@ export const Dashboard = () => {
                     lastActive: today,
                 });
 
-                updateUserBalance((user.coins || 0) - missingPenaltyCoins);
+                updateResources({ coins: (user.coins || 0) - missingPenaltyCoins });
                 toast.error(`You lost ${missingPenaltyCoins} coins for breaking your login streak!`, { icon: '💸' });
                 return; // Skip normal update below
             } catch (err: any) {
@@ -132,7 +154,7 @@ export const Dashboard = () => {
       const interval = setInterval(checkStreak, 60000); // Check every minute for midnight rollovers
       return () => clearInterval(interval);
     }
-  }, [user?.id, user?.lastActive, user?.streak, user?.coins, updateUserBalance]);
+  }, [user?.id, user?.lastActive, user?.streak, user?.coins, updateResources]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -171,7 +193,7 @@ export const Dashboard = () => {
         let balanceChanged = false;
 
         let totalCoinsPenalty = 0;
-        let totalXpPenalty = 0;
+        let totalDiamondsPenalty = 0;
 
         for (const assignment of allRelevantAssignments) {
           const existingEnr = userEnrollments.find(e => e.assignmentId === assignment.id);
@@ -194,19 +216,19 @@ export const Dashboard = () => {
           if (targetMissIndex <= appliedMissIndex) continue;
           
           let sweepCoinsPenalty = 0;
-          let sweepXpPenalty = 0;
+          let sweepDiamondsPenalty = 0;
 
           for (let i = appliedMissIndex + 1; i <= targetMissIndex; i++) {
               if (isRetest) {
                   sweepCoinsPenalty += 25 * Math.pow(1.25, i - 1);
-                  sweepXpPenalty += 50; 
+                  sweepDiamondsPenalty += 50; 
               } else if (isBonus) {
                   sweepCoinsPenalty += assignment.penaltyFee || 0;
-                  sweepXpPenalty += Math.floor((assignment.xpReward || 100) * 0.5);
+                  sweepDiamondsPenalty += Math.floor((assignment.xpReward || 100) * 0.5);
               } else {
                   if (i === 1) {
                       sweepCoinsPenalty += assignment.penaltyFee || 0;
-                      sweepXpPenalty += Math.floor((assignment.xpReward || 50) * 0.5);
+                      sweepDiamondsPenalty += Math.floor((assignment.xpReward || 50) * 0.5);
                   }
               }
           }
@@ -235,7 +257,7 @@ export const Dashboard = () => {
             newBalance -= sweepCoinsPenalty;
             totalCoinsPenalty += sweepCoinsPenalty;
             balanceChanged = true;
-            totalXpPenalty += sweepXpPenalty;
+            totalDiamondsPenalty += sweepDiamondsPenalty;
 
             await dbService.createTransaction({
               senderId: user.id,
@@ -256,13 +278,13 @@ export const Dashboard = () => {
 
         if (balanceChanged) {
           userUpdate.coins = (user.coins || 0) - totalCoinsPenalty;
-          userUpdate.xp = (user.xp || 0) - totalXpPenalty; 
+          userUpdate.diamonds = (user.diamonds || 0) - totalDiamondsPenalty; 
         }
 
         await dbService.updateUser(user.id, userUpdate);
 
         if (balanceChanged) {
-          updateUserBalance(newBalance);
+          updateResources({ coins: newBalance });
         }
       } catch (error: any) {
         console.error("Missed assignments processing error:", error);
@@ -304,7 +326,7 @@ export const Dashboard = () => {
       processMissedAssignments().catch(err => console.error("Background sweep failed:", err));
     }
     loadData();
-  }, [user?.id, user?.role, user?.lastMissedSweep, user?.coins, user?.xp, user?.email, updateUserBalance]);
+  }, [user?.id, user?.role, user?.lastMissedSweep, user?.coins, user?.xp, user?.email, updateResources]);
 
   const groupedAssignments = useMemo(() => {
     const groups: Record<string, Assignment[]> = {};
@@ -334,6 +356,14 @@ export const Dashboard = () => {
 
   if (isLoading) return <DashboardSkeleton />;
 
+  const missedCount = studentEnrollments.filter(e => e.status === 'missed').length;
+  const activeMissions = assignments.filter(a => {
+      const enr = studentEnrollments.find(e => e.assignmentId === a.id);
+      return !enr || (enr.status === 'active');
+  });
+  
+  const potentialLoss = activeMissions.reduce((acc, a) => acc + (a.entryFee || 0), 0);
+
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -361,6 +391,83 @@ export const Dashboard = () => {
       transition={{ duration: 0.5 }}
       className="max-w-6xl mx-auto px-4 space-y-6 md:space-y-8 pb-8"
     >
+      {/* Live Ticker Marquee */}
+      <div className="bg-[#1A2B48]/40 border-y border-white/5 py-3 -mx-4 px-4 overflow-hidden relative">
+        <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
+          {platformEvents.map((event) => (
+             <div key={event.id} className="flex items-center gap-2">
+                <span className="text-lg">{event.icon}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+                  {event.text}
+                </span>
+                <div className="w-1 h-1 rounded-full bg-brand-gold/40 mx-4" />
+             </div>
+          ))}
+          {/* Duplicate for seamless loop */}
+          {platformEvents.map((event) => (
+             <div key={`dup-${event.id}`} className="flex items-center gap-2">
+                <span className="text-lg">{event.icon}</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
+                  {event.text}
+                </span>
+                <div className="w-1 h-1 rounded-full bg-brand-gold/40 mx-4" />
+             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Risk Alert Banner */}
+      {potentialLoss > 0 && (
+          <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="bg-rose-500/10 border border-rose-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative group"
+          >
+              <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
+              <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-12 h-12 bg-rose-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
+                      <AlertTriangle size={24} />
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-black text-rose-600 uppercase tracking-tight">Bankruptcy Warning</h3>
+                      <p className="text-sm font-medium text-rose-500/80">You have {activeMissions.length} active missions with <span className="font-black underline decoration-rose-500/30">-{potentialLoss} Coins</span> at risk if you fail the deadlines.</p>
+                  </div>
+              </div>
+              <Link 
+                  to="/assignments?filter=active"
+                  className="bg-rose-500 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20 relative z-10 whitespace-nowrap"
+              >
+                  Secure My Stakes
+              </Link>
+          </motion.div>
+      )}
+
+      {missedCount > 3 && (
+          <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              className="bg-orange-500/10 border border-orange-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative"
+          >
+              <div className="flex items-center gap-4 relative z-10">
+                  <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
+                      <ZapOff size={24} />
+                  </div>
+                  <div>
+                      <h3 className="text-lg font-black text-orange-600 uppercase tracking-tight">Academic Probation</h3>
+                      <p className="text-sm font-medium text-orange-500/80">You've missed {missedCount} missions recently. Your XP gains are now reduced by 20% until you clear 2 missions.</p>
+                  </div>
+              </div>
+              <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
+                  SYSTEM PENALTY ACTIVE
+              </div>
+          </motion.div>
+      )}
+
+      {/* The Oracle AI Strategic Advisor */}
+      <TheOracle 
+        submissions={studentEnrollments.filter(e => e.status === 'graded')} 
+      />
+
       {/* Hero Section */}
       <motion.div
         initial={{ y: 10, opacity: 0 }}
@@ -414,18 +521,21 @@ export const Dashboard = () => {
               transition={{ delay: 0.45 }}
               className="mt-8 flex flex-col md:flex-row gap-6 max-w-md md:max-w-xl"
              >
-               <div className="flex-1 space-y-2">
-                 <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                   <span>XP Progress</span>
-                   <span className="text-text-primary">{getUserLevelAndXP(user).xpCurrent} / {getUserLevelAndXP(user).xpMax}</span>
-                 </div>
-                 <div className="w-full h-1 bg-border-main rounded-full overflow-hidden">
-                   <div
-                     className="h-full bg-brand-gold rounded-full transition-all duration-1000 ease-out"
-                     style={{ width: `${getUserLevelAndXP(user).xpProgress}%` }}
-                   />
-                 </div>
-               </div>
+                <div className="flex-1 space-y-2">
+                  <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-text-secondary">
+                    <span>Level {currentLevel} XP</span>
+                    <span className="text-text-primary">{xpCurrent} / {xpMax}</span>
+                  </div>
+                  <div className="w-full h-1 bg-border-main rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-brand-gold rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${xpProgress}%` }}
+                    />
+                  </div>
+                  <div className="text-[10px] text-text-secondary italic">
+                    {nextRewardLevel > currentLevel ? `Next Legendary Reward at Level ${nextRewardLevel}` : "You've reached max level rewards!"}
+                  </div>
+                </div>
 
                {getVIPLevel(user).level > 0 && (
                <div className="flex-1 space-y-2">

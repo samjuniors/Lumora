@@ -10,6 +10,7 @@ import {
 import { Toaster, useToasterStore, toast as toastRef } from "react-hot-toast";
 import { AnimatePresence, motion } from "motion/react";
 import { useSwipeable } from "react-swipeable";
+import { usePresence } from "./hooks/usePresence";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { dbService } from "./services/dbProvider";
 import { unlockAudio } from "./lib/audio";
@@ -37,6 +38,7 @@ const Scorecard = React.lazy(() => import("./pages/Scorecard").then(m => ({ defa
 const Shop = React.lazy(() => import("./pages/Shop").then(m => ({ default: m.Shop })));
 const Profile = React.lazy(() => import("./pages/Profile").then(m => ({ default: m.Profile })));
 const Badges = React.lazy(() => import("./pages/Badges").then(m => ({ default: m.Badges })));
+const Syndicates = React.lazy(() => import("./pages/Syndicates").then(m => ({ default: m.Syndicates })));
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
@@ -61,6 +63,10 @@ const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  const { user } = useAuth();
+  
+  // Track presence
+  usePresence(user?.id);
 
   return (
     <Routes location={location}>
@@ -153,6 +159,18 @@ const AnimatedRoutes = () => {
             <RequireAuth>
               <PageWrapper>
                 <Badges />
+              </PageWrapper>
+            </RequireAuth>
+          </React.Suspense>
+        }
+      />
+      <Route
+        path="/syndicates"
+        element={
+          <React.Suspense fallback={<SplashScreen />}>
+            <RequireAuth>
+              <PageWrapper>
+                <Syndicates />
               </PageWrapper>
             </RequireAuth>
           </React.Suspense>
@@ -281,7 +299,7 @@ const AppRoutes = () => {
         }}
       />
       <Navbar />
-      <main className="flex-grow w-full relative pb-[calc(120px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(80px+env(safe-area-inset-top))] md:pt-[calc(96px+env(safe-area-inset-top))] overflow-x-hidden">
+      <main className="flex-grow w-full relative pb-[calc(136px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(120px+env(safe-area-inset-top))] md:pt-[calc(192px+env(safe-area-inset-top))] overflow-x-hidden">
         <div className="container mx-auto px-4 py-4 md:py-8 min-h-full">
           <AnimatedRoutes />
           <DailyRewardModal />

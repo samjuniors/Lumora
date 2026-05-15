@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { IDatabaseService } from './dbInterface';
-import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType } from '../types';
+import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType, Syndicate } from '../types';
 
 export class FirebaseAdminService implements IDatabaseService {
   private db = admin.firestore();
@@ -31,6 +31,67 @@ export class FirebaseAdminService implements IDatabaseService {
   async getAllUsers(): Promise<User[]> {
     const snap = await this.db.collection('users').get();
     return snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+  }
+
+  async getUsers(): Promise<User[]> {
+    return this.getAllUsers();
+  }
+
+  // Social & Presence
+  async followUser(followerId: string, targetId: string): Promise<void> {
+    const batch = this.db.batch();
+    const now = Date.now();
+    batch.update(this.db.collection('users').doc(followerId), { 
+      followingIds: admin.firestore.FieldValue.arrayUnion(targetId),
+      updatedAt: now 
+    });
+    batch.update(this.db.collection('users').doc(targetId), { 
+      followerIds: admin.firestore.FieldValue.arrayUnion(followerId),
+      updatedAt: now 
+    });
+    await batch.commit();
+  }
+
+  async unfollowUser(followerId: string, targetId: string): Promise<void> {
+    const batch = this.db.batch();
+    batch.update(this.db.collection('users').doc(followerId), { 
+      followingIds: admin.firestore.FieldValue.arrayRemove(targetId),
+      updatedAt: Date.now() 
+    });
+    batch.update(this.db.collection('users').doc(targetId), { 
+      followerIds: admin.firestore.FieldValue.arrayRemove(followerId),
+      updatedAt: Date.now() 
+    });
+    await batch.commit();
+  }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {
+    await this.db.collection('users').doc(userId).update({
+      presence,
+      lastSeen: Date.now()
+    });
+  }
+
+  async generateLuminaId(userId: string): Promise<string> {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const lid = `LMN-${chars.charAt(Math.floor(Math.random() * chars.length))}${Math.floor(1000 + Math.random() * 9000)}`;
+    await this.db.collection('users').doc(userId).update({ luminaId: lid });
+    return lid;
+  }
+
+  // Syndicate Methods
+  async getAllSyndicates(): Promise<Syndicate[]> {
+    const snap = await this.db.collection('syndicates').get();
+    return snap.docs.map(d => ({ ...d.data(), id: d.id } as Syndicate));
+  }
+
+  async createSyndicate(data: Omit<Syndicate, 'id'>): Promise<string> {
+    const res = await this.db.collection('syndicates').add(data);
+    return res.id;
+  }
+
+  async updateSyndicate(id: string, data: Partial<Syndicate>): Promise<void> {
+    await this.db.collection('syndicates').doc(id).update(data);
   }
 
   async deleteUser(userId: string): Promise<void> {
@@ -156,9 +217,9 @@ export class FirebaseAdminService implements IDatabaseService {
     p['shopaholic'] = user.inventory?.length || 0;
     p['streaker'] = user.streak || 0;
     
-    const currentXP = user.xp || 0;
-    const currentLevel = Math.floor(Math.sqrt(currentXP / 100)) + 1;
-    p['veteran'] = currentLevel;
+    const { getUserLevelAndXP } = require('../lib/utils');
+    const levelData = getUserLevelAndXP(user);
+    p['veteran'] = levelData.currentLevel;
 
     const subSnap = await this.db.collection('submissions').where('studentId', '==', userId).where('status', '==', 'assessed').get();
     p['scholar'] = subSnap.docs.length;
@@ -175,7 +236,7 @@ export class FirebaseAdminService implements IDatabaseService {
     return p;
   }
 
-  async claimAchievement(userId: string, achievementId: string, reward: { coins: number, xp: number }): Promise<void> {
+  async claimAchievement(userId: string, achievementId: string, reward: { coins: number, diamonds: number }): Promise<void> {
     const now = Date.now();
     const batch = this.db.batch();
     const userRef = this.db.collection('users').doc(userId);
@@ -183,7 +244,7 @@ export class FirebaseAdminService implements IDatabaseService {
     batch.update(userRef, {
       achievements: admin.firestore.FieldValue.arrayUnion(achievementId),
       coins: admin.firestore.FieldValue.increment(reward.coins),
-      xp: admin.firestore.FieldValue.increment(reward.xp),
+      diamonds: admin.firestore.FieldValue.increment(reward.diamonds),
       updatedAt: now
     });
 
@@ -394,9 +455,9 @@ export class FirebaseAdminService implements IDatabaseService {
   async adjustUserXP(userId: string, amount: number, adminId: string, reason: string): Promise<void> {
     const now = Date.now();
     const batch = this.db.batch();
-    batch.update(this.db.collection('users').doc(userId), { xp: admin.firestore.FieldValue.increment(amount), updatedAt: now });
+    batch.update(this.db.collection('users').doc(userId), { diamonds: admin.firestore.FieldValue.increment(amount), updatedAt: now });
     const nr = this.db.collection('notifications').doc();
-    batch.set(nr, { id: nr.id, userId, title: '⚡ XP Boost Received', message: `Admin granted you ${amount} bonus XP for: ${reason}`, type: 'info', read: false, createdAt: now });
+    batch.set(nr, { id: nr.id, userId, title: '💎 Diamonds Boost Received', message: `Admin granted you ${amount} bonus Diamonds for: ${reason}`, type: 'info', read: false, createdAt: now });
     await batch.commit();
   }
 
@@ -497,7 +558,7 @@ export class FirebaseAdminService implements IDatabaseService {
       const xp = (student.xpBoosterUntil && student.xpBoosterUntil > now) ? (assignment.xpReward || 50) * 2 : (assignment.xpReward || 50);
 
       if (!enrSnap.empty) batch.update(enrSnap.docs[0].ref, { status: 'graded', grade: score, rewardEarned: bonus, updatedAt: now });
-      batch.update(studentRef, { coins: admin.firestore.FieldValue.increment(bonus), xp: admin.firestore.FieldValue.increment(xp), updatedAt: now });
+      batch.update(studentRef, { coins: admin.firestore.FieldValue.increment(bonus), diamonds: admin.firestore.FieldValue.increment(xp), updatedAt: now });
       if (bonus > 0) {
         batch.set(this.db.collection('transactions').doc(`REWARD_${submissionId}`), { id: `REWARD_${submissionId}`, senderId: 'SYSTEM', receiverId: studentRef.id, amount: bonus, type: 'assignment_reward', status: 'completed', timestamp: now, message: `Reward: ${assignment.title}` });
       }
@@ -737,8 +798,8 @@ export class FirebaseAdminService implements IDatabaseService {
     const tax = Math.floor(amount * 0.3);
     const receive = amount - tax;
     const batch = this.db.batch();
-    batch.update(senderRef, { coins: admin.firestore.FieldValue.increment(-amount), xp: admin.firestore.FieldValue.increment(amount), updatedAt: now });
-    batch.update(receiverRef, { coins: admin.firestore.FieldValue.increment(receive), updatedAt: now });
+    batch.update(senderRef, { coins: admin.firestore.FieldValue.increment(-amount), updatedAt: now });
+    batch.update(receiverRef, { coins: admin.firestore.FieldValue.increment(receive), diamonds: admin.firestore.FieldValue.increment(receive), updatedAt: now });
     const txId = `trans_${now}`;
     batch.set(this.db.collection('transactions').doc(txId), { id: txId, senderId, receiverId, amount: receive, type: 'transfer', status: 'completed', timestamp: now });
     await batch.commit();
@@ -760,8 +821,8 @@ export class FirebaseAdminService implements IDatabaseService {
 
     if (reward.type === 'coins') {
       updates.coins = admin.firestore.FieldValue.increment(reward.value as number);
-    } else if (reward.type === 'xp') {
-      updates.xp = admin.firestore.FieldValue.increment(reward.value as number);
+    } else if (reward.type === 'diamonds') {
+      updates.diamonds = admin.firestore.FieldValue.increment(reward.value as number);
     } else if (reward.type === 'item') {
       updates.inventory = admin.firestore.FieldValue.arrayUnion(reward.value);
     } else if (reward.type === 'penalty') {

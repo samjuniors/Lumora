@@ -19,10 +19,35 @@
         "inventory": { "type": "array", "items": { "type": "string" } },
         "achievements": { "type": "array", "items": { "type": "string" } },
         "inviteCodeUsed": { "type": "string" },
+        "luminaId": { "type": "string" },
+        "presence": { "type": "string", "enum": ["online", "idle", "offline"] },
+        "lastSeen": { "type": "number" },
+        "followingIds": { "type": "array", "items": { "type": "string" } },
+        "followerIds": { "type": "array", "items": { "type": "string" } },
+        "bio": { "type": "string" },
+        "academicRoadmap": { "type": "string" },
         "createdAt": { "type": "number" },
         "updatedAt": { "type": "number" }
       },
       "required": ["email", "name", "role", "coins", "createdAt", "updatedAt"]
+    },
+    "Syndicate": {
+      "title": "Syndicate",
+      "description": "A group of students competing together.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "leaderId": { "type": "string" },
+        "memberIds": { "type": "array", "items": { "type": "string" } },
+        "xp": { "type": "number" },
+        "level": { "type": "number" },
+        "taxSavings": { "type": "number" },
+        "warWins": { "type": "number" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["name", "leaderId", "memberIds", "createdAt", "updatedAt"]
     },
     "InviteCode": {
       "title": "InviteCode",
@@ -186,6 +211,10 @@
     "/recharge_requests/{requestId}": {
       "schema": { "$ref": "#/entities/RechargeRequest" },
       "description": "Pending and past coin recharge requests."
+    },
+    "/syndicates/{syndicateId}": {
+      "schema": { "$ref": "#/entities/Syndicate" },
+      "description": "Syndicates for group competition."
     }
   }
 }

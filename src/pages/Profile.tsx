@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   User as UserIcon, Mail, Shield, ShieldAlert, Coins, Award, Edit2, Check, X, 
   Package, Palette, Target, TrendingUp, Flame, Settings, Zap, Star, Crown, 
-  Copy, Upload, LogOut, Clock, BookOpen, ChevronRight, AlertCircle, Share2, Info, Gift 
+  Copy, Upload, LogOut, Clock, BookOpen, ChevronRight, AlertCircle, Share2, Info, Gift,
+  Users, UserPlus, Heart, Search
 } from 'lucide-react';
 import { dbService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
@@ -17,6 +18,9 @@ import { RulesModal } from '../components/RulesModal';
 import { ShareModal } from '../components/ShareModal';
 import { SendItemModal } from '../components/SendItemModal';
 import { BADGES } from '../lib/badges';
+import { UserProfileModal } from '../components/UserProfileModal';
+import { PresenceDot } from '../components/PresenceDot';
+import { User, Enrollment } from '../types';
 
 const AVATARS = [
   '🐶', '🐱', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🦄', '🐝', '🐛', '🦋', '🐙', '🐢', '🦖', '🐉', '👽', '👻', '🤖'
@@ -61,8 +65,9 @@ export const Profile = () => {
   const { user, logOut, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
+  const [editBio, setEditBio] = useState(user?.bio || '');
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'social'>('overview');
   const [showBadges, setShowBadges] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [showShare, setShowShare] = useState(false);
@@ -71,6 +76,9 @@ export const Profile = () => {
   const [showInfoId, setShowInfoId] = useState<string | null>(null);
   const [editAvatar, setEditAvatar] = useState(user?.avatar || '');
   const [editBanner, setEditBanner] = useState(user?.bannerColor || '');
+  const [followers, setFollowers] = useState<User[]>([]);
+  const [following, setFollowing] = useState<User[]>([]);
+  const [loadingSocial, setLoadingSocial] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -78,10 +86,25 @@ export const Profile = () => {
 
   useEffect(() => {
     setEditName(user?.name || '');
+    setEditBio(user?.bio || '');
     setEditAvatar(user?.avatar || '');
     setEditBanner(user?.bannerColor || '');
     
     if (user?.id) {
+        const fetchSocialData = async () => {
+          setLoadingSocial(true);
+          try {
+            const allUsers = await dbService.getUsers();
+            setFollowers(allUsers.filter(u => user.followerIds?.includes(u.id)));
+            setFollowing(allUsers.filter(u => user.followingIds?.includes(u.id)));
+          } catch (err) {
+            console.error("Failed to fetch social data", err);
+          } finally {
+            setLoadingSocial(false);
+          }
+        };
+        fetchSocialData();
+        
         const fetchMissionStats = async () => {
             try {
                 const enrs = await dbService.getEnrollmentsByStudent(user.id);
@@ -119,6 +142,7 @@ export const Profile = () => {
     try {
       const updateData = {
         name: editName.trim(),
+        bio: editBio.trim(),
         avatar: editAvatar.trim(),
         bannerColor: editBanner.trim(),
         updatedAt: Date.now()
@@ -237,6 +261,7 @@ export const Profile = () => {
   const currentName = isEditing ? editName : user.name;
   const currentAvatar = isEditing ? editAvatar : user.avatar;
   const currentBanner = isEditing ? editBanner : user.bannerColor;
+  const currentBio = isEditing ? editBio : user.bio;
 
   return (
     <div className="max-w-6xl mx-auto px-4 space-y-6 pb-12">
@@ -352,7 +377,18 @@ export const Profile = () => {
                       autoFocus
                     />
                   ) : (
-                    <h1 className="text-3xl md:text-4xl font-black text-text-primary hover:text-brand-gold transition-colors cursor-default">{currentName}</h1>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-3">
+                        <h1 className="text-3xl md:text-4xl font-black text-text-primary hover:text-brand-gold transition-colors cursor-default">{currentName}</h1>
+                        <PresenceDot status={user.presence} showLabel className="hidden md:flex ml-2" />
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs font-mono font-bold text-brand-gold bg-bg-surface px-2 py-0.5 rounded-lg border border-brand-gold/20 shadow-sm">
+                          #{user.luminaId || getShortId(user.id)}
+                        </span>
+                        <PresenceDot status={user.presence} className="md:hidden" />
+                      </div>
+                    </div>
                   )}
                   {user.inventory?.includes('badge_scholar') && !isEditing && (
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-1.5 rounded-xl shadow-lg shadow-indigo-200 animate-pulse" title="Scholar Badge">
@@ -376,9 +412,17 @@ export const Profile = () => {
                   )}
                 </div>
                 <div className="flex flex-wrap items-center gap-3 md:gap-4 text-text-secondary font-medium text-sm mt-3">
+                  <div className="flex items-center gap-3 mr-2">
+                    <button onClick={() => setActiveTab('social')} className="hover:text-[#D4AF37] transition-colors flex items-center gap-1">
+                      <span className="font-black text-text-primary">{(user.followerIds || []).length}</span> <span className="uppercase tracking-widest text-[9px] font-bold">Followers</span>
+                    </button>
+                    <button onClick={() => setActiveTab('social')} className="hover:text-[#D4AF37] transition-colors flex items-center gap-1">
+                      <span className="font-black text-text-primary">{(user.followingIds || []).length}</span> <span className="uppercase tracking-widest text-[9px] font-bold">Following</span>
+                    </button>
+                  </div>
                   <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-text-secondary bg-bg-main border border-border-main px-3 py-1 rounded-lg">
-                    ID: {getShortId(user.id)} 
-                    <button onClick={() => copyToClipboard(getShortId(user.id))} className="ml-1 hover:text-brand-gold transition-colors"><Copy className="w-3.5 h-3.5" /></button>
+                    ID: {user.luminaId || user.id} 
+                    <button onClick={() => copyToClipboard(user.luminaId || user.id)} className="ml-1 hover:text-brand-gold transition-colors"><Copy className="w-3.5 h-3.5" /></button>
                   </span>
                   {user.role === 'superadmin' ? (
                       <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-bg-main bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg shadow-rose-200 px-3 py-1 rounded-lg border border-rose-400">
@@ -395,6 +439,23 @@ export const Profile = () => {
                   )}
                   <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-brand-gold bg-brand-gold/10 border border-amber-100 px-3 py-1 rounded-lg"><Coins className="w-3.5 h-3.5" /> {user.coins} Coins</span>
                 </div>
+
+                {isEditing ? (
+                  <div className="mt-4">
+                    <p className="text-[10px] uppercase font-black text-text-secondary tracking-widest mb-1 mx-1">Your Bio</p>
+                    <textarea 
+                      value={editBio}
+                      onChange={(e) => setEditBio(e.target.value)}
+                      placeholder="Tell the world about your academic goal..."
+                      className="w-full max-w-sm bg-bg-main border-2 border-border-main rounded-2xl px-4 py-3 text-sm font-medium focus:border-brand-gold outline-none transition-all resize-none"
+                      rows={2}
+                    />
+                  </div>
+                ) : currentBio && (
+                  <p className="mt-4 text-sm text-text-secondary font-medium italic border-l-2 border-[#D4AF37] pl-4 py-1 max-w-md">
+                    "{currentBio}"
+                  </p>
+                )}
               </div>
             </div>
 
@@ -411,6 +472,12 @@ export const Profile = () => {
                 </Link>
               )}
               <button 
+                onClick={() => setActiveTab('social')}
+                className={cn("transition-all font-bold text-sm px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2", activeTab === 'social' ? 'bg-[#1A2B48] text-[#D4AF37] hover:bg-black' : 'bg-bg-main text-text-primary hover:bg-border-main')}
+              >
+                <Users className="w-4 h-4" /> <span>Social</span>
+              </button>
+              <button 
                 onClick={() => setActiveTab(activeTab === 'overview' ? 'settings' : 'overview')}
                 className={cn("transition-all font-bold text-sm px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2", activeTab === 'settings' ? 'bg-brand-gold-hover text-bg-main hover:bg-indigo-700' : 'bg-bg-main text-text-primary hover:bg-border-main')}
               >
@@ -422,7 +489,97 @@ export const Profile = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'settings' ? (
+        {activeTab === 'social' ? (
+           <motion.div 
+            key="social"
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+           >
+              <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8">
+                <h3 className="font-black text-text-primary text-xl mb-6 flex items-center justify-between">
+                  <span>Following</span>
+                  <span className="text-sm font-bold bg-[#1A2B48] text-[#D4AF37] px-3 py-1 rounded-full">{(user.followingIds || []).length}</span>
+                </h3>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                  {loadingSocial ? (
+                    <p className="text-center py-4 text-text-secondary text-sm animate-pulse">Scanning connections...</p>
+                  ) : following.length > 0 ? (
+                    following.map(f => (
+                      <Link to={`/leaderboard?search=${f.name}`} key={f.id} className="flex items-center gap-4 p-3 bg-bg-main rounded-2xl border border-border-main hover:border-[#D4AF37]/50 transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
+                          {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
+                            <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{f.avatar || '👤'}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="font-bold text-sm text-text-primary truncate">{f.name}</p>
+                          <p className="text-[10px] font-mono font-bold text-text-secondary uppercase tracking-tighter truncate">{f.luminaId || getShortId(f.id)}</p>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-text-secondary" />
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 bg-bg-main rounded-2xl border border-dashed border-border-main">
+                      <Search className="w-8 h-8 mx-auto mb-2 opacity-20 text-[#1A2B48]" />
+                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">No connections found</p>
+                      <Link to="/leaderboard" className="mt-4 inline-block text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:underline">Find Researchers</Link>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8">
+                <h3 className="font-black text-text-primary text-xl mb-6 flex items-center justify-between">
+                  <span>Followers</span>
+                  <span className="text-sm font-bold bg-[#D4AF37] text-[#1A2B48] px-3 py-1 rounded-full">{(user.followerIds || []).length}</span>
+                </h3>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                  {loadingSocial ? (
+                    <p className="text-center py-4 text-text-secondary text-sm animate-pulse">Syncing lists...</p>
+                  ) : followers.length > 0 ? (
+                    followers.map(f => (
+                      <div key={f.id} className="flex items-center gap-4 p-3 bg-bg-main rounded-2xl border border-border-main transition-all">
+                        <div className="w-10 h-10 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
+                          {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
+                            <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{f.avatar || '👤'}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="font-bold text-sm text-text-primary truncate">{f.name}</p>
+                          <p className="text-[10px] font-mono font-bold text-text-secondary uppercase tracking-tighter truncate">{f.luminaId || getShortId(f.id)}</p>
+                        </div>
+                        <div className="flex gap-2">
+                           {user.followingIds?.includes(f.id) ? (
+                             <span className="text-[9px] font-black uppercase text-text-secondary tracking-widest bg-success-green/10 px-2 py-1 rounded">Mutual</span>
+                           ) : (
+                             <button 
+                              onClick={() => {
+                                dbService.followUser(user.id, f.id);
+                                toast.success(`Following ${f.name}`);
+                              }} 
+                              className="text-[9px] font-black uppercase text-[#D4AF37] tracking-widest bg-[#1A2B48] px-3 py-1 rounded-lg hover:bg-black transition-colors"
+                             >
+                               Follow Back
+                             </button>
+                           )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 bg-bg-main rounded-2xl border border-dashed border-border-main">
+                      <Heart className="w-8 h-8 mx-auto mb-2 opacity-20 text-rose-500" />
+                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">No followers yet</p>
+                      <p className="text-[9px] font-medium text-text-secondary mt-1">Consistency brings respect.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+           </motion.div>
+        ) : activeTab === 'settings' ? (
           <motion.div 
             key="settings"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}

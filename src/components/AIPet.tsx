@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Bot, X, Send, Sparkles, Lightbulb, Coffee, Brain, Heart, Zap, Flame, Smile, Coins, Trophy, BookOpen } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -23,7 +24,11 @@ const TIPS = [
 ];
 
 export const AIPet = () => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const isRankPage = location.pathname.includes('leaderboard');
+  const activeTab = searchParams.get('tab') || 'diamonds';
   const [isOpen, setIsOpen] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const [isWaving, setIsWaving] = useState(false);
@@ -120,7 +125,7 @@ export const AIPet = () => {
     try {
       await dbService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction');
       
-      updateUserBalance(user.coins - chatCost);
+      updateResources({ coins: user.coins - chatCost });
       
       // Visual feedback for coin deduction
       toast.success(`-${chatCost} Coins`, { 
@@ -169,37 +174,42 @@ export const AIPet = () => {
 
   return (
     <>
-       <div className="fixed bottom-40 md:bottom-40 right-4 md:right-8 z-[1000] flex justify-end">
+       <motion.div 
+         className="fixed right-4 md:right-8 z-[1050] flex justify-end"
+         animate={{
+           bottom: isRankPage ? (window.innerWidth < 768 ? 92 : 112) : (window.innerWidth < 768 ? 92 : 112),
+           y: isRankPage ? -150 : 0
+         }}
+         transition={{ type: "spring", stiffness: 200, damping: 25 }}
+       >
         <AnimatePresence mode="wait">
           {!isOpen ? (
             <motion.div 
-              key="pet-button"
+              key="pet-button-container"
               className="relative"
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: petStage.scale }}
               exit={{ opacity: 0, scale: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              <AnimatePresence>
-                {currentTip && (
-                  <motion.div
-                    key="tooltip-tip"
-                    initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                    className="absolute bottom-full right-0 mb-6 bg-bg-surface text-text-primary border border-border-main px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold z-20 tooltip-triangle-tip flex items-start gap-3 w-56 sm:w-64"
+              {currentTip && (
+                <motion.div
+                  key="tooltip-tip"
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                  className="absolute bottom-full right-0 mb-6 bg-bg-surface text-text-primary border border-border-main px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold z-20 tooltip-triangle-tip flex items-start gap-3 w-56 sm:w-64"
+                >
+                  <motion.div 
+                    animate={{ rotate: [0, 15, -15, 0] }} 
+                    transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
+                    className="shrink-0 pt-0.5"
                   >
-                    <motion.div 
-                      animate={{ rotate: [0, 15, -15, 0] }} 
-                      transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
-                      className="shrink-0 pt-0.5"
-                    >
-                      <currentTip.icon className={cn("w-5 h-5", currentTip.color || "text-amber-500")} />
-                    </motion.div>
-                    <span className="leading-snug">{currentTip.text}</span>
+                    <currentTip.icon className={cn("w-5 h-5", currentTip.color || "text-amber-500")} />
                   </motion.div>
-                )}
-              </AnimatePresence>
+                  <span className="leading-snug">{currentTip.text}</span>
+                </motion.div>
+              )}
 
               <motion.button
                 whileHover={{ scale: 1.1 }}
@@ -340,7 +350,7 @@ export const AIPet = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       <style>{`
         .tooltip-triangle::before {

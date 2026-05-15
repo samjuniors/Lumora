@@ -23,9 +23,39 @@ export interface User {
   lastMissedSweep?: number;
   lastSeenVersion?: string;
   xp?: number;
+  lifetimeDiamonds?: number;
+  dailyDiamonds?: number;
+  weeklyDiamonds?: number;
+  lastResetDay?: string;
+  lastResetWeek?: string;
   xpBoosterUntil?: number;
   vipExp?: number;
   vipLevel?: number;
+  level?: number;
+  syndicateId?: string;
+  luminaId?: string;
+  presence?: 'online' | 'idle' | 'offline';
+  lastSeen?: number;
+  followingIds?: string[];
+  followerIds?: string[];
+  bio?: string;
+  academicRoadmap?: string;
+  isOracleUnlocked?: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Syndicate {
+  id: string;
+  name: string;
+  description: string;
+  tag: string;
+  leaderId: string;
+  memberIds: string[];
+  totalScore: number;
+  coinsStaked: number;
+  logo?: string;
+  level: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -81,6 +111,8 @@ export interface Enrollment {
   grade?: number;
   rewardEarned?: number;
   graceDeadline?: number;
+  isDoubleDown?: boolean;
+  stakedAmount?: number;
   updatedAt: number;
 }
 
@@ -152,7 +184,7 @@ export interface PreRegisteredUser {
   createdAt: number;
 }
 
-export type TransactionType = 'transfer' | 'recharge' | 'spend' | 'ai_assessment' | 'enrollment_fee' | 'assignment_reward' | 'assignment_penalty' | 'late_submission_fee' | 'late_enrollment_fee' | 'shop_purchase' | 'daily_reward' | 'achievement_reward' | 'penalty' | 'refund' | 'mission_reward' | 'tax' | 'convert';
+export type TransactionType = 'transfer' | 'recharge' | 'spend' | 'ai_assessment' | 'enrollment_fee' | 'assignment_reward' | 'assignment_penalty' | 'late_submission_fee' | 'late_enrollment_fee' | 'shop_purchase' | 'daily_reward' | 'achievement_reward' | 'penalty' | 'refund' | 'mission_reward' | 'tax' | 'convert' | 'gift';
 
 export type TransactionStatus = 'pending' | 'approved' | 'rejected' | 'completed' | 'revoked';
 
@@ -161,6 +193,7 @@ export interface Transaction {
   senderId: string;
   receiverId: string;
   amount: number;
+  currency?: 'coins' | 'diamonds' | 'xp';
   type: TransactionType;
   status: TransactionStatus;
   utr?: string;

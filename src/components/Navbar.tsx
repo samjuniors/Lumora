@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BookOpen, Coins, LogOut, Award, Calendar, ShieldAlert, Sparkles, Target, ShoppingBag, User, BarChart3, Share2, Zap, Wallet, Settings, UserPlus, Trophy } from 'lucide-react';
+import { BookOpen, Coins, LogOut, Award, Calendar, ShieldAlert, Sparkles, Target, ShoppingBag, User, BarChart3, Share2, Zap, Wallet, Settings, UserPlus, Trophy, Shield } from 'lucide-react';
 import { cn, getUserLevelAndXP } from '../lib/utils';
 import { NotificationDropdown } from './NotificationDropdown';
 import { ShareModal } from './ShareModal';
@@ -41,12 +41,14 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-bg-surface/90 backdrop-blur-md fixed top-0 w-full z-[120] border-b border-border-main/50 pt-[env(safe-area-inset-top)] transition-all">
-        <div className="container mx-auto px-2 sm:px-6 max-w-7xl">
-          <div className="flex h-14 md:h-16 justify-between items-center">
-            <Link to="/dashboard" className="flex items-center group transition-transform hover:scale-[1.02] active:scale-95 shrink lg:mr-8 mr-1 sm:mr-4">
-              <Logo className="w-20 sm:w-28 md:w-32 h-auto text-brand-slate drop-shadow-sm min-w-[70px]" />
-            </Link>
+      <nav className="bg-[#0A0F1A]/95 backdrop-blur-xl fixed top-0 w-full z-[120] border-b border-white/10 pt-[env(safe-area-inset-top)] transition-all">
+        <div className="container mx-auto px-6 sm:px-10 max-w-7xl">
+          <div className="flex h-20 md:h-36 justify-between items-center">
+            <div className="flex-1 flex justify-start">
+              <Link to="/dashboard" className="inline-flex items-center group transition-all hover:scale-105 active:scale-95">
+                <Logo className="w-42 sm:w-54 md:w-72 lg:w-[420px] h-auto text-white drop-shadow-[0_16px_80px_rgba(255,255,255,0.35)] min-w-[165px]" />
+              </Link>
+            </div>
 
             <div className="hidden md:flex items-center space-x-1 lg:space-x-2 mr-auto">
               {(user.role === 'admin' || user.role === 'superadmin') ? (
@@ -61,8 +63,9 @@ export const Navbar = () => {
                 <>
                   <NavLink to="/dashboard" icon={BookOpen}>Home</NavLink>
                   <NavLink to="/assignments" icon={Calendar}>Mission</NavLink>
-                  <NavLink to="/badges" icon={Award}>Badges</NavLink>
-                  <NavLink to="/leaderboard?tab=coins" icon={Trophy}>Rank</NavLink>
+                  <NavLink to="/syndicates" icon={Shield}>Network</NavLink>
+                  <NavLink to="/badges" icon={Award}>Awards</NavLink>
+                  <NavLink to="/leaderboard?tab=diamonds" icon={Trophy}>Rank</NavLink>
                   <NavLink to="/shop" icon={ShoppingBag}>Shop</NavLink>
                 </>
               )}
@@ -77,28 +80,7 @@ export const Navbar = () => {
                   <span>Invite</span>
                 </button>
                 
-                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-cyan-500 px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-cyan-500/20 group shrink-0">
-                  <div className="p-0.5 sm:p-1 bg-cyan-500/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-500" />
-                  </div>
-                  <span className="font-black text-[10px] sm:text-xs md:text-sm tracking-tight truncate">{user.diamonds || 0}</span>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-brand-gold px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-brand-gold/20 group shrink-0">
-                  <div className="p-0.5 sm:p-1 bg-brand-gold/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
-                    <Coins className="h-4 w-4 sm:h-5 sm:w-5 text-brand-gold" />
-                  </div>
-                  <span className="font-black text-[10px] sm:text-xs md:text-sm tracking-tight truncate">{user.coins || 0}</span>
-                </div>
-
-                <div className="hidden sm:flex items-center gap-1 sm:gap-1.5 bg-bg-main text-indigo-500 px-1.5 sm:px-2 py-1 md:px-3 md:py-2 rounded-xl shadow-sm border border-border-main/50 group shrink-0">
-                  <div className="p-0.5 sm:p-1 bg-indigo-500/10 rounded-lg group-hover:scale-110 transition-transform hidden sm:block">
-                    <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-500" />
-                  </div>
-                  <span className="font-black text-[10px] sm:text-xs md:text-sm tracking-tight truncate">{getUserLevelAndXP(user).totalXP} XP</span>
-                </div>
-                
-                <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-3 pl-1 sm:pl-3 shrink-0">
+                <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4 pl-1 sm:pl-4 shrink-0">
                   {(user.role === 'admin' || user.role === 'superadmin') && (
                     <div className="flex items-center gap-1 sm:gap-2">
                       <Link to="/admin?tab=invites" className="flex w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 items-center justify-center bg-bg-main/50 text-text-secondary hover:text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30" title="Invites">
@@ -109,15 +91,18 @@ export const Navbar = () => {
                       </Link>
                     </div>
                   )}
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <NotificationDropdown />
-                    <Link to="/profile" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-xl bg-bg-main flex items-center justify-center overflow-hidden hover:opacity-90 transition-all ring-1 ring-border-main/50 hover:ring-brand-gold/50 shadow-sm" title="Profile">
+          <div className="flex items-center gap-6 sm:gap-10">
+            <div className="relative pr-5 sm:pr-8 border-r border-white/10 group">
+              <NotificationDropdown />
+              <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl -z-10 mx-1" />
+            </div>
+            <Link to="/profile" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-110 active:scale-95 transition-all ring-[2.5px] ring-[#D4AF37] ring-offset-[2px] ring-offset-[#0A0F1A] shadow-[0_0_20px_rgba(212,175,55,0.25)]" title="Profile">
                       {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                         <img src={user.avatar} key={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                       ) : user.avatar ? (
-                        <span className="text-lg sm:text-2xl md:text-3xl">{user.avatar}</span>
+                        <span className="text-xl sm:text-2xl md:text-3xl">{user.avatar}</span>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-bold text-sm sm:text-base uppercase">
+                        <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-bold text-sm sm:text-lg uppercase">
                           {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </div>
                       )}
@@ -134,7 +119,7 @@ export const Navbar = () => {
         "fixed bottom-0 left-0 right-0 z-[999] px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-2 md:hidden",
         "transition-all duration-300"
       )}>
-        <div className="bg-bg-surface/95 backdrop-blur-md border border-border-main/80 rounded-[28px] shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-between w-full h-16 px-2 relative">
+        <div className="bg-[#0A0F1A]/95 backdrop-blur-xl border border-white/10 rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center justify-between w-full h-18 px-2 relative">
           {(user.role === 'admin' || user.role === 'superadmin') ? (
             <>
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
@@ -147,8 +132,9 @@ export const Navbar = () => {
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Home" currentPath={location.pathname} />
               <MobileNavLink to="/assignments" icon={Calendar} label="Mission" currentPath={location.pathname} />
-              <MobileNavLink to="/badges" icon={Award} label="Badges" currentPath={location.pathname} />
-              <MobileNavLink to="/leaderboard?tab=coins" icon={Trophy} label="Rank" currentPath={location.pathname} />
+              <MobileNavLink to="/syndicates" icon={Shield} label="Network" currentPath={location.pathname} />
+              <MobileNavLink to="/badges" icon={Award} label="Awards" currentPath={location.pathname} />
+              <MobileNavLink to="/leaderboard?tab=diamonds" icon={Trophy} label="Rank" currentPath={location.pathname} />
               <MobileNavLink to="/shop" icon={ShoppingBag} label="Shop" currentPath={location.pathname} />
             </>
           )}

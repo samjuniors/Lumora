@@ -53,15 +53,29 @@ service cloud.firestore {
       allow read: if isSignedIn(); 
       allow create: if isSignedIn() && request.auth.uid == userId;
       allow update: if (isSuperAdmin()) || (
-        isSignedIn() && request.auth.uid == userId && (
-          (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt', 'avatar', 'bannerColor', 'theme'])) ||
-          (incoming().diff(existing()).affectedKeys().hasAny(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'lastCollectionTime', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'updatedAt']) && 
-           !incoming().diff(existing()).affectedKeys().hasAny(['role', 'email', 'createdAt']))
+        isSignedIn() && (
+          (request.auth.uid == userId && (
+            (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt', 'avatar', 'bannerColor', 'theme', 'luminaId', 'presence', 'lastSeen', 'bio', 'academicRoadmap', 'followingIds', 'syndicateId', 'followerIds'])) ||
+            (incoming().diff(existing()).affectedKeys().hasAny(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'lastCollectionTime', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'updatedAt']) && 
+             !incoming().diff(existing()).affectedKeys().hasAny(['role', 'email', 'createdAt']))
+          )) ||
+          (request.auth.uid != userId && incoming().diff(existing()).affectedKeys().hasOnly(['followerIds', 'updatedAt']))
         )
       ) || (
         isAtLeastAdmin() && !incoming().diff(existing()).affectedKeys().hasAny(['role', 'email', 'createdAt'])
       );
       allow delete: if isSuperAdmin();
+    }
+
+    match /syndicates/{syndicateId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (
+        resource.data.leaderId == request.auth.uid || 
+        isAtLeastAdmin() ||
+        (incoming().diff(existing()).affectedKeys().hasOnly(['memberIds', 'updatedAt']))
+      );
+      allow delete: if isAtLeastAdmin();
     }
 
     match /assignments/{assignmentId} {

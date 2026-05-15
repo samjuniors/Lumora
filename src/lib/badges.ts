@@ -29,10 +29,10 @@ export const BADGES: BadgeDef[] = [
   { id: 'early_bird', name: 'Early Bird', description: 'Submit in the morning.', icon: '🌅', color: 'bg-orange-300', checkEligibility: (_, subs) => true }, // simplified
   { id: 'persistent', name: 'Persistent', description: 'Miss an assignment but keep going.', icon: '💪', color: 'bg-rose-500', checkEligibility: (_, __, enr) => (enr || []).some(e => e.status === 'missed') },
   { id: 'social_butterfly', name: 'Social Butterfly', description: 'Make a transaction to a friend.', icon: '🦋', color: 'bg-pink-400', checkEligibility: (user) => true }, // Hard to track generically without transactions
-  { id: 'level_5', name: 'Rising Star', description: 'Reach Level 5.', icon: '⭐', color: 'bg-yellow-300', checkEligibility: (user) => (user.xp || 0) >= 500 },
-  { id: 'level_10', name: 'Veteran', description: 'Reach Level 10.', icon: '🛡️', color: 'bg-slate-500', checkEligibility: (user) => (user.xp || 0) >= 1500 },
-  { id: 'level_25', name: 'Master', description: 'Reach Level 25.', icon: '⚜️', color: 'bg-purple-600', checkEligibility: (user) => (user.xp || 0) >= 5000 },
-  { id: 'level_50', name: 'Grandmaster', description: 'Reach Level 50.', icon: '💎', color: 'bg-cyan-500', checkEligibility: (user) => (user.xp || 0) >= 15000 },
+  { id: 'level_5', name: 'Rising Star', description: 'Reach Level 5.', icon: '⭐', color: 'bg-yellow-300', checkEligibility: (user) => { return (user.diamonds || 0) >= 150 } },
+  { id: 'level_10', name: 'Veteran', description: 'Reach Level 10.', icon: '🛡️', color: 'bg-slate-500', checkEligibility: (user) => { return (user.diamonds || 0) >= 300 } },
+  { id: 'level_25', name: 'Master', description: 'Reach Level 25.', icon: '⚜️', color: 'bg-purple-600', checkEligibility: (user) => { return (user.diamonds || 0) >= 1200 } },
+  { id: 'level_50', name: 'Grandmaster', description: 'Reach Level 50.', icon: '💎', color: 'bg-cyan-500', checkEligibility: (user) => { return (user.diamonds || 0) >= 3200 } },
   { id: 'shop_1', name: 'First Purchase', description: 'Buy an item from the shop.', icon: '🛍️', color: 'bg-pink-500', checkEligibility: (user) => (user.inventory || []).length >= 1 },
   { id: 'shop_5', name: 'Collector', description: 'Have 5 items in inventory.', icon: '🎒', color: 'bg-amber-600', checkEligibility: (user) => (user.inventory || []).length >= 5 },
 ];

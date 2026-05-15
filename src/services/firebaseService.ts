@@ -14,12 +14,14 @@ import {
   deleteDoc,
   writeBatch,
   increment,
-  arrayUnion
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { IDatabaseService } from './dbInterface';
-import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType } from '../types';
+import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType, Syndicate } from '../types';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
+import { checkLevelUp } from '../lib/utils';
 
 export class FirebaseService implements IDatabaseService {
   async getUser(userId: string): Promise<User | null> {
@@ -78,6 +80,100 @@ export class FirebaseService implements IDatabaseService {
       handleFirestoreError(error, OperationType.LIST, 'users');
       return [];
     }
+  }
+
+  async getUsers(): Promise<User[]> {
+    return this.getAllUsers();
+  }
+
+  private applyLevelUpNotifications(batch: any, userId: string, levelUpData: ReturnType<typeof checkLevelUp>) {
+    if (!levelUpData.leveledUp) return;
+    
+    const now = Date.now();
+    
+    // Notification for the level up
+    batch.set(doc(db, 'notifications', `LEVEL_UP_${userId}_${levelUpData.newLevel}_${now}`), {
+      id: `LEVEL_UP_${userId}_${levelUpData.newLevel}_${now}`,
+      userId,
+      title: `🎖️ LEVEL UP: ${levelUpData.newLevel}`,
+      message: `Congratulations! You've reached Level ${levelUpData.newLevel}. Your power has increased!`,
+      type: 'success',
+      read: false,
+      createdAt: now
+    });
+
+    // Special rewards for 10th levels
+    levelUpData.rewards.forEach((reward, index) => {
+      batch.set(doc(db, 'notifications', `LEVEL_REWARD_${userId}_${reward.level}_${now}_${index}`), {
+        id: `LEVEL_REWARD_${userId}_${reward.level}_${now}_${index}`,
+        userId,
+        title: `🎁 LEGENDARY REWARD`,
+        message: `For reaching Level ${reward.level}, you've received: ${reward.badge} badge, a new frame, and permanent status boost!`,
+        type: 'alert',
+        read: false,
+        createdAt: now
+      });
+
+      // Grant badge
+      batch.update(doc(db, 'users', userId), {
+        achievements: arrayUnion(reward.badge),
+        inventory: arrayUnion({
+          id: reward.frame,
+          name: `Level ${reward.level} Frame`,
+          type: 'frame',
+          rarity: 'legendary',
+          acquiredAt: now
+        })
+      });
+    });
+  }
+
+  private calculateResourceUpdates(user: User, diamondsToAdd: number, xpToAdd: number = 0) {
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+    
+    const d = new Date(nowIST);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(), 0, 1);
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+
+    const updates: any = {
+      updatedAt: Date.now()
+    };
+
+    // Calculate level up before applying increments
+    const oldTotalXP = (user.xp || 0) + (user.lifetimeDiamonds || 0);
+    const newTotalXP = oldTotalXP + xpToAdd + Math.max(0, diamondsToAdd);
+    const levelUpData = checkLevelUp(oldTotalXP, newTotalXP);
+
+    if (diamondsToAdd !== 0) {
+      updates.diamonds = increment(diamondsToAdd);
+      if (diamondsToAdd > 0) {
+        updates.lifetimeDiamonds = increment(diamondsToAdd);
+        
+        if (user.lastResetDay !== today) {
+          updates.dailyDiamonds = diamondsToAdd;
+          updates.lastResetDay = today;
+        } else {
+          updates.dailyDiamonds = increment(diamondsToAdd);
+        }
+
+        if (user.lastResetWeek !== thisWeek) {
+          updates.weeklyDiamonds = diamondsToAdd;
+          updates.lastResetWeek = thisWeek;
+        } else {
+          updates.weeklyDiamonds = increment(diamondsToAdd);
+        }
+      }
+    }
+
+    if (xpToAdd !== 0) {
+      updates.xp = increment(xpToAdd);
+    }
+    
+    return { updates, levelUpData };
   }
 
   async deleteUser(userId: string): Promise<void> {
@@ -317,9 +413,9 @@ export class FirebaseService implements IDatabaseService {
       p['streaker'] = user.streak || 0;
       
       // Level calculation
-      const currentXP = user.xp || 0;
-      const currentLevel = Math.floor(Math.sqrt(currentXP / 100)) + 1;
-      p['veteran'] = currentLevel;
+      const { getUserLevelAndXP } = await import('../lib/utils');
+      const levelData = getUserLevelAndXP(user);
+      p['veteran'] = levelData.currentLevel;
 
       // Fetch submissions
       const subSnap = await getDocs(query(collection(db, 'submissions'), where('studentId', '==', userId), where('status', '==', 'assessed')));
@@ -342,18 +438,25 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
-  async claimAchievement(userId: string, achievementId: string, reward: { coins: number, xp: number }): Promise<void> {
+  async claimAchievement(userId: string, achievementId: string, reward: { coins: number, diamonds: number }): Promise<void> {
     try {
       const now = Date.now();
-      const batch = writeBatch(db);
       const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) throw new Error("User not found");
+      const user = userSnap.data() as User;
+      
+      const batch = writeBatch(db);
+      
+      const { updates, levelUpData } = this.calculateResourceUpdates(user, reward.diamonds || 0);
       
       batch.update(userRef, {
+        ...updates,
         achievements: arrayUnion(achievementId),
         coins: increment(reward.coins),
-        xp: increment(reward.xp),
-        updatedAt: now
       });
+
+      this.applyLevelUpNotifications(batch, userId, levelUpData);
 
       if (reward.coins > 0) {
         const txId = 'tx_achv_' + now;
@@ -701,12 +804,18 @@ export class FirebaseService implements IDatabaseService {
     try {
       const now = Date.now();
       const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) throw new Error("User not found");
+      const user = userSnap.data() as User;
       
       const batch = writeBatch(db);
+      const { updates, levelUpData } = this.calculateResourceUpdates(user, amount);
+      
       batch.update(userRef, {
-        diamonds: increment(amount),
-        updatedAt: now
+        ...updates,
       });
+
+      this.applyLevelUpNotifications(batch, userId, levelUpData);
       
       const txId = `ADMIN_DIA_${now}_${Math.random().toString(36).substring(7)}`;
       batch.set(doc(db, 'transactions', txId), {
@@ -747,8 +856,8 @@ export class FirebaseService implements IDatabaseService {
       batch.set(notifRef, {
         id: notifRef.id,
         userId,
-        title: '⚡ XP Boost Received',
-        message: `Admin granted you ${amount} bonus XP for: ${reason}`,
+        title: '✨ XP Boost Received',
+        message: `Admin granted you ${amount} XP for: ${reason}`,
         type: 'info',
         read: false,
         createdAt: now
@@ -875,7 +984,8 @@ export class FirebaseService implements IDatabaseService {
 
       const enrSnap = await getDocs(query(collection(db, 'enrollments'), where('studentId', '==', sub.studentId), where('assignmentId', '==', sub.assignmentId)));
       let enrollmentId = enrSnap.empty ? null : enrSnap.docs[0].id;
-      let graceDeadline = enrSnap.empty ? null : enrSnap.docs[0].data().graceDeadline;
+      let enrollmentData = enrSnap.empty ? null : enrSnap.docs[0].data() as Enrollment;
+      let graceDeadline = enrollmentData?.graceDeadline;
 
       // determine grade
       let grade: 'A+' | 'A' | 'B+' | 'B' | 'C' | 'D' | 'F' = 'F';
@@ -892,31 +1002,71 @@ export class FirebaseService implements IDatabaseService {
         const gdl = now + (48 * 60 * 60 * 1000);
         batch.update(doc(db, 'submissions', submissionId), { aiScore: score, aiFeedback: `[GRADE F - COMPULSORY RETEST REQUIRED] ${feedback}`, status: 'rejected', updatedAt: now });
         if (enrollmentId) batch.update(doc(db, 'enrollments', enrollmentId), { status: 'active', graceDeadline: gdl, updatedAt: now });
+        
+        // Fail penalty: small XP reduction
+        batch.update(doc(db, 'users', student.id), { xp: increment(-20), updatedAt: now });
+
         batch.set(doc(db, 'notifications', `NOTIF_RETEST_${submissionId}`), {
-          id: `NOTIF_RETEST_${submissionId}`, userId: student.id, title: '⚠️ Compulsory Retest Required!', message: `You received Grade F for "${assignment.title}". You MUST retake it. 48h grace period.`, type: 'info', read: false, createdAt: now
+          id: `NOTIF_RETEST_${submissionId}`, userId: student.id, title: '⚠️ Mission Failed!', message: `You received Grade F for "${assignment.title}". Deducted 20 XP. You MUST retake it within 48h.`, type: 'alert', read: false, createdAt: now
         });
       } else {
         batch.update(doc(db, 'submissions', submissionId), { aiScore: score, aiFeedback: feedback, status: 'assessed', updatedAt: now });
         
-        const multiplier = grade === 'A+' ? 1.2 : grade === 'A' ? 1.0 : grade === 'B+' ? 0.9 : grade === 'B' ? 0.8 : grade === 'C' ? 0.5 : 0;
-        const isLate = graceDeadline ? (sub.submittedAt > graceDeadline) : (sub.submittedAt > assignment.dueDate);
-        let bonusEarned = (!isLate && multiplier > 0) ? Math.floor(assignment.bonusReward * multiplier) : 0;
+        const gradeMultiplier = grade === 'A+' ? 1.0 : grade === 'A' ? 0.8 : grade === 'B+' ? 0.6 : grade === 'B' ? 0.4 : grade === 'C' ? 0.2 : grade === 'D' ? 0.1 : 0;
         
-        const baseXP = assignment.xpReward || (assignment.isBonus ? 100 : 50);
-        const xpToAward = (student.xpBoosterUntil && student.xpBoosterUntil > now) ? baseXP * 2 : baseXP;
+        // Late Penalty: 10% per day late
+        const dueDate = graceDeadline || assignment.dueDate;
+        const diff = sub.submittedAt - dueDate;
+        const daysLate = Math.max(0, Math.floor(diff / (24 * 60 * 60 * 1000)));
+        const lateMultiplier = Math.max(0.1, 1 - (daysLate * 0.1)); // Minimum 10% reward for any success
+        
+        const rewardMultiplier = gradeMultiplier * lateMultiplier;
+        let bonusEarned = Math.floor(assignment.bonusReward * rewardMultiplier);
+        
+        // Double Down? (2.5x Reward)
+        if (enrollmentData?.isDoubleDown) {
+           bonusEarned = Math.floor(bonusEarned * 2.5);
+        }
+
+        // --- 30% Platform Tax for Admin Profit ---
+        const platformTax = Math.floor(bonusEarned * 0.3);
+        bonusEarned = bonusEarned - platformTax;
+        // ------------------------------------------
+
+        // Diamonds earned through academic success (Slightly boosted to offset coins)
+        const diamondsEarned = Math.floor((score / 5) * (gradeMultiplier)); 
+
+        const gradeXpBonus = grade === 'A+' ? 100 : grade === 'A' ? 75 : grade === 'B+' ? 50 : grade === 'B' ? 25 : 0;
+        const baseXP = (assignment.xpReward || (assignment.isBonus ? 100 : 50)) + gradeXpBonus;
+        const xpAwarded = (student.xpBoosterUntil && student.xpBoosterUntil > now) ? baseXP * 2 : baseXP;
 
         if (enrollmentId) batch.update(doc(db, 'enrollments', enrollmentId), { status: 'graded', grade: score, rewardEarned: bonusEarned, updatedAt: now });
         
-        batch.update(doc(db, 'users', student.id), { coins: increment(bonusEarned), xp: increment(xpToAward), updatedAt: now });
+        const { updates, levelUpData } = this.calculateResourceUpdates(student, diamondsEarned, xpAwarded);
+
+        batch.update(doc(db, 'users', student.id), { 
+          ...updates,
+          coins: increment(bonusEarned), 
+          taxWallet: increment(platformTax),
+        });
+
+        this.applyLevelUpNotifications(batch, student.id, levelUpData);
 
         if (bonusEarned > 0) {
           batch.set(doc(db, 'transactions', `reward_${submissionId}`), {
-            id: `reward_${submissionId}`, senderId: 'SYSTEM', receiverId: student.id, amount: bonusEarned, type: 'assignment_reward', status: 'completed', timestamp: now, message: `Reward: ${assignment.title} (Grade ${grade})`
+            id: `reward_${submissionId}`, senderId: 'SYSTEM', receiverId: student.id, amount: bonusEarned, type: 'assignment_reward', status: 'completed', timestamp: now, message: `Reward: ${assignment.title} (Grade ${grade}${daysLate > 0 ? `, ${daysLate}d Late` : ''})`
           });
+        }
+        
+        if (diamondsEarned > 0) {
+           const dTxId = `dia_reward_${submissionId}`;
+           batch.set(doc(db, 'transactions', dTxId), {
+             id: dTxId, senderId: 'SYSTEM', receiverId: student.id, amount: diamondsEarned, currency: 'diamonds', type: 'assignment_reward', status: 'completed', timestamp: now, message: `Diamonds: Academic Success (${grade})`
+           });
         }
 
         batch.set(doc(db, 'notifications', `NOTIF_GRADE_${submissionId}`), {
-          id: `NOTIF_GRADE_${submissionId}`, userId: student.id, title: `Assignment Graded: ${grade}`, message: `Your submission for "${assignment.title}" scored ${score}%. ${bonusEarned > 0 ? `Earned 🪙${bonusEarned} coins!` : 'Mission completed.'}`, type: 'success', read: false, createdAt: now
+          id: `NOTIF_GRADE_${submissionId}`, userId: student.id, title: `Mission Rated: ${grade}`, message: `Score: ${score}%. ${bonusEarned > 0 ? `Earnt 🪙${bonusEarned} coins!` : 'Mission completed.'} +${xpAwarded} XP ${diamondsEarned > 0 ? `& 💎${diamondsEarned} Diamonds` : ''}`, type: 'success', read: false, createdAt: now
         });
       }
 
@@ -1132,7 +1282,10 @@ export class FirebaseService implements IDatabaseService {
           penalizedCount++;
           const enrId = enr?.id || `enr_pen_${now}_${s.id}_${a.id}`;
           
-          const finalPenalty = Math.min(a.penaltyFee || 0, 50);
+          let basePenalty = a.penaltyFee || 0;
+          if (enr?.isDoubleDown) basePenalty *= 2;
+          const finalPenalty = Math.min(basePenalty, 100);
+          
           const currentCoins = s.coins || 0;
           const penaltyToApply = Math.min(finalPenalty, currentCoins);
           
@@ -1151,14 +1304,14 @@ export class FirebaseService implements IDatabaseService {
           if (penaltyToApply > 0) {
             batch.update(doc(db, 'users', s.id), {
               coins: increment(-penaltyToApply),
-              xp: increment(-Math.floor((a.xpReward || 50) * 0.5)),
+              diamonds: increment(-Math.floor((a.xpReward || 50) * 0.5)),
               updatedAt: now
             });
             opCount++;
 
             const txId = `tx_pen_${now}_${s.id}_${a.id}`;
             batch.set(doc(db, 'transactions', txId), {
-              id: txId, senderId: s.id, receiverId: 'SYSTEM', amount: penaltyToApply, type: 'assignment_penalty', status: 'completed', timestamp: now, message: `Auto-penalty: Missed ${a.title} (Capped at 50)`
+              id: txId, senderId: s.id, receiverId: 'SYSTEM', amount: penaltyToApply, type: 'assignment_penalty', status: 'completed', timestamp: now, message: `Auto-penalty: Missed ${a.title}${enr?.isDoubleDown ? ' (Double Down Failure)' : ''}`
             });
             opCount++;
           }
@@ -1176,6 +1329,35 @@ export class FirebaseService implements IDatabaseService {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'penalty_sweep');
       return { penalizedCount: 0 };
+    }
+  }
+
+  // Syndicate Methods
+  async getAllSyndicates(): Promise<Syndicate[]> {
+    try {
+      const snap = await getDocs(collection(db, 'syndicates'));
+      return snap.docs.map(d => ({ id: d.id, ...d.data() } as Syndicate));
+    } catch (e) {
+      handleFirestoreError(e, OperationType.GET, 'syndicates');
+      return [];
+    }
+  }
+
+  async createSyndicate(data: Omit<Syndicate, 'id'>): Promise<string> {
+    try {
+      const docRef = await addDoc(collection(db, 'syndicates'), data);
+      return docRef.id;
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, 'syndicates');
+      return '';
+    }
+  }
+
+  async updateSyndicate(id: string, data: Partial<Syndicate>): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'syndicates', id), data);
+    } catch (e) {
+      handleFirestoreError(e, OperationType.UPDATE, `syndicates/${id}`);
     }
   }
 
@@ -1388,17 +1570,42 @@ export class FirebaseService implements IDatabaseService {
       const receiveAmount = amount - taxAmount;
 
       if (!isAdmin) {
+        // Gifting earns XP for the sender (10% of amount)
+        const xpEarned = Math.floor(amount * 0.1);
         batch.update(senderRef, {
           coins: increment(-amount),
-          xp: increment(amount),
+          xp: increment(xpEarned),
           updatedAt: now
         });
+        
+        if (xpEarned > 0) {
+           const xpTxId = 'tx_gift_xp_' + now + Math.random().toString(36).substring(7);
+           batch.set(doc(db, 'transactions', xpTxId), {
+             id: xpTxId,
+             senderId: 'SYSTEM',
+             receiverId: senderId,
+             amount: xpEarned,
+             currency: 'xp',
+             type: 'gift',
+             status: 'completed',
+             message: `XP earned for gifting to ${receiverId}`,
+             timestamp: now,
+           });
+        }
       }
 
+      const receiverSnap = await getDoc(receiverRef);
+      if (!receiverSnap.exists()) throw new Error("Receiver not found");
+      const receiver = receiverSnap.data() as User;
+
+      const { updates, levelUpData } = this.calculateResourceUpdates(receiver, receiveAmount);
+
       batch.update(receiverRef, {
-        diamonds: increment(receiveAmount),
-        updatedAt: now
+        ...updates,
+        coins: increment(receiveAmount),
       });
+
+      this.applyLevelUpNotifications(batch, receiver.id, levelUpData);
 
       // Handle tax
       if (taxAmount > 0) {
@@ -1435,6 +1642,17 @@ export class FirebaseService implements IDatabaseService {
         timestamp: now,
       });
 
+      const notifRef = doc(collection(db, 'notifications'));
+      batch.set(notifRef, {
+        id: notifRef.id,
+        userId: receiverId,
+        title: '💎 Diamonds & Coins Received!',
+        message: `You received ${receiveAmount} coins and ${receiveAmount} diamonds!`,
+        type: 'success',
+        read: false,
+        createdAt: now
+      });
+
       await batch.commit();
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, 'users');
@@ -1452,7 +1670,7 @@ export class FirebaseService implements IDatabaseService {
       const currentDiamonds = user.diamonds || 0;
       if (currentDiamonds < diamondsAmount) throw new Error("Insufficient diamonds");
 
-      const coinsToAdd = diamondsAmount * 0.7;
+      const coinsToAdd = Math.floor(diamondsAmount / 7);
 
       const batch = writeBatch(db);
       batch.update(userRef, {
@@ -1467,7 +1685,8 @@ export class FirebaseService implements IDatabaseService {
         senderId: userId,
         receiverId: userId,
         amount: diamondsAmount,
-        type: 'transfer',
+        currency: 'diamonds',
+        type: 'convert',
         status: 'completed',
         message: 'Converted ' + diamondsAmount + ' diamonds to ' + coinsToAdd + ' coins',
         timestamp: now
@@ -1483,16 +1702,27 @@ export class FirebaseService implements IDatabaseService {
     try {
       const now = Date.now();
       const userRef = doc(db, 'users', userId);
+
+      // 30% Platform Tax
+      const platformTax = Math.floor(coins * 0.3);
+      const studentReward = coins - platformTax;
       
       const batch = writeBatch(db);
       const updates: any = {
         lastCollectionTime: now,
-        coins: increment(coins),
+        coins: increment(studentReward),
+        taxWallet: increment(platformTax),
         updatedAt: now
       };
       
       if (diamonds > 0) {
-        updates.diamonds = increment(diamonds);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const user = userSnap.data() as User;
+          const { updates: resourceUpdates, levelUpData } = this.calculateResourceUpdates(user, diamonds);
+          Object.assign(updates, resourceUpdates);
+          this.applyLevelUpNotifications(batch, userId, levelUpData);
+        }
       }
 
       batch.update(userRef, updates);
@@ -1537,7 +1767,10 @@ export class FirebaseService implements IDatabaseService {
       if (reward.type === 'coins') {
         updates.coins = increment(reward.value as number);
       } else if (reward.type === 'diamonds') {
-        updates.diamonds = increment(reward.value as number);
+        const user = userSnap.data() as User;
+        const { updates: resourceUpdates, levelUpData } = this.calculateResourceUpdates(user, reward.value as number);
+        Object.assign(updates, resourceUpdates);
+        this.applyLevelUpNotifications(batch, user.id, levelUpData);
       } else if (reward.type === 'penalty') {
         const penaltyAmount = Math.min(Math.abs(reward.value as number), 50);
         const penaltyToApply = Math.min(penaltyAmount, currentCoins);
@@ -1569,5 +1802,80 @@ export class FirebaseService implements IDatabaseService {
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${userId}`);
     }
+  }
+
+  // Social & Presence Methods
+  async followUser(followerId: string, targetId: string): Promise<void> {
+    try {
+      const batch = writeBatch(db);
+      const now = Date.now();
+      
+      batch.update(doc(db, 'users', followerId), { 
+        followingIds: arrayUnion(targetId),
+        updatedAt: now 
+      });
+      batch.update(doc(db, 'users', targetId), { 
+        followerIds: arrayUnion(followerId),
+        updatedAt: now 
+      });
+      
+      const notifId = `NOTIF_FOLLOW_${followerId}_${targetId}_${now}`;
+      batch.set(doc(db, 'notifications', notifId), {
+        id: notifId,
+        userId: targetId,
+        title: '👥 New Follower',
+        message: 'A peer is now tracking your progress!',
+        type: 'info',
+        read: false,
+        createdAt: now
+      });
+      
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `users/${followerId}`);
+    }
+  }
+
+  async unfollowUser(followerId: string, targetId: string): Promise<void> {
+    try {
+       const batch = writeBatch(db);
+       batch.update(doc(db, 'users', followerId), { 
+         followingIds: arrayRemove(targetId),
+         updatedAt: Date.now() 
+       });
+       batch.update(doc(db, 'users', targetId), { 
+         followerIds: arrayRemove(followerId),
+         updatedAt: Date.now() 
+       });
+       await batch.commit();
+    } catch (error) {
+       handleFirestoreError(error, OperationType.WRITE, `users/${followerId}`);
+    }
+  }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        presence,
+        lastSeen: Date.now()
+      });
+    } catch (error) {
+       // Suppress presence errors to avoid UI noise
+    }
+  }
+
+  async generateLuminaId(userId: string): Promise<string> {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+    const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    const lid = `LMN-${randomChar}${randomNum}`;
+    
+    // Check if exists
+    const q = query(collection(db, 'users'), where('luminaId', '==', lid), fsLimit(1));
+    const snap = await getDocs(q);
+    if (!snap.empty) return this.generateLuminaId(userId);
+    
+    await updateDoc(doc(db, 'users', userId), { luminaId: lid });
+    return lid;
   }
 }

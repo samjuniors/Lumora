@@ -45,7 +45,7 @@ export const DailyRewardModal = () => {
   const generateReward = (): DailyReward => {
     const roll = Math.random();
     
-    if (roll < 0.15) { // 15% chance for a temporary item
+    if (roll < 0.10) { // 10% chance for a temporary item
       const items = [
         { label: 'Gold Frame', id: 'frame_gold', duration: 1 },
         { label: 'Neon Glow Frame', id: 'frame_neon', duration: 3 },
@@ -59,32 +59,32 @@ export const DailyRewardModal = () => {
         icon: <Zap className="w-10 h-10 text-amber-400" />,
         duration: item.duration
       };
-    } else if (roll < 0.35) { // 20% chance for penalty
-      const penaltyVal = Math.floor(Math.random() * 25) + 1; // 1 to 25 coins penalty
+    } else if (roll < 0.30) { // 20% chance for penalty
+      const penaltyVal = Math.floor(Math.random() * 20) + 1; // 1 to 20 coins penalty
       return {
          type: 'penalty',
          value: penaltyVal,
          label: `-${penaltyVal} Coins (Unlucky Drop!)`,
          icon: <Zap className="w-10 h-10 text-red-500" />
       };
-    } else if (roll < 0.50) { // 15% chance for diamonds
-      const diamondVal = Math.floor(Math.random() * 5) + 1; // 1 to 5 diamonds
-      return {
-        type: 'diamonds' as any,
-        value: diamondVal,
-        label: `${diamondVal} Diamonds`,
-        icon: <Star className="w-10 h-10 text-cyan-400" />
-      };
-    } else if (roll < 0.7) { // 20% chance for XP boost
-      const xpVal = Math.floor(Math.random() * 100) + 1; // 1 to 100 XP
+    } else if (roll < 0.60) { // 30% chance for XP boost
+      const xpVal = Math.floor(Math.random() * 150) + 50; // 50 to 200 XP
       return {
         type: 'xp',
         value: xpVal,
         label: `${xpVal} Mission XP`,
         icon: <Star className="w-10 h-10 text-indigo-400" />
       };
-    } else { // 30% chance for coins
-      const coinVal = Math.floor(Math.random() * 10) + 1; // 1 to 10 coins
+    } else if (roll < 0.85) { // 25% chance for diamonds
+      const diamondVal = Math.floor(Math.random() * 3) + 1; // 1 to 3 diamonds
+      return {
+        type: 'diamonds' as any,
+        value: diamondVal,
+        label: `${diamondVal} Diamonds`,
+        icon: <Star className="w-10 h-10 text-cyan-400" />
+      };
+    } else { // 15% chance for coins
+      const coinVal = Math.floor(Math.random() * 3) + 1; // 1 to 3 coins
       return {
         type: 'coins',
         value: coinVal,

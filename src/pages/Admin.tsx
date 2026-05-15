@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbProvider';
 import { InviteCode, User, Role, Transaction, PlatformSettings, Assignment, Submission, AssignmentTemplate, RechargeRequest, Enrollment, Notification } from '../types';
-import { ShieldAlert, Trash2, Edit2, Check, Plus, X, Shield, Users, KeyRound, Wallet, Settings, Clock, CheckCircle, BarChart3, TrendingUp, Search, Filter, ArrowUpRight, GraduationCap, Coins, Target, Copy, Award, Gift, Eye, ThumbsUp, ThumbsDown, Zap, Image as ImageIcon, Bell, Sparkles, BrainCircuit, Menu, Mail, Loader2, ShieldCheck, AlertCircle, Send, RotateCcw, User as UserIcon, UserPlus } from 'lucide-react';
+import { ShieldAlert, Trash2, Edit2, Check, Plus, X, Shield, Users, KeyRound, Wallet, Settings, Clock, CheckCircle, BarChart3, TrendingUp, Search, Filter, ArrowUpRight, GraduationCap, Coins, Target, Copy, Award, Gift, Eye, ThumbsUp, ThumbsDown, Zap, Image as ImageIcon, Bell, Sparkles, BrainCircuit, Menu, Mail, Loader2, ShieldCheck, AlertCircle, Send, RotateCcw, User as UserIcon, UserPlus, Bot } from 'lucide-react';
 import { AdminAnalytics } from './AdminAnalytics';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { format, subDays, startOfDay } from 'date-fns';
@@ -16,12 +16,12 @@ import { GoogleGenAI } from "@google/genai";
 import ReactMarkdown from 'react-markdown';
 
 const GRADE_REWARDS = {
-    'A+': { min: 95, label: 'Exceptional', multiplier: 1.2, color: 'text-brand-gold', bg: 'bg-brand-gold/10 border-brand-gold/20' },
-    'A': { min: 90, label: 'Excellent', multiplier: 1.0, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-    'B+': { min: 85, label: 'Great', multiplier: 0.9, color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/20' },
-    'B': { min: 80, label: 'Good', multiplier: 0.8, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
-    'C': { min: 70, label: 'Average', multiplier: 0.5, color: 'text-brand-gold', bg: 'bg-brand-gold/10 border-brand-gold/20' },
-    'D': { min: 60, label: 'Marginal', multiplier: 0, color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/20' },
+    'A+': { min: 95, label: 'Exceptional', multiplier: 1.0, color: 'text-brand-gold', bg: 'bg-brand-gold/10 border-brand-gold/20' },
+    'A': { min: 90, label: 'Excellent', multiplier: 0.8, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
+    'B+': { min: 85, label: 'Great', multiplier: 0.6, color: 'text-cyan-500', bg: 'bg-cyan-500/10 border-cyan-500/20' },
+    'B': { min: 80, label: 'Good', multiplier: 0.4, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
+    'C': { min: 70, label: 'Average', multiplier: 0.2, color: 'text-slate-400', bg: 'bg-slate-400/10 border-slate-400/20' },
+    'D': { min: 60, label: 'Marginal', multiplier: 0.1, color: 'text-orange-500', bg: 'bg-orange-500/10 border-orange-500/20' },
     'F': { min: 0, label: 'Fail', multiplier: 0, color: 'text-rose-500', bg: 'bg-rose-500/10 border-rose-500/20' }
 };
 
@@ -1060,28 +1060,63 @@ const AnalyticsOverview = () => {
         totalSubmissions: 0,
         totalCoins: 0,
         avgScore: 0,
+        taxRevenue: 0,
+        penaltyVolume: 0,
+        rechargeVolume: 0
     });
     const [loading, setLoading] = useState(true);
     const [submissionData, setSubmissionData] = useState<any[]>([]);
+    const [economyInsights, setEconomyInsights] = useState<string | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
 
     useEffect(() => {
         fetchStats();
     }, []);
 
+    const generateEconomyInsights = async () => {
+        setIsAnalyzing(true);
+        try {
+            const response = await fetch('/api/ai/economy-insights', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ stats })
+            });
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+            setEconomyInsights(data.text);
+        } catch (err) {
+            console.error(err);
+            toast.error("AI Insight failed");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
     const fetchStats = async () => {
         try {
             setLoading(true);
-            const [users, assignments, submissions] = await Promise.all([
+            const [users, assignments, submissions, transactions, recharges] = await Promise.all([
                 dbService.getAllUsers(),
                 dbService.getAllAssignments(),
-                dbService.getAllSubmissions()
+                dbService.getAllSubmissions(),
+                dbService.getAllTransactions(),
+                dbService.getAllRechargeRequests()
             ]);
 
             const totalCoins = users.reduce((acc, u) => acc + (u.coins || 0), 0);
+            const taxRevenue = users.reduce((acc, u) => acc + (u.taxWallet || 0), 0);
             const assessedSubmissions = submissions.filter(s => s.status === 'assessed');
             const avgScore = assessedSubmissions.length > 0 
                 ? assessedSubmissions.reduce((acc, s) => acc + s.aiScore, 0) / assessedSubmissions.length 
                 : 0;
+
+            const penaltyVolume = transactions
+                .filter(t => t.type === 'penalty' || t.type === 'assignment_penalty')
+                .reduce((acc, t) => acc + t.amount, 0);
+            
+            const rechargeVolume = recharges
+                .filter(r => r.status === 'approved')
+                .reduce((acc, r) => acc + r.amount, 0);
 
             setStats({
                 totalUsers: users.length,
@@ -1090,6 +1125,9 @@ const AnalyticsOverview = () => {
                 totalSubmissions: submissions.length,
                 totalCoins,
                 avgScore: Math.round(avgScore),
+                taxRevenue,
+                penaltyVolume,
+                rechargeVolume
             });
 
             // Prepare chart data for last 7 days
@@ -1125,6 +1163,95 @@ const AnalyticsOverview = () => {
 
     return (
         <div className="space-y-8">
+            {/* Profit Metrics */}
+            <div className="bg-[#1A2B48] rounded-[2.5rem] p-8 text-white shadow-2xl border border-white/5 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                <div className="relative z-10">
+                    <div className="flex justify-between items-center mb-8">
+                        <div>
+                            <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                                <TrendingUp className="text-brand-gold w-8 h-8" />
+                                Platform Revenue
+                            </h2>
+                            <p className="text-white/60 font-medium text-sm mt-1 uppercase tracking-widest">Global Earnings & Profitability</p>
+                        </div>
+                        <button 
+                            onClick={generateEconomyInsights}
+                            disabled={isAnalyzing}
+                            className="bg-brand-gold text-bg-main px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-brand-gold/20 flex items-center gap-2"
+                        >
+                            <Sparkles size={16} />
+                            {isAnalyzing ? "Analyzing..." : "AI Economy Suggest"}
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
+                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Tax Collected (30%)</p>
+                             <div className="flex items-center gap-3">
+                                <div className="p-3 bg-brand-gold/20 rounded-2xl text-brand-gold">
+                                    <ShieldCheck size={24} />
+                                </div>
+                                <div>
+                                    <span className="text-2xl font-black text-white flex items-center gap-1 leading-none">
+                                        <Coins size={20} className="fill-current" />
+                                        {stats.taxRevenue.toLocaleString()}
+                                    </span>
+                                    <p className="text-[10px] text-brand-gold font-bold mt-1">SUPERADMIN WALLET</p>
+                                </div>
+                             </div>
+                        </div>
+
+                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
+                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Penalty Revenue</p>
+                             <div className="flex items-center gap-3">
+                                <div className="p-3 bg-rose-500/20 rounded-2xl text-rose-500">
+                                    <Zap size={24} />
+                                </div>
+                                <div>
+                                    <span className="text-2xl font-black text-white flex items-center gap-1 leading-none">
+                                        <Coins size={20} className="fill-current" />
+                                        {stats.penaltyVolume.toLocaleString()}
+                                    </span>
+                                    <p className="text-[10px] text-rose-400 font-bold mt-1">FROM MISSED TASKS</p>
+                                </div>
+                             </div>
+                        </div>
+
+                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
+                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Gross Sales (Recharges)</p>
+                             <div className="flex items-center gap-3">
+                                <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-500">
+                                    <Wallet size={24} />
+                                </div>
+                                <div>
+                                    <span className="text-2xl font-black text-white leading-none">
+                                        ${stats.rechargeVolume.toLocaleString()}
+                                    </span>
+                                    <p className="text-[10px] text-emerald-400 font-bold mt-1">REAL MONEY VOLUME</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    {economyInsights && (
+                        <motion.div 
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            className="mt-8 p-6 bg-brand-gold/10 border border-brand-gold/20 rounded-3xl"
+                        >
+                            <div className="flex items-center gap-2 mb-3">
+                                <Bot className="text-brand-gold w-5 h-5" />
+                                <span className="text-[10px] font-black uppercase text-brand-gold tracking-widest">Gemini Economy Analysis</span>
+                            </div>
+                            <div className="text-sm font-medium text-indigo-100 prose prose-invert max-w-none">
+                                <ReactMarkdown>{economyInsights}</ReactMarkdown>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
                     title="Total Students" 
@@ -1878,7 +2005,7 @@ const UsersManager = () => {
     const [roleFilter, setRoleFilter] = useState<Role | 'all'>('student');
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showGrantModal, setShowGrantModal] = useState<{ user: User, type: 'coins' | 'penalty' | 'xp' | 'gift' } | null>(null);
+    const [showGrantModal, setShowGrantModal] = useState<{ user: User, type: 'coins' | 'penalty' | 'diamonds' | 'gift' } | null>(null);
     const [selectedUserForActions, setSelectedUserForActions] = useState<User | null>(null);
 
     const [auditingUser, setAuditingUser] = useState<User | null>(null);
@@ -2099,7 +2226,7 @@ const UsersManager = () => {
             const all = await dbService.getAllUsers();
             all.sort((a,b) => {
                 if (b.coins !== a.coins) return b.coins - a.coins;
-                if ((b.xp || 0) !== (a.xp || 0)) return (b.xp || 0) - (a.xp || 0);
+                if ((b.diamonds || 0) !== (a.diamonds || 0)) return (b.diamonds || 0) - (a.diamonds || 0);
                 return a.name.localeCompare(b.name);
             });
             setUsers(all);
@@ -2452,7 +2579,7 @@ const LeaderboardManager = () => {
     const [students, setStudents] = useState<User[]>([]);
     const [search, setSearch] = useState('');
     const [loading, setLoading] = useState(true);
-    const [showGrantModal, setShowGrantModal] = useState<{ user: User, type: 'coins' | 'penalty' | 'xp' | 'gift' } | null>(null);
+    const [showGrantModal, setShowGrantModal] = useState<{ user: User, type: 'coins' | 'penalty' | 'diamonds' | 'gift' } | null>(null);
 
     useEffect(() => { fetchStudents(); }, []);
 
@@ -2595,9 +2722,9 @@ const LeaderboardManager = () => {
     );
 };
 
-const AdminActionModal = ({ u, onClose, onSuccess, initialType = 'coins' }: { u: User, onClose: () => void, onSuccess: () => void, initialType?: 'coins' | 'gift' | 'xp' | 'penalty' }) => {
+const AdminActionModal = ({ u, onClose, onSuccess, initialType = 'coins' }: { u: User, onClose: () => void, onSuccess: () => void, initialType?: 'coins' | 'gift' | 'diamonds' | 'penalty' }) => {
     const { user: currentUser } = useAuth();
-    const [actionType, setActionType] = useState<'coins' | 'gift' | 'xp' | 'penalty'>(initialType);
+    const [actionType, setActionType] = useState<'coins' | 'gift' | 'diamonds' | 'penalty'>(initialType);
     const [amount, setAmount] = useState(initialType === 'penalty' ? '50' : '100');
     const [selectedItem, setSelectedItem] = useState('');
     const [reason, setReason] = useState(initialType === 'penalty' ? 'Rule Violation: Plagiarism' : 'Achievement Reward');
@@ -2618,7 +2745,7 @@ const AdminActionModal = ({ u, onClose, onSuccess, initialType = 'coins' }: { u:
                 const isPenalty = actionType === 'penalty';
                 const val = parseInt(amount);
                 await dbService.adjustUserBalance(u.id, val, isPenalty, currentUser!.id, reason);
-            } else if (actionType === 'xp') {
+            } else if (actionType === 'diamonds') {
                 const val = parseInt(amount);
                 await dbService.adjustUserXP(u.id, val, currentUser!.id, reason);
             } else if (actionType === 'gift') {
@@ -2665,7 +2792,7 @@ const AdminActionModal = ({ u, onClose, onSuccess, initialType = 'coins' }: { u:
                 </div>
 
                 <div className="flex flex-wrap gap-2 p-1 bg-border-main rounded-2xl mb-6">
-                    {(['coins', 'penalty', 'xp', 'gift'] as const).map(t => (
+                    {(['coins', 'penalty', 'diamonds', 'gift'] as const).map(t => (
                         <button
                             key={t}
                             onClick={() => {
@@ -2700,7 +2827,7 @@ const AdminActionModal = ({ u, onClose, onSuccess, initialType = 'coins' }: { u:
                                 <div className="relative">
                                     {actionType === 'coins' ? <Coins className="absolute left-6 top-1/2 -translate-y-1/2 text-amber-500 w-6 h-6" /> : 
                                      actionType === 'penalty' ? <ShieldAlert className="absolute left-6 top-1/2 -translate-y-1/2 text-rose-500 w-6 h-6" /> :
-                                     <Sparkles className="absolute left-6 top-1/2 -translate-y-1/2 text-brand-gold w-6 h-6" />}
+                                     <Sparkles className="absolute left-6 top-1/2 -translate-y-1/2 text-cyan-400 w-6 h-6" />}
                                     <input 
                                         type="number" 
                                         required 

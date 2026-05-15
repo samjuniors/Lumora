@@ -8,17 +8,17 @@ import { dbService } from '../services/dbProvider';
 export const VersionUpdateModal = () => {
     const { user } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-    const VERSION = "2.0.3";
+    const VERSION = "2.1.0";
 
     useEffect(() => {
         const lastSeenLocal = localStorage.getItem('last_seen_version');
-        const lastSeenUser = user?.lastSeenVersion;
         
-        if (lastSeenLocal !== VERSION && lastSeenUser !== VERSION) {
-            const timer = setTimeout(() => setIsOpen(true), 1500);
+        // Show only if the version has changed and not yet seen locally
+        if (lastSeenLocal !== VERSION) {
+            const timer = setTimeout(() => setIsOpen(true), 1200);
             return () => clearTimeout(timer);
         }
-    }, [user?.lastSeenVersion]);
+    }, []);
 
     const handleClose = async () => {
         localStorage.setItem('last_seen_version', VERSION);
@@ -26,6 +26,7 @@ export const VersionUpdateModal = () => {
         
         if (user?.id) {
             try {
+                // Also persist to DB to stay synced across sessions
                 await dbService.updateUser(user.id, {
                     lastSeenVersion: VERSION,
                     updatedAt: Date.now()
@@ -37,10 +38,10 @@ export const VersionUpdateModal = () => {
     };
 
     const updates = [
-        { icon: <Zap className="text-amber-500" />, title: "Super Admin Minting", desc: "Instantly issue coins without verification hassles through the wallet console." },
-        { icon: <Bell className="text-brand-gold" />, title: "Sleek Mobile UI", desc: "A brand new, compact, card-shuffle admin menu tailored for small screens." },
-        { icon: <Star className="text-purple-500" />, title: "Inline Economy Audit", desc: "Admins can seamlessly adjust transaction values without disruptive popups." },
-        { icon: <Shield className="text-emerald-500" />, title: "Bug Fixes", desc: "Resolved wallet scrolling issues and hid irrelevant profile stats for admins." }
+        { icon: <Zap className="text-brand-gold" />, title: "Diamond Economy", desc: "Level up by collecting Diamonds from achievements, drops, and transacting with peers." },
+        { icon: <Sparkles className="text-brand-gold" />, title: "Peer Boosting", desc: "Send coins to friends; they receive Diamonds 1:1, increasing their tier instantly." },
+        { icon: <Shield className="text-brand-gold" />, title: "Pro Dark Mode", desc: "Consolidated system protocols with a sleek, high-contrast professional interface." },
+        { icon: <Bell className="text-brand-gold" />, title: "Instant Sync", desc: "Optimized transfer speeds and real-time balance updates across your wallet." }
     ];
 
     return (
@@ -51,50 +52,36 @@ export const VersionUpdateModal = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-text-primary/80 backdrop-blur-xl"
+                    className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-slate-950/90 backdrop-blur-md"
                 >
-                    
                     <motion.div
-                        initial={{ scale: 0.9, opacity: 0, y: 40 }}
+                        initial={{ scale: 0.9, opacity: 0, y: 30 }}
                         animate={{ scale: 1, opacity: 1, y: 0 }}
-                        exit={{ scale: 0.9, opacity: 0, y: 40 }}
-                        className="bg-bg-surface border border-border-main rounded-[40px] w-full max-w-xl relative z-10 overflow-hidden shadow-2xl flex flex-col md:flex-row"
+                        exit={{ scale: 0.9, opacity: 0, y: 30 }}
+                        className="bg-[#0A0F1A] border border-white/10 rounded-[32px] w-full max-w-sm relative z-10 overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,1)] ring-1 ring-white/5"
                     >
-                        <div className="md:w-2/5 bg-text-primary p-8 flex flex-col justify-between text-bg-main relative">
-                            <div className="absolute top-0 right-0 w-full h-full bg-brand-gold/10 pointer-events-none" />
-                            <div className="relative">
-                                <div className="inline-flex items-center gap-2 bg-brand-gold/20 text-brand-gold px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-6 border border-brand-gold/20">
-                                    System Protocol
+                        {/* Header Banner */}
+                        <div className="bg-[#1A2B48] p-6 text-center relative overflow-hidden border-b border-white/5">
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-brand-gold/10 blur-[64px] rounded-full" />
+                            <div className="relative z-10">
+                                <div className="inline-flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest mb-4 border border-brand-gold/20">
+                                    <Shield size={10} /> System Protocol
                                 </div>
-                                <h2 className="text-5xl font-black tracking-tighter leading-none mb-1">V{VERSION}</h2>
-                                <p className="text-brand-gold text-sm font-bold uppercase tracking-widest">Quality Patch</p>
-                            </div>
-                            <div className="bg-bg-surface/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm">
-                                <p className="text-[10px] text-bg-main/40 font-bold uppercase tracking-[0.2em] mb-2 leading-none">Security Status</p>
-                                <div className="flex items-center gap-2 text-emerald-400 font-black text-xs">
-                                    <Shield size={14} /> SYSTEM STABLE
-                                </div>
+                                <h2 className="text-4xl font-black text-white tracking-tighter leading-none mb-1 italic">V{VERSION}</h2>
+                                <p className="text-brand-gold/70 text-[10px] font-black uppercase tracking-[0.2em]">Diamond Update</p>
                             </div>
                         </div>
 
-                        <div className="md:w-3/5 p-8 md:p-12">
-                            <div className="flex justify-between items-start mb-8">
-                                <div>
-                                    <h3 className="text-2xl font-black text-text-primary tracking-tight">Mission Update</h3>
-                                    <p className="text-xs text-text-secondary font-bold uppercase tracking-widest mt-1">Version {VERSION} Global Rollout</p>
-                                </div>
-                                <X className="text-text-secondary hover:text-text-primary cursor-pointer" onClick={handleClose} />
-                            </div>
-
-                            <div className="space-y-6 mb-10">
+                        <div className="p-6 md:p-8">
+                            <div className="space-y-5 mb-8">
                                 {updates.map((upd, i) => (
-                                    <div key={i} className="flex gap-4 group">
-                                        <div className="w-10 h-10 bg-bg-main rounded-xl flex items-center justify-center shrink-0 border border-border-main group-hover:bg-bg-surface group-hover:shadow-md transition-all">
+                                    <div key={i} className="flex gap-4 items-start group">
+                                        <div className="w-9 h-9 bg-white/5 rounded-xl flex items-center justify-center shrink-0 border border-white/10 group-hover:border-brand-gold/30 transition-colors">
                                             {upd.icon}
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-text-primary text-sm">{upd.title}</h4>
-                                            <p className="text-xs text-text-secondary font-medium leading-relaxed">{upd.desc}</p>
+                                            <h4 className="font-bold text-white text-sm leading-tight mb-0.5">{upd.title}</h4>
+                                            <p className="text-[11px] text-slate-400 font-medium leading-relaxed">{upd.desc}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -102,10 +89,14 @@ export const VersionUpdateModal = () => {
 
                             <button 
                                 onClick={handleClose}
-                                className="w-full bg-brand-gold hover:bg-brand-gold-hover text-bg-main font-black py-5 rounded-[22px] transition-all flex items-center justify-center gap-3 active:scale-95 shadow-xl shadow-brand-gold/20"
+                                className="w-full bg-brand-gold hover:bg-[#C5A02E] text-[#1A2B48] font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-95 shadow-lg shadow-brand-gold/10 text-sm"
                             >
-                                Continue to Dashboard <ArrowRight size={20} />
+                                Get Started <ArrowRight size={16} />
                             </button>
+
+                            <p className="text-center text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-4">
+                                Auto-Encrypted Handshake Complete
+                            </p>
                         </div>
                     </motion.div>
                 </motion.div>

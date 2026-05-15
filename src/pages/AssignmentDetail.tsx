@@ -26,6 +26,7 @@ import {
   Sparkles,
   Shield,
   Edit,
+  Gem,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "../lib/utils";
@@ -40,7 +41,7 @@ import { ExpandableText } from "../components/ExpandableText";
 export const AssignmentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, updateUserBalance, setUser } = useAuth();
+  const { user, updateResources, setUser } = useAuth();
   const { playSound } = useSound();
 
   const [assignment, setAssignment] = useState<Assignment | null>(null);
@@ -56,6 +57,7 @@ export const AssignmentDetail = () => {
   const [submitting, setSubmitting] = useState(false);
   const [enrolling, setEnrolling] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isDoubleDown, setIsDoubleDown] = useState(false);
 
   const [timeLeftStr, setTimeLeftStr] = useState<string>("");
   const [isTimeUp, setIsTimeUp] = useState(false);
@@ -64,6 +66,8 @@ export const AssignmentDetail = () => {
 
   const [showCompletionMessage, setShowCompletionMessage] = useState(false);
   const [earnedCoins, setEarnedCoins] = useState(0);
+  const [earnedXP, setEarnedXP] = useState(0);
+  const [earnedDiamonds, setEarnedDiamonds] = useState(0);
 
   const [tabSwitches, setTabSwitches] = useState(0);
   const [pasteCount, setPasteCount] = useState(0);
@@ -203,12 +207,16 @@ export const AssignmentDetail = () => {
       consumedLatePass = await consumeItem("late_pass_1");
     }
 
+    const baseFee = isDoubleDown ? assignment.entryFee * 2 : assignment.entryFee;
     const totalFee =
-      assignment.entryFee + (isLateToEnroll && !consumedLatePass ? 30 : 0);
+      baseFee + (isLateToEnroll && !consumedLatePass ? 30 : 0);
 
-    let feeMessage = `It will cost ${assignment.entryFee} coins to take this mission.`;
+    let feeMessage = `It will cost ${baseFee} coins to take this mission.`;
+    if (isDoubleDown) {
+        feeMessage = `HIGH STAKES: It will cost ${baseFee} coins (DOUBLE) to take this mission.`;
+    }
     if (isLateToEnroll && !consumedLatePass) {
-        feeMessage = `It will cost ${assignment.entryFee} coins to take this mission, PLUS a 30 coin late fee. Total: ${totalFee} coins.`;
+        feeMessage += ` PLUS a 30 coin late fee. Total: ${totalFee} coins.`;
     }
 
     if (totalFee > 0 && !window.confirm(`${feeMessage} Are you sure you want to enroll?`)) {
@@ -237,8 +245,9 @@ export const AssignmentDetail = () => {
           type:
             isLateToEnroll && !consumedLatePass
               ? "late_enrollment_fee"
-              : "enrollment_fee",
+              : (isDoubleDown ? "spend" : "enrollment_fee"), // Use spend for double down for now or add new type
           status: "completed",
+          message: isDoubleDown ? "High-Stakes Double Down Enrollment" : undefined,
           timestamp: Date.now(),
         });
       }
@@ -248,6 +257,8 @@ export const AssignmentDetail = () => {
         studentId: user.id,
         enrolledAt: Date.now(),
         status: isLateToEnroll ? "missed" : "active",
+        isDoubleDown: isDoubleDown,
+        stakedAmount: totalFee,
         updatedAt: Date.now(),
       };
       
@@ -255,7 +266,7 @@ export const AssignmentDetail = () => {
       const fullEnroll = { id: enrollId, ...newEnroll };
       
       if (totalFee > 0) {
-        updateUserBalance(user.coins - totalFee);
+        updateResources({ coins: user.coins - totalFee });
       }
       setEnrollment(fullEnroll);
     } catch (err: any) {
@@ -562,6 +573,10 @@ export const AssignmentDetail = () => {
     ? (submission ? submission.submittedAt > enrollment.graceDeadline : Date.now() > enrollment.graceDeadline)
     : (submission ? submission.submittedAt > assignment.dueDate : Date.now() > assignment.dueDate);
 
+  const finalEntryFee = assignment.entryFee * (isDoubleDown ? 2 : 1);
+  const finalBonusReward = isDoubleDown ? Math.floor(assignment.bonusReward * 2.5) : assignment.bonusReward;
+  const finalPenalty = assignment.penaltyFee * (isDoubleDown ? 2 : 1);
+
   const hasNotStarted =
     assignment.startDate && Date.now() < assignment.startDate;
 
@@ -603,20 +618,42 @@ export const AssignmentDetail = () => {
               <h2 className="text-2xl md:text-3xl font-black text-text-primary mb-2">
                 Mission Accomplished!
               </h2>
-              <p className="text-text-secondary text-sm md:text-lg mb-6">
-                You've successfully completed the mission and received your
-                assessment.
+               <p className="text-text-secondary text-sm md:text-lg mb-6">
+                You've successfully completed the mission and submitted for review.
               </p>
 
-              {earnedCoins > 0 && (
-                <div className="bg-brand-gold/20 border border-brand-gold/30 rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <span className="text-amber-800 font-bold mb-1 text-sm md:text-base">
-                    Reward Earned
-                  </span>
-                  <div className="text-2xl md:text-3xl font-black flex items-center gap-2 text-brand-gold">
-                    <Zap className="w-6 h-6 md:w-8 md:h-8 fill-current text-amber-500" />{" "}
-                    {earnedCoins} Coins
-                  </div>
+              {(earnedCoins > 0 || earnedXP > 0 || earnedDiamonds > 0) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-bg-main p-4 rounded-2xl border border-border-main">
+                  {earnedCoins > 0 && (
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] uppercase font-black text-text-secondary mb-1">Coins</span>
+                      <div className="text-xl font-black text-brand-gold flex items-center gap-1">
+                        <Zap className="w-4 h-4 fill-current" /> {earnedCoins}
+                      </div>
+                    </div>
+                  )}
+                   {earnedXP > 0 && (
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] uppercase font-black text-text-secondary mb-1">XP Earned</span>
+                      <div className="text-xl font-black text-indigo-600 flex items-center gap-1">
+                        <Sparkles className="w-4 h-4" /> {earnedXP}
+                      </div>
+                    </div>
+                  )}
+                   {earnedDiamonds > 0 && (
+                    <div className="flex flex-col items-center">
+                      <span className="text-[10px] uppercase font-black text-text-secondary mb-1">Diamonds</span>
+                      <div className="text-xl font-black text-cyan-500 flex items-center gap-1">
+                        <Gem className="w-4 h-4" /> {earnedDiamonds}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="bg-brand-gold/10 p-4 rounded-2xl border border-brand-gold/20">
+                   <p className="text-sm font-bold text-amber-800 italic">
+                      Mission details saved. Awaiting Final Admin Assessment for rewards!
+                   </p>
                 </div>
               )}
 
@@ -799,9 +836,35 @@ export const AssignmentDetail = () => {
             Unlock this Mission
           </h3>
           <p className="text-text-secondary mb-8 font-medium max-w-md mx-auto text-lg leading-relaxed">
-            Commit 🪙 {assignment.entryFee} coins to participate. Succeed to
-            earn 🪙 {assignment.bonusReward} bonus reward.
+            Commit 🪙 {finalEntryFee} coins to participate. Succeed to
+            earn 🪙 {finalBonusReward} bonus reward. Failing to succeed will result in a 🪙 -{finalPenalty} Loss.
           </p>
+
+          <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-3xl group transition-all hover:bg-white/10">
+             <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                   <div className={cn("p-3 rounded-2xl transition-colors", isDoubleDown ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" : "bg-white/10 text-white/40")}>
+                      <Zap size={24} className={isDoubleDown ? "animate-pulse" : ""} />
+                   </div>
+                   <div className="text-left">
+                      <h4 className="text-sm font-black text-white uppercase tracking-wider">Double Down</h4>
+                      <p className="text-[10px] text-white/50 font-bold uppercase">2x Stake | 2.5x Reward | 2x Penalty</p>
+                   </div>
+                </div>
+                <button 
+                  onClick={() => setIsDoubleDown(!isDoubleDown)}
+                  className={cn(
+                    "w-14 h-8 rounded-full relative transition-all duration-300",
+                    isDoubleDown ? "bg-rose-500" : "bg-white/20"
+                  )}
+                >
+                  <motion.div 
+                    animate={{ x: isDoubleDown ? 24 : 4 }}
+                    className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md"
+                  />
+                </button>
+             </div>
+          </div>
 
           {hasNotStarted ? (
             <div className="bg-brand-gold/10 text-brand-gold font-bold p-6 rounded-2xl flex items-center justify-center gap-3 border border-amber-100">
@@ -841,8 +904,8 @@ export const AssignmentDetail = () => {
               className="bg-brand-gold-hover hover:bg-indigo-700 disabled:opacity-50 text-bg-main font-black text-lg py-5 px-8 rounded-2xl transition w-full shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-200"
             >
               {enrolling
-                ? "Unlocking Access..."
-                : `Pay 🪙 ${assignment.entryFee} and Begin`}
+                ? "Securing Stakes..."
+                : `Commit 🪙 ${assignment.entryFee} Stakes & Begin`}
             </motion.button>
           )}
           {user.coins <

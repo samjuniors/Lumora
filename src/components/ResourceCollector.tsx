@@ -8,7 +8,7 @@ import { cn } from '../lib/utils';
 import { playNotificationSound } from '../lib/audio';
 
 export const ResourceCollector = () => {
-  const { user, updateUserBalance } = useAuth();
+  const { user, updateResources } = useAuth();
   const [loading, setLoading] = useState(false);
   const [collected, setCollected] = useState(false);
   
@@ -46,21 +46,75 @@ export const ResourceCollector = () => {
 
     setLoading(true);
     try {
-      // Randomly generate rewards
-      const coinsAmount = Math.floor(Math.random() * 50) + 10;
-      const diamondsAmount = Math.random() > 0.7 ? Math.floor(Math.random() * 3) + 1 : 0; // 30% chance for diamonds
+      // Tiered Reward Calculation
+      const rollout = Math.random();
+      let coinsAmount = 0;
+      let diamondsAmount = 0;
+      let tierName = "Common";
+
+      if (rollout > 0.95) { // 5% Epic
+          tierName = "Epic";
+          coinsAmount = Math.floor(Math.random() * 11) + 20; // 20-30
+          diamondsAmount = Math.floor(Math.random() * 4) + 2; // 2-5
+      } else if (rollout > 0.80) { // 15% Rare
+          tierName = "Rare";
+          coinsAmount = Math.floor(Math.random() * 7) + 6; // 6-12
+          diamondsAmount = 1;
+      } else { // 80% Common
+          tierName = "Common";
+          coinsAmount = Math.floor(Math.random() * 4) + 2; // 2-5
+          diamondsAmount = 0;
+      }
 
       await dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount);
 
-      updateUserBalance((user.coins || 0) + coinsAmount);
+      updateResources({ 
+        coins: (user.coins || 0) + coinsAmount,
+        diamonds: (user.diamonds || 0) + diamondsAmount 
+      });
       playNotificationSound();
-      toast.success(`Collected ${coinsAmount} Coins${diamondsAmount > 0 ? ` & ${diamondsAmount} Diamonds!` : '!'}`);
+      
+      const message = tierName === "Common" 
+        ? `Collected ${coinsAmount} Coins`
+        : `[${tierName}] Found ${coinsAmount} Coins & ${diamondsAmount} Diamonds!`;
+      
+      toast.success(message, { 
+          icon: tierName === "Epic" ? "🔥" : tierName === "Rare" ? "✨" : "⛏️",
+          duration: 4000 
+      });
       
       setCollected(true);
       setTimeout(() => setCollected(false), 3000);
     } catch (e: any) {
       console.error(e);
       toast.error("Failed to collect resources. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFastReset = async () => {
+    if (!user || loading || canCollect) return;
+    const resetCost = 3;
+
+    if ((user.diamonds || 0) < resetCost) {
+      toast.error(`You need ${resetCost} Diamonds for an Instant Reset!`);
+      return;
+    }
+
+    if (!window.confirm(`Spend ${resetCost} Diamonds to reset the collector immediately?`)) return;
+
+    setLoading(true);
+    try {
+      await dbService.updateUser(user.id, { 
+        lastCollectionTime: 0, 
+        diamonds: (user.diamonds || 0) - resetCost 
+      });
+      updateResources({ diamonds: (user.diamonds || 0) - resetCost });
+      toast.success("Collector Reset! Ready to mine.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Failed to reset.");
     } finally {
       setLoading(false);
     }
@@ -85,7 +139,7 @@ export const ResourceCollector = () => {
                </div>
             </div>
 
-            <div className="flex items-center justify-center shrink-0">
+            <div className="flex items-center justify-center shrink-0 gap-3">
                <AnimatePresence mode="wait">
                  {collected ? (
                      <motion.div
@@ -97,26 +151,40 @@ export const ResourceCollector = () => {
                          <Sparkles className="w-5 h-5"/> Collected!
                      </motion.div>
                  ) : (
-                     <button
-                         onClick={handleCollect}
-                         disabled={!canCollect || loading}
-                         className={cn(
-                             "relative w-full md:w-auto px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden",
-                             canCollect 
-                               ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:shadow-orange-500/50 hover:-translate-y-1" 
-                               : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10"
-                         )}
-                     >
-                        {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Not Ready'}
-                        {canCollect && (
-                            <motion.div 
-                              className="absolute inset-0 bg-white/20"
-                              initial={{ x: "-100%" }}
-                              animate={{ x: "200%" }}
-                              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                            />
+                     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                        <button
+                            onClick={handleCollect}
+                            disabled={!canCollect || loading}
+                            className={cn(
+                                "relative w-full md:w-auto px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden",
+                                canCollect 
+                                  ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:shadow-orange-500/50 hover:-translate-y-1" 
+                                  : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10"
+                            )}
+                        >
+                            {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Not Ready'}
+                            {canCollect && (
+                                <motion.div 
+                                  className="absolute inset-0 bg-white/20"
+                                  initial={{ x: "-100%" }}
+                                  animate={{ x: "200%" }}
+                                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                                />
+                            )}
+                        </button>
+
+                        {!canCollect && (
+                            <button
+                                onClick={handleFastReset}
+                                disabled={loading}
+                                className="px-4 py-3 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold text-xs hover:bg-cyan-500/20 transition-all flex items-center justify-center gap-2 group/reset whitespace-nowrap"
+                                title="Reset cooldown for 3 Diamonds"
+                            >
+                                <Gem className="w-4 h-4 group-hover/reset:rotate-12 transition-transform" />
+                                Reset for 3
+                            </button>
                         )}
-                     </button>
+                     </div>
                  )}
                </AnimatePresence>
             </div>

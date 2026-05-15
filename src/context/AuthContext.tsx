@@ -10,7 +10,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: () => Promise<void>;
   logOut: () => Promise<void>;
-  updateUserBalance: (newBalance: number) => void;
+  updateResources: (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
@@ -20,7 +20,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   signIn: async () => {},
   logOut: async () => {},
-  updateUserBalance: () => {},
+  updateResources: () => {},
   setUser: () => {}
 });
 
@@ -29,9 +29,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const updateUserBalance = (newBalance: number) => {
+  const updateResources = (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => {
     if (user) {
-      setUser({ ...user, coins: newBalance });
+      setUser({ ...user, ...resources });
     }
   };
 
@@ -48,6 +48,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             if ((fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') && data.role !== 'superadmin') {
               dbService.updateUser(fUser.uid, { role: 'superadmin' });
             }
+            
+            // Generate Lumina ID if missing
+            if (!data.luminaId) {
+              dbService.generateLuminaId(fUser.uid);
+            }
+
             setUser(data);
             setLoading(false);
           } else if (fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') {
@@ -109,7 +115,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, user, loading, signIn, logOut, updateUserBalance, setUser }}>
+    <AuthContext.Provider value={{ firebaseUser, user, loading, signIn, logOut, updateResources, setUser }}>
       {children}
     </AuthContext.Provider>
   );

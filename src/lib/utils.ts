@@ -14,11 +14,49 @@ export const getShortId = (id?: string) => {
   return Math.abs(hash % 9000000 + 1000000).toString(); // 7 digit number
 }
 
+export function checkLevelUp(oldTotalXP: number, newTotalXP: number) {
+  const oldLevelData = getLevelFromTotalXP(oldTotalXP);
+  const newLevelData = getLevelFromTotalXP(newTotalXP);
+  
+  if (newLevelData.level > oldLevelData.level) {
+    const rewards: any[] = [];
+    // Check for every 10th level
+    for (let lv = oldLevelData.level + 1; lv <= newLevelData.level; lv++) {
+      if (lv % 10 === 0) {
+        rewards.push({
+          level: lv,
+          type: 'special',
+          badge: `level_${lv}_master`,
+          frame: `frame_lv_${lv}`,
+          perks: ['increased_power', 'exclusive_gift']
+        });
+      }
+    }
+    return { leveledUp: true, oldLevel: oldLevelData.level, newLevel: newLevelData.level, rewards };
+  }
+  return { leveledUp: false };
+}
+
+function getLevelFromTotalXP(totalXP: number) {
+  let level = 1;
+  let accumulatedXP = 0;
+  while (true) {
+    // Harder Scaling: Base 1200, increases by 800 per level
+    const xpNeeded = 1200 + (level - 1) * 800;
+    if (totalXP >= accumulatedXP + xpNeeded) {
+      accumulatedXP += xpNeeded;
+      level++;
+    } else {
+      return { level, xpInCurrent: totalXP - accumulatedXP, xpMax: xpNeeded };
+    }
+  }
+}
+
 export function getUserLevelAndXP(user: any) {
-  if (!user) return { currentLevel: 1, xpCurrent: 0, xpMax: 100, xpProgress: 0, achievementsSummary: {}, totalXP: 0 };
+  if (!user) return { currentLevel: 1, xpCurrent: 0, xpMax: 1000, xpProgress: 0, achievementsSummary: {}, totalXP: 0 };
   
   if (user.role === 'superadmin') {
-     return { currentLevel: 100, xpCurrent: 0, xpMax: 100, xpProgress: 100, achievementsSummary: user.achievements || {}, totalXP: 1000000 };
+     return { currentLevel: 100, xpCurrent: 0, xpMax: 1000, xpProgress: 100, achievementsSummary: user.achievements || {}, totalXP: 1000000 };
   }
 
   const achievementsSummary = (user.achievements || []).reduce((acc: any, achId: string) => {
@@ -32,47 +70,19 @@ export function getUserLevelAndXP(user: any) {
     return acc;
   }, {});
 
-  // Calculate total tiers unlocked across all achievements
-  const totalTiers = Object.values(achievementsSummary).reduce(
-    (sum: number, val: any) => sum + (typeof val === 'number' ? val : 1), 0
-  );
+  const totalXP = (user.xp || 0) + (user.lifetimeDiamonds || 0);
+  const { level, xpInCurrent, xpMax } = getLevelFromTotalXP(totalXP);
+  const xpProgress = (xpInCurrent / xpMax) * 100;
 
-  const xpFromAchievements = (totalTiers as number) * 500;
-  const baseXP = user.xp || 0;
-  
-  // XP only increases by missions, achievements, drops, and admin gifts
-  const totalXP = baseXP + xpFromAchievements;
-  
-  // Custom non-linear leveling with "milestone walls"
-  let level = 1;
-  let remainingXP = totalXP;
-  
-  while (true) {
-    // Base requirement for level n is usually (n * 1000)
-    // But we'll make it harder at intervals
-    const milestoneGroup = Math.floor(level / 10);
-    let requirement = 1000 + (milestoneGroup * 2000);
-
-    // Specific thresholds: 9->10, 19->20, 29->30 are significantly harder
-    if ((level + 1) % 10 === 0) {
-      requirement *= 5; // The "Wall"
-    }
-
-    if (remainingXP >= requirement) {
-      remainingXP -= requirement;
-      level++;
-    } else {
-      const xpMax = requirement;
-      const xpCurrent = remainingXP;
-      const xpProgress = Math.min(100, Math.max(0, (xpCurrent / xpMax) * 100));
-      return { currentLevel: level, xpCurrent, xpMax, xpProgress, achievementsSummary, totalXP };
-    }
-
-    // Safety break
-    if (level > 200) break;
-  }
-
-  return { currentLevel: 1, xpCurrent: 0, xpMax: 100, xpProgress: 0, achievementsSummary, totalXP: 0 };
+  return { 
+    currentLevel: level, 
+    xpCurrent: xpInCurrent, 
+    xpMax, 
+    xpProgress, 
+    achievementsSummary, 
+    totalXP,
+    nextRewardLevel: level % 10 === 0 ? level + 10 : Math.ceil(level / 10) * 10
+  };
 }
 
 export function getVIPLevel(user: any) {

@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { ListSkeleton } from '../components/Skeletons';
 import { UserProfileModal } from '../components/UserProfileModal';
+import { PresenceDot } from '../components/PresenceDot';
 
 const getTierInfo = (diamonds: number) => {
   if (diamonds >= 100) return { name: 'Diamond', color: 'text-cyan-500', bg: 'bg-cyan-100', border: 'border-cyan-300', shadow: 'shadow-cyan-200/50' };
@@ -41,7 +42,7 @@ const itemVariants = {
   show: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" as const } }
 };
 
-const Podium = ({ leaders, type, setSelectedUser }: { leaders: any[], type: 'diamonds' | 'grades', setSelectedUser: (user: any) => void }) => {
+const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[], type: 'diamonds' | 'grades', setSelectedUser: (user: any) => void, timeframe: 'daily' | 'weekly' | 'overall' }) => {
     if (leaders.length === 0) return null;
     const top3 = [leaders[1], leaders[0], leaders[2]]; // 2nd, 1st, 3rd
 
@@ -110,7 +111,20 @@ const Podium = ({ leaders, type, setSelectedUser }: { leaders: any[], type: 'dia
                
                <div className={cn("mt-4 font-black flex items-center gap-1.5", isFirst ? "text-3xl text-amber-400" : "text-2xl")}>
                  {type === 'diamonds' ? (
-                   <>{student.diamonds || 0} <Gem className={cn("w-5 h-5", isFirst ? 'text-cyan-400' : iconColor)}/></>
+                   <>{(() => {
+                     const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                     const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+                     const d = new Date(nowIST);
+                     d.setHours(0,0,0,0);
+                     d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                     const yearStart = new Date(d.getFullYear(),0,1);
+                     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                     const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+                     
+                     if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
+                     if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
+                     return student.lifetimeDiamonds || student.diamonds || 0;
+                   })()} <Gem className={cn("w-5 h-5", isFirst ? 'text-cyan-400' : iconColor)}/></>
                  ) : (
                    <>{student.averageGrade}% <GraduationCap className={cn("w-5 h-5", iconColor)}/></>
                  )}
@@ -129,9 +143,14 @@ export const Leaderboard = () => {
   const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'diamonds' | 'grades') || 'diamonds';
+  const timeframe = (searchParams.get('time') as 'daily' | 'weekly' | 'overall') || 'overall';
 
   const setActiveTab = (tab: string) => {
-    setSearchParams({ tab });
+    setSearchParams({ tab, time: timeframe });
+  };
+  
+  const setTimeframe = (time: string) => {
+    setSearchParams({ tab: activeTab, time });
   };
   const [selectedUser, setSelectedUser] = useState<(User & { averageGrade?: number, gradedCount?: number }) | null>(null);
 
@@ -179,11 +198,32 @@ export const Leaderboard = () => {
   }, [users, submissions]);
 
   const coinLeaders = useMemo(() => {
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+    
+    // Simple ISO week calculation
+    const d = new Date(nowIST);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(),0,1);
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+
     return [...calculatedUsers].sort((a, b) => {
-      // 1. Diamonds (Primary)
-      const aDiamonds = a.diamonds || 0;
-      const bDiamonds = b.diamonds || 0;
-      if (bDiamonds !== aDiamonds) return bDiamonds - aDiamonds;
+      // 1. Diamonds (Primary, based on timeframe)
+      let aVal = 0, bVal = 0;
+      if (timeframe === 'daily') {
+        aVal = a.lastResetDay === today ? (a.dailyDiamonds || 0) : 0;
+        bVal = b.lastResetDay === today ? (b.dailyDiamonds || 0) : 0;
+      } else if (timeframe === 'weekly') {
+        aVal = a.lastResetWeek === thisWeek ? (a.weeklyDiamonds || 0) : 0;
+        bVal = b.lastResetWeek === thisWeek ? (b.weeklyDiamonds || 0) : 0;
+      } else {
+        aVal = a.lifetimeDiamonds || a.diamonds || 0;
+        bVal = b.lifetimeDiamonds || b.diamonds || 0;
+      }
+      
+      if (bVal !== aVal) return bVal - aVal;
       
       // 2. XP/Level (Secondary)
       const aStats = getUserLevelAndXP(a);
@@ -217,7 +257,7 @@ export const Leaderboard = () => {
 
   const renderList = (leadersList: any[], type: 'diamonds' | 'grades') => (
     <div className="space-y-4 lg:space-y-6 relative mt-10">
-      <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} />
+      <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} timeframe={timeframe} />
       
       <motion.div 
         variants={containerVariants}
@@ -260,13 +300,19 @@ export const Leaderboard = () => {
                   {student.inventory?.includes('avatar_frame_gold') && (
                     <div className="absolute inset-0 border-[3px] border-[#D4AF37] rounded-2xl z-10 pointer-events-none"></div>
                   )}
+                  <PresenceDot status={student.presence} className="absolute bottom-1 right-1 z-20 scale-75" />
                 </div>
                 
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 text-left">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
                     <button onClick={() => setSelectedUser(student)} className="text-lg md:text-xl font-bold truncate hover:text-[#D4AF37] transition-colors tracking-tight text-left text-text-primary">
                       {student.name}
                     </button>
+                    {student.luminaId && (
+                      <span className="text-[10px] font-mono text-text-secondary bg-bg-main px-1.5 py-0.5 rounded border border-border-main/50">
+                        {student.luminaId}
+                      </span>
+                    )}
                     {student.id === currentUser?.id && <span className="text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded flex-shrink-0 font-bold">YOU</span>}
                     <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border", rankBadge.bg, rankBadge.color, rankBadge.border)}>
                       {rankBadge.name}
@@ -290,7 +336,20 @@ export const Leaderboard = () => {
                 <div className="font-bold text-2xl flex items-center gap-2 min-w-[120px] justify-end tracking-tight">
                   {type === 'diamonds' ? (
                     <span className="text-text-primary flex items-center gap-2">
-                       {student.diamonds || 0} <Gem className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"/>
+                       {(() => {
+                         const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                         const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+                         const d = new Date(nowIST);
+                         d.setHours(0,0,0,0);
+                         d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                         const yearStart = new Date(d.getFullYear(),0,1);
+                         const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                         const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+                         
+                         if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
+                         if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
+                         return student.lifetimeDiamonds || student.diamonds || 0;
+                       })()} <Gem className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"/>
                     </span>
                   ) : (
                     <span className="text-text-primary flex items-center gap-2">
@@ -324,7 +383,7 @@ export const Leaderboard = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 relative pb-24 px-4 md:px-0">
+    <div className="max-w-5xl mx-auto space-y-8 relative pb-48 px-4 md:px-0">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
@@ -347,31 +406,56 @@ export const Leaderboard = () => {
         <p className="text-[#D4AF37] text-lg font-medium max-w-2xl mx-auto relative z-10">Compete globally, earn badges, and climb the ranks to become a legend.</p>
         
         {/* Navigation Tabs */}
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="flex flex-wrap items-center justify-center gap-2 mt-10 z-20 relative bg-[#0A1128]/50 backdrop-blur-md p-1.5 justify-between w-full max-w-sm mx-auto rounded-full border border-white/10 shadow-inner"
-        >
-          <button
-            onClick={() => setActiveTab('diamonds')}
-            className={cn(
-              "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-              activeTab === 'diamonds' ? "bg-cyan-500 text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
-            )}
+        <div className="flex flex-col gap-4 mt-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-center gap-2 z-20 relative bg-[#0A1128]/50 backdrop-blur-md p-1.5 justify-between w-full max-w-sm mx-auto rounded-full border border-white/10 shadow-inner"
           >
-            <Gem className={cn("w-4 h-4")} /> Diamonds
-          </button>
-          <button
-            onClick={() => setActiveTab('grades')}
-            className={cn(
-              "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-              activeTab === 'grades' ? "bg-[#D4AF37] text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
-            )}
-          >
-            <GraduationCap className={cn("w-4 h-4")} /> Mastery
-          </button>
-        </motion.div>
+            <button
+              onClick={() => setActiveTab('diamonds')}
+              className={cn(
+                "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                activeTab === 'diamonds' ? "bg-cyan-500 text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
+              )}
+            >
+              <Gem className={cn("w-4 h-4")} /> Diamonds
+            </button>
+            <button
+              onClick={() => setActiveTab('grades')}
+              className={cn(
+                "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                activeTab === 'grades' ? "bg-[#D4AF37] text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
+              )}
+            >
+              <GraduationCap className={cn("w-4 h-4")} /> Mastery
+            </button>
+          </motion.div>
+
+          {activeTab === 'diamonds' && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-center gap-4 z-20 relative px-4"
+            >
+               {['daily', 'weekly', 'overall'].map((t) => (
+                 <button
+                   key={t}
+                   onClick={() => setTimeframe(t)}
+                   className={cn(
+                     "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-tighter transition-all",
+                     timeframe === t 
+                       ? "bg-white/15 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-900/40" 
+                       : "text-white/40 hover:text-white/60"
+                   )}
+                 >
+                   {t}
+                 </button>
+               ))}
+            </motion.div>
+          )}
+        </div>
       </motion.div>
 
       <AnimatePresence mode="wait">
@@ -389,7 +473,7 @@ export const Leaderboard = () => {
 
       {/* Sticky Current User Rank Bar (if user is logged in as student) */}
       {currentUser && currentUser.role === 'student' && (
-        <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] md:bottom-6 left-0 right-0 px-4 z-40 pointer-events-none flex justify-center">
+        <div className="fixed bottom-[calc(104px+env(safe-area-inset-bottom))] md:bottom-8 left-0 right-0 px-4 z-[1000] pointer-events-none flex justify-center">
           <div className="w-full max-w-4xl pointer-events-auto">
              {(() => {
                 const list = activeTab === 'diamonds' ? coinLeaders : gradeLeaders;
@@ -397,7 +481,7 @@ export const Leaderboard = () => {
                 const me = list[myIndex];
                 if (!me) return null;
 
-                const tier = getTierInfo(me.diamonds || 0);
+                const tier = getTierInfo(me.lifetimeDiamonds || me.diamonds || 0);
                 
                 return (
                   <motion.div 
@@ -436,7 +520,20 @@ export const Leaderboard = () => {
                     <div className="font-bold text-lg md:text-xl z-10 whitespace-nowrap bg-[#D4AF37]/10 px-4 md:px-6 py-2 md:py-3 rounded-xl flex items-center gap-2 border border-[#D4AF37]/30 text-[#D4AF37] shadow-sm">
                       {activeTab === 'diamonds' ? (
                         <span className="flex items-center gap-2 text-cyan-400">
-                          {me.diamonds || 0} <Gem className="w-4 h-4 md:w-5 md:h-5"/>
+                          {(() => {
+                             const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                             const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+                             const d = new Date(nowIST);
+                             d.setHours(0,0,0,0);
+                             d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                             const yearStart = new Date(d.getFullYear(),0,1);
+                             const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                             const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+                             
+                             if (timeframe === 'daily') return me.lastResetDay === today ? (me.dailyDiamonds || 0) : 0;
+                             if (timeframe === 'weekly') return me.lastResetWeek === thisWeek ? (me.weeklyDiamonds || 0) : 0;
+                             return me.lifetimeDiamonds || me.diamonds || 0;
+                          })()} <Gem className="w-4 h-4 md:w-5 md:h-5"/>
                         </span>
                       ) : (
                         <>{(me as any).averageGrade}% <GraduationCap className="w-4 h-4 md:w-5 md:h-5"/></>

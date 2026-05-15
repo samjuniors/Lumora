@@ -1,6 +1,6 @@
 {
   "name": "samjuniors-lab",
-  "description": "Lumina (Powered by Samjuniors) - AI-powered student assessment platform with coin rewards, leaderboard, and calendar.",
+  "description": "Lumina High-Stakes Academy - A competitive student assessment platform driven by a high-stakes economy, loss aversion, and premium AI-powered insights.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

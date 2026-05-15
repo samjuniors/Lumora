@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User } from '../types';
-import { X, Trophy, Medal, Star, Target, Gift, ScrollText, Sparkles } from 'lucide-react';
+import { X, Trophy, Medal, Star, Target, Gift, ScrollText, Sparkles, UserPlus, UserCheck, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { getUserLevelAndXP, cn, getVIPLevel } from '../lib/utils';
 import { calculatePerformanceScore, getPerformanceBadge } from '../lib/performance';
@@ -9,22 +9,44 @@ import { SendCoinsModal } from './SendCoinsModal';
 import { INFINITE_ACHIEVEMENTS } from './Achievements';
 import { getLetterGrade } from '../lib/gradeUtils';
 import { BADGES } from '../lib/badges';
+import { dbService } from '../services/dbProvider';
+import { useAuth } from '../context/AuthContext';
+import { PresenceDot } from './PresenceDot';
 
 export const UserProfileModal = ({ 
-  user, 
+  user: profileUser, 
   onClose,
 }: { 
   user: User & { averageGrade?: number, gradedCount?: number }; 
   onClose: () => void;
 }) => {
+  const { user: currentUser } = useAuth();
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview');
-  const { currentLevel } = getUserLevelAndXP(user);
-  const perfScore = calculatePerformanceScore(user);
+  const { currentLevel } = getUserLevelAndXP(profileUser);
+  const perfScore = calculatePerformanceScore(profileUser);
   const badge = getPerformanceBadge(perfScore);
+  const [isFollowing, setIsFollowing] = useState(
+    currentUser?.followingIds?.includes(profileUser.id) || false
+  );
+
+  const isFriend = currentUser?.id === profileUser.id || 
+                  currentUser?.followingIds?.includes(profileUser.id) || 
+                  currentUser?.followerIds?.includes(profileUser.id);
+
+  const handleFollowToggle = async () => {
+    if (!currentUser) return;
+    if (isFollowing) {
+      await dbService.unfollowUser(currentUser.id, profileUser.id);
+      setIsFollowing(false);
+    } else {
+      await dbService.followUser(currentUser.id, profileUser.id);
+      setIsFollowing(true);
+    }
+  };
 
   const earnedAchievements = INFINITE_ACHIEVEMENTS.map(def => {
-    const claimedTiers = (user.achievements || [])
+    const claimedTiers = (profileUser.achievements || [])
        .filter(a => a.startsWith(def.id + '_tier_'))
        .map(a => parseInt(a.replace(def.id + '_tier_', '')))
        .filter(n => !isNaN(n));
@@ -37,9 +59,9 @@ export const UserProfileModal = ({
     };
   }).filter((a): a is { def: typeof INFINITE_ACHIEVEMENTS[0], tier: number } => a !== null);
 
-  const standardEarnedBadges = BADGES.filter(b => (user.achievements || []).includes(b.id));
+  const standardEarnedBadges = BADGES.filter(b => (profileUser.achievements || []).includes(b.id));
 
-  const letterGrade = getLetterGrade(user.averageGrade ?? 0);
+  const letterGrade = getLetterGrade(profileUser.averageGrade ?? 0);
 
   return (
     <>
@@ -58,21 +80,30 @@ export const UserProfileModal = ({
           </button>
 
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[2rem] bg-brand-gold-secondary-hover border-4 border-white shadow-xl flex items-center justify-center text-4xl mb-4 relative overflow-hidden">
-              {(user.avatar?.startsWith('http') || user.avatar?.startsWith('data:')) ? (
-                 <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+            <div className="w-24 h-24 rounded-[2rem] bg-brand-gold-secondary-hover border-4 border-white shadow-xl flex items-center justify-center text-4xl mb-4 relative overflow-hidden group">
+              {(profileUser.avatar?.startsWith('http') || profileUser.avatar?.startsWith('data:')) ? (
+                 <img src={profileUser.avatar} alt={profileUser.name} className="w-full h-full object-cover" />
               ) : (
-                 <span>{user.avatar || '👤'}</span>
+                 <span>{profileUser.avatar || '👤'}</span>
               )}
+              <PresenceDot status={profileUser.presence} className="absolute bottom-1 right-1 z-20" />
             </div>
             
-            <h2 className="text-2xl font-black text-text-primary mb-1">{user.name}</h2>
+            <div className="text-center mb-1">
+              <h2 className="text-2xl font-black text-text-primary leading-tight">{profileUser.name}</h2>
+              {profileUser.luminaId && (
+                <span className="text-[10px] font-mono font-bold text-[#D4AF37] uppercase tracking-tighter bg-[#1A2B48]/5 px-2 py-0.5 rounded border border-[#D4AF37]/20">
+                  {profileUser.luminaId}
+                </span>
+              )}
+            </div>
+
             <div className="flex items-center flex-wrap justify-center gap-2 mb-6">
-              {user.role === 'superadmin' ? (
+              {profileUser.role === 'superadmin' ? (
                   <span className="text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg text-bg-main bg-gradient-to-r from-rose-500 to-orange-500 shadow-sm border border-rose-400">
                       Super Admin
                   </span>
-              ) : user.role === 'admin' ? (
+              ) : profileUser.role === 'admin' ? (
                   <span className="text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg text-bg-main bg-gradient-to-r from-blue-500 to-indigo-500 shadow-sm border border-blue-400">
                       Admin
                   </span>
@@ -83,13 +114,40 @@ export const UserProfileModal = ({
               <span className={cn(
                 "text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg shadow-sm border border-black/5",
                 badge.color,
-                (calculatePerformanceScore(user) >= 2000 && calculatePerformanceScore(user) < 5000) ? "text-[#0A1128]" : "text-bg-main"
+                (calculatePerformanceScore(profileUser) >= 2000 && calculatePerformanceScore(profileUser) < 5000) ? "text-[#0A1128]" : "text-bg-main"
               )}>
                 {badge.title}
               </span>
             </div>
 
-            <div className="flex w-full bg-border-main/80 p-1 rounded-2xl mb-6">
+            {currentUser && currentUser.id !== profileUser.id && (
+              <div className="flex gap-2 w-full mb-6">
+                <button 
+                  onClick={handleFollowToggle}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all border-2",
+                    isFollowing 
+                      ? "bg-bg-surface border-border-main text-text-secondary hover:text-red-500 hover:border-red-200" 
+                      : "bg-[#1A2B48] border-[#1A2B48] text-[#D4AF37] hover:bg-[#0A1128]"
+                  )}
+                >
+                  {isFollowing ? (
+                    <><UserCheck className="w-4 h-4" /> Following</>
+                  ) : (
+                    <><UserPlus className="w-4 h-4" /> Follow</>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setShowGiftModal(true)}
+                  className="px-4 flex items-center justify-center bg-[#D4AF37] text-[#1A2B48] rounded-xl font-bold border-2 border-[#D4AF37] hover:bg-amber-400 transition-colors"
+                  title="Send Coins"
+                >
+                  <Gift className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+
+            <div className="flex w-full bg-border-main/80 p-1 rounded-2xl mb-4">
               <button 
                 onClick={() => setActiveTab('overview')}
                 className={cn("flex-1 py-2.5 rounded-xl text-sm font-bold transition-all", activeTab === 'overview' ? "bg-bg-surface shadow-sm text-text-primary" : "text-text-secondary hover:text-text-primary")}
@@ -110,44 +168,72 @@ export const UserProfileModal = ({
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full flex flex-col items-center"
               >
-                <div className="w-full grid grid-cols-3 gap-3 mb-6 mt-4">
-                  <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                    <Trophy className="w-6 h-6 text-yellow-500 mb-2" />
-                    <span className="text-sm text-text-secondary font-semibold mb-1">Coins</span>
-                    <span className="text-xl font-black text-text-primary">{user.coins}</span>
+                {!isFriend ? (
+                  <div className="w-full bg-bg-main border border-border-main rounded-3xl p-6 mt-2 text-center flex flex-col items-center gap-3">
+                    <div className="w-12 h-12 bg-border-main/50 rounded-2xl flex items-center justify-center text-text-secondary/50">
+                      <Lock className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-text-primary">Profile Locked</h4>
+                      <p className="text-xs text-text-secondary font-medium">Follow this user to see their academic progress and full statistics.</p>
+                    </div>
+                    <div className="flex gap-4 mt-2">
+                       <div className="text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-text-secondary font-bold">Followers</p>
+                          <p className="font-black text-text-primary">{(profileUser.followerIds || []).length}</p>
+                       </div>
+                       <div className="text-center">
+                          <p className="text-[10px] uppercase tracking-widest text-text-secondary font-bold">Following</p>
+                          <p className="font-black text-text-primary">{(profileUser.followingIds || []).length}</p>
+                       </div>
+                    </div>
                   </div>
-                  <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                    <svg viewBox="0 0 24 24" className="w-6 h-6 text-cyan-400 mb-2" fill="currentColor">
-                      <path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L5.5 12 12 5.5l6.5 6.5L12 19.5z" />
-                    </svg>
-                    <span className="text-sm text-text-secondary font-semibold mb-1">Diamonds</span>
-                    <span className="text-xl font-black text-text-primary">{user.diamonds || 0}</span>
-                  </div>
-                  <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                    <Target className="w-6 h-6 text-brand-gold mb-2" />
-                    <span className="text-sm text-text-secondary font-semibold mb-1">Avg Grade</span>
-                    <span className="text-xl font-black text-text-primary flex items-center gap-1.5 px-2 py-0.5 rounded-lg">
-                      <span className={cn("text-sm px-1.5 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
-                      {user.averageGrade ?? 0}%
-                    </span>
-                  </div>
-                </div>
+                ) : (
+                  <div className="w-full">
+                    {profileUser.bio && (
+                      <p className="text-xs text-text-secondary font-medium text-center italic mb-4 px-4 line-clamp-2">
+                        "{profileUser.bio}"
+                      </p>
+                    )}
+                    <div className="w-full grid grid-cols-2 gap-3 mb-6 mt-4">
+                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
+                        <Trophy className="w-6 h-6 text-yellow-500 mb-2" />
+                        <span className="text-sm text-text-secondary font-semibold mb-1">Coins</span>
+                        <span className="text-xl font-black text-text-primary">{profileUser.coins}</span>
+                      </div>
+                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
+                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-cyan-400 mb-2" fill="currentColor">
+                          <path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L5.5 12 12 5.5l6.5 6.5L12 19.5z" />
+                        </svg>
+                        <span className="text-sm text-text-secondary font-semibold mb-1">Diamonds</span>
+                        <span className="text-xl font-black text-text-primary">{profileUser.diamonds || 0}</span>
+                      </div>
+                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
+                        <Sparkles className="w-6 h-6 text-indigo-500 mb-2" />
+                        <span className="text-sm text-text-secondary font-semibold mb-1">Lifetime</span>
+                        <span className="text-xl font-black text-text-primary">{profileUser.lifetimeDiamonds || 0}</span>
+                      </div>
+                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
+                        <Target className="w-6 h-6 text-brand-gold mb-2" />
+                        <span className="text-sm text-text-secondary font-semibold mb-1">Avg Grade</span>
+                        <span className="text-xl font-black text-text-primary flex items-center gap-1.5 px-2 py-0.5 rounded-lg">
+                          <span className={cn("text-sm px-1.5 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
+                          {profileUser.averageGrade ?? 0}%
+                        </span>
+                      </div>
+                    </div>
 
-                <div className="w-full space-y-3">
-                  <Link 
-                    to={`/scorecard/${user.id}`}
-                    onClick={onClose}
-                    className="w-full bg-brand-gold-secondary-hover text-indigo-700 hover:bg-brand-gold-secondary-hover font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                  >
-                    View Full Scorecard
-                  </Link>
-                  <button 
-                    onClick={() => setShowGiftModal(true)}
-                    className="w-full bg-gradient-to-r from-yellow-400 to-amber-500 text-bg-main hover:from-yellow-500 hover:to-amber-600 font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-yellow-500/25 flex items-center justify-center gap-2"
-                  >
-                    <Gift className="w-5 h-5" /> Gift Coins
-                  </button>
-                </div>
+                    <div className="w-full space-y-3">
+                      <Link 
+                        to={`/scorecard/${profileUser.id}`}
+                        onClick={onClose}
+                        className="w-full bg-[#1A2B48] text-white hover:bg-[#0A1128] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-950/20 flex items-center justify-center gap-2"
+                      >
+                        <ScrollText className="w-5 h-5 text-[#D4AF37]" /> View Academic Performance
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             ) : (
               <motion.div 
@@ -207,7 +293,7 @@ export const UserProfileModal = ({
 
       <AnimatePresence>
         {showGiftModal && (
-          <SendCoinsModal recipient={user as User} onClose={() => setShowGiftModal(false)} />
+          <SendCoinsModal recipient={profileUser as User} onClose={() => setShowGiftModal(false)} />
         )}
       </AnimatePresence>
     </>

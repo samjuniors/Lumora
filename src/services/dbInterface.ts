@@ -1,16 +1,23 @@
-import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType } from '../types';
+import { User, Assignment, Submission, Transaction, Notification, InviteCode, RechargeRequest, Enrollment, PlatformSettings, AssignmentTemplate, PreRegisteredUser, TransactionType, Syndicate } from '../types';
 
 export interface IDatabaseService {
   // Achievement operations
   getAchievementProgress(userId: string): Promise<Record<string, number>>;
-  claimAchievement(userId: string, achievementId: string, reward: { coins: number, xp: number }): Promise<void>;
+  claimAchievement(userId: string, achievementId: string, reward: { coins: number, diamonds: number }): Promise<void>;
   getUser(userId: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
   updateUser(userId: string, data: Partial<User>): Promise<void>;
   createUser(userId: string, data: User): Promise<void>;
   getUsersByRole(role: string): Promise<User[]>;
   getAllUsers(): Promise<User[]>;
+  getUsers(): Promise<User[]>; // Added for social search
   deleteUser(userId: string): Promise<void>;
+
+  // Social & Presence
+  followUser(followerId: string, targetId: string): Promise<void>;
+  unfollowUser(followerId: string, targetId: string): Promise<void>;
+  updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void>;
+  generateLuminaId(userId: string): Promise<string>;
 
   // Assignment operations
   getAssignment(assignmentId: string): Promise<Assignment | null>;
@@ -108,4 +115,9 @@ export interface IDatabaseService {
   approveRechargeRequest(requestId: string, adminId: string): Promise<void>;
   rejectRechargeRequest(requestId: string, adminId: string): Promise<void>;
   runPenaltySweep(assignmentId?: string): Promise<{ penalizedCount: number }>;
+
+  // Syndicate Methods
+  getAllSyndicates(): Promise<Syndicate[]>;
+  createSyndicate(data: Omit<Syndicate, 'id'>): Promise<string>;
+  updateSyndicate(id: string, data: Partial<Syndicate>): Promise<void>;
 }

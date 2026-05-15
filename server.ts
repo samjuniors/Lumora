@@ -154,6 +154,61 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
     }
   });
 
+  app.post("/api/ai/academic-roadmap", async (req, res) => {
+    try {
+      const ai = getAI();
+      if (!ai) return res.status(503).json({ error: "AI Service Offline" });
+      const { submissions } = req.body;
+      
+      const prompt = `As an Elite Academic Strategist (Oracle), analyze this student's submission history and provide a high-stakes roadmap for success. 
+      History: ${JSON.stringify(submissions)}
+      
+      Structure your response in Markdown:
+      1. **Performance Verdict**: A blunt assessment of their current standing (A+, B, etc.) and trajectory.
+      2. **Critical Weak Points**: Identify 2-3 specific topics they are struggling with based on AI feedback history.
+      3. **Strategic Injunctions**: Give 3 highly actionable study commands to improve their ROI.
+      4. **The Oracle's Prediction**: Predict their likely grade for the next 48 hours if they follow these steps.
+      
+      Be authoritative, encouraging but high-stakes.`;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      res.json({ text: response.text });
+    } catch (err: any) {
+      console.error("[The Oracle] Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/ai/economy-insights", async (req, res) => {
+    try {
+      const ai = getAI();
+      if (!ai) return res.status(503).json({ error: "AI Service Offline" });
+      const { stats } = req.body;
+      const prompt = `As an Academic Economy Expert, analyze these platform metrics and suggest 3 ways to increase admin profit while maintaining user addiction (loss aversion).
+      Metrics:
+      - Total Students: ${stats.studentCount}
+      - Total Coins in System: ${stats.totalCoins}
+      - Tax Collected: ${stats.taxRevenue}
+      - Penalties Collected: ${stats.penaltyVolume}
+      - Financial Recharges: ${stats.rechargeVolume}
+      - Avg Student Score: ${stats.avgScore}%
+      
+      Give concise, high-stakes suggestions. Return the content in Markdown format.`;
+      
+      const response = await ai.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+      res.json({ text: response.text });
+    } catch (err: any) {
+      console.error("[AI Economy] Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.get("/api/proxy-image", async (req, res) => {
     try {
       const { url } = req.query;
