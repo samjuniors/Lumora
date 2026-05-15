@@ -5,7 +5,7 @@ import {
   User as UserIcon, Mail, Shield, ShieldAlert, Coins, Award, Edit2, Check, X, 
   Package, Palette, Target, TrendingUp, Flame, Settings, Zap, Star, Crown, 
   Copy, Upload, LogOut, Clock, BookOpen, ChevronRight, AlertCircle, Share2, Info, Gift,
-  Users, UserPlus, Heart, Search
+  Users, UserPlus, Heart, Search, Trophy
 } from 'lucide-react';
 import { dbService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
@@ -411,33 +411,47 @@ export const Profile = () => {
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-3 md:gap-4 text-text-secondary font-medium text-sm mt-3">
-                  <div className="flex items-center gap-3 mr-2">
-                    <button onClick={() => setActiveTab('social')} className="hover:text-[#D4AF37] transition-colors flex items-center gap-1">
-                      <span className="font-black text-text-primary">{(user.followerIds || []).length}</span> <span className="uppercase tracking-widest text-[9px] font-bold">Followers</span>
+                <div className="flex flex-wrap items-center gap-3 md:gap-6 text-text-secondary font-medium text-[11px] md:text-sm mt-4">
+                  <div className="flex items-center gap-4 bg-[#1A2B48]/5 border border-[#1A2B48]/10 px-4 py-2 rounded-2xl">
+                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start">
+                      <span className="font-black text-text-primary text-base leading-none">{(user.followerIds || []).length}</span> 
+                      <span className="uppercase tracking-widest text-[8px] font-bold opacity-60">Followers</span>
                     </button>
-                    <button onClick={() => setActiveTab('social')} className="hover:text-[#D4AF37] transition-colors flex items-center gap-1">
-                      <span className="font-black text-text-primary">{(user.followingIds || []).length}</span> <span className="uppercase tracking-widest text-[9px] font-bold">Following</span>
+                    <div className="w-px h-6 bg-border-main" />
+                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start">
+                      <span className="font-black text-text-primary text-base leading-none">{(user.followingIds || []).length}</span> 
+                      <span className="uppercase tracking-widest text-[8px] font-bold opacity-60">Following</span>
                     </button>
                   </div>
-                  <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-text-secondary bg-bg-main border border-border-main px-3 py-1 rounded-lg">
-                    ID: {user.luminaId || user.id} 
-                    <button onClick={() => copyToClipboard(user.luminaId || user.id)} className="ml-1 hover:text-brand-gold transition-colors"><Copy className="w-3.5 h-3.5" /></button>
-                  </span>
-                  {user.role === 'superadmin' ? (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-bg-main bg-gradient-to-r from-rose-500 to-orange-500 shadow-lg shadow-rose-200 px-3 py-1 rounded-lg border border-rose-400">
-                          <ShieldAlert className="w-3.5 h-3.5" /> Super Admin
+                  
+                  <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
+                    <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-black text-text-secondary bg-bg-main border border-border-main px-3 py-2 rounded-xl shadow-sm">
+                      <span className="opacity-50">LUMINA-ID:</span>
+                      <span className="text-text-primary font-mono">{user.luminaId || getShortId(user.id)}</span>
+                      <button onClick={() => copyToClipboard(user.luminaId || user.id)} className="ml-1 text-brand-gold hover:scale-110 transition-transform shrink-0"><Copy className="w-3 h-3" /></button>
+                    </span>
+                    
+                    <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-black text-brand-gold bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-2 rounded-xl shadow-sm">
+                      <Coins className="w-3.5 h-3.5" /> 
+                      {user.coins.toLocaleString()}
+                    </span>
+
+                    {user.xpBoosterUntil && user.xpBoosterUntil > Date.now() && (
+                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-3 py-2 rounded-xl">
+                        <Zap className="w-3.5 h-3.5" /> 1.5x XP
                       </span>
-                  ) : user.role === 'admin' ? (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-bg-main bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg shadow-blue-200 px-3 py-1 rounded-lg border border-blue-400">
-                          <Shield className="w-3.5 h-3.5" /> Admin
+                    )}
+                    {user.taxHavenUntil && user.taxHavenUntil > Date.now() && (
+                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-2 rounded-xl">
+                        <Shield className="w-3.5 h-3.5" /> -10% Tax
                       </span>
-                  ) : (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-emerald-600 bg-success-green/10 border border-success-green/20 px-3 py-1 rounded-lg">
-                          <UserIcon className="w-3.5 h-3.5" /> Student
+                    )}
+                    {user.doubleDownShieldUntil && user.doubleDownShieldUntil > Date.now() && (
+                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-amber-400 bg-amber-400/10 border border-amber-400/20 px-3 py-2 rounded-xl">
+                        <ShieldAlert className="w-3.5 h-3.5" /> 75% Refund
                       </span>
-                  )}
-                  <span className="flex items-center gap-1.5 uppercase tracking-wider text-xs font-bold text-brand-gold bg-brand-gold/10 border border-amber-100 px-3 py-1 rounded-lg"><Coins className="w-3.5 h-3.5" /> {user.coins} Coins</span>
+                    )}
+                  </div>
                 </div>
 
                 {isEditing ? (
@@ -459,29 +473,35 @@ export const Profile = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 self-start md:self-end pt-4 md:pt-0 pb-2">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 self-start md:self-end pt-6 md:pt-0 pb-2 w-full lg:w-auto">
               <button 
                 onClick={() => setShowShare(true)}
-                className="bg-bg-main hover:bg-border-main text-text-primary transition-all font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2 border border-border-main"
+                className="bg-bg-main hover:bg-border-main text-text-primary transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 border border-border-main active:scale-95"
               >
-                <Share2 className="w-4 h-4" /> Share
+                <Share2 className="w-4 h-4" /> <span>Share</span>
               </button>
               {user.role === 'student' && (
-                <Link to={`/scorecard/${user.id}`} className="bg-bg-surface hover:bg-bg-main text-text-primary border border-border-main transition-all font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm flex items-center gap-2">
-                  <Target className="w-4 h-4 text-brand-gold" /> Transcript
+                <Link to={`/scorecard/${user.id}`} className="bg-bg-surface hover:bg-brand-gold/5 text-text-primary border border-brand-gold/20 transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 text-center">
+                  <Target className="w-4 h-4 text-brand-gold" /> <span>Transcript</span>
                 </Link>
               )}
               <button 
                 onClick={() => setActiveTab('social')}
-                className={cn("transition-all font-bold text-sm px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2", activeTab === 'social' ? 'bg-[#1A2B48] text-[#D4AF37] hover:bg-black' : 'bg-bg-main text-text-primary hover:bg-border-main')}
+                className={cn(
+                  "transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95", 
+                  activeTab === 'social' ? 'bg-[#1A2B48] text-brand-gold border border-brand-gold/30 shadow-lg shadow-brand-gold/10' : 'bg-bg-main text-text-primary border border-border-main hover:bg-border-main'
+                )}
               >
                 <Users className="w-4 h-4" /> <span>Social</span>
               </button>
               <button 
-                onClick={() => setActiveTab(activeTab === 'overview' ? 'settings' : 'overview')}
-                className={cn("transition-all font-bold text-sm px-4 py-2.5 rounded-xl shadow-sm flex items-center gap-2", activeTab === 'settings' ? 'bg-brand-gold-hover text-bg-main hover:bg-indigo-700' : 'bg-bg-main text-text-primary hover:bg-border-main')}
+                onClick={() => setActiveTab('settings')}
+                className={cn(
+                  "transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95", 
+                  activeTab === 'settings' ? 'bg-[#1A2B48] text-brand-gold border border-brand-gold/30 shadow-lg shadow-brand-gold/10' : 'bg-bg-main text-text-primary border border-border-main hover:bg-border-main'
+                )}
               >
-                <Settings className="w-4 h-4" /> <span>Settings</span>
+                <Settings className="w-4 h-4" /> <span>System</span>
               </button>
             </div>
           </div>
@@ -489,24 +509,29 @@ export const Profile = () => {
       </div>
 
       <AnimatePresence mode="wait">
-        {activeTab === 'social' ? (
-           <motion.div 
+        {activeTab === 'social' && (
+          <motion.div 
             key="social"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
            >
-              <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8">
-                <h3 className="font-black text-text-primary text-xl mb-6 flex items-center justify-between">
-                  <span>Following</span>
-                  <span className="text-sm font-bold bg-[#1A2B48] text-[#D4AF37] px-3 py-1 rounded-full">{(user.followingIds || []).length}</span>
+              <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 flex flex-col">
+                <h3 className="font-black text-text-primary text-lg md:text-xl mb-6 flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Users className="w-5 h-5 text-brand-gold" /> Following</span>
+                  <span className="text-[10px] font-black bg-[#1A2B48] text-brand-gold px-3 py-1 rounded-full uppercase tracking-widest border border-brand-gold/20">{(user.followingIds || []).length}</span>
                 </h3>
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
                   {loadingSocial ? (
-                    <p className="text-center py-4 text-text-secondary text-sm animate-pulse">Scanning connections...</p>
+                    <div className="space-y-4">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="h-16 w-full animate-pulse bg-bg-main rounded-2xl" />
+                      ))}
+                    </div>
                   ) : following.length > 0 ? (
                     following.map(f => (
-                      <Link to={`/leaderboard?search=${f.name}`} key={f.id} className="flex items-center gap-4 p-3 bg-bg-main rounded-2xl border border-border-main hover:border-[#D4AF37]/50 transition-all">
-                        <div className="w-10 h-10 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
+                      <Link to={`/leaderboard?search=${f.name}`} key={f.id} className="flex items-center gap-3 p-3 bg-bg-main rounded-2xl border border-border-main hover:border-brand-gold/30 hover:shadow-lg hover:shadow-brand-gold/5 transition-all group">
+                        <div className="w-12 h-12 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
                           {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
                             <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
                           ) : (
@@ -514,34 +539,38 @@ export const Profile = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="font-bold text-sm text-text-primary truncate">{f.name}</p>
-                          <p className="text-[10px] font-mono font-bold text-text-secondary uppercase tracking-tighter truncate">{f.luminaId || getShortId(f.id)}</p>
+                          <p className="font-black text-sm text-text-primary truncate">{f.name}</p>
+                          <p className="text-[9px] font-mono font-black text-text-secondary uppercase tracking-tight truncate opacity-60">#{f.luminaId || getShortId(f.id)}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-text-secondary" />
+                        <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                       </Link>
                     ))
                   ) : (
-                    <div className="text-center py-10 bg-bg-main rounded-2xl border border-dashed border-border-main">
-                      <Search className="w-8 h-8 mx-auto mb-2 opacity-20 text-[#1A2B48]" />
-                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">No connections found</p>
-                      <Link to="/leaderboard" className="mt-4 inline-block text-[10px] font-black uppercase tracking-widest text-[#D4AF37] hover:underline">Find Researchers</Link>
+                    <div className="text-center py-12 bg-bg-main rounded-[2rem] border border-dashed border-border-main">
+                      <Search className="w-10 h-10 mx-auto mb-3 opacity-20 text-[#1A2B48]" />
+                      <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">No active connections</p>
+                      <Link to="/leaderboard" className="mt-4 inline-block text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold hover:underline bg-[#1A2B48] px-4 py-2 rounded-xl">Hunt Recruits</Link>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8">
-                <h3 className="font-black text-text-primary text-xl mb-6 flex items-center justify-between">
-                  <span>Followers</span>
-                  <span className="text-sm font-bold bg-[#D4AF37] text-[#1A2B48] px-3 py-1 rounded-full">{(user.followerIds || []).length}</span>
+              <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 flex flex-col">
+                <h3 className="font-black text-text-primary text-lg md:text-xl mb-6 flex items-center justify-between">
+                  <span className="flex items-center gap-2"><Heart className="w-5 h-5 text-rose-500" /> Followers</span>
+                  <span className="text-[10px] font-black bg-brand-gold text-[#1A2B48] px-3 py-1 rounded-full uppercase tracking-widest">{(user.followerIds || []).length}</span>
                 </h3>
-                <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 no-scrollbar">
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
                   {loadingSocial ? (
-                    <p className="text-center py-4 text-text-secondary text-sm animate-pulse">Syncing lists...</p>
+                    <div className="space-y-4">
+                      {[1,2,3].map(i => (
+                        <div key={i} className="h-16 w-full animate-pulse bg-bg-main rounded-2xl" />
+                      ))}
+                    </div>
                   ) : followers.length > 0 ? (
                     followers.map(f => (
-                      <div key={f.id} className="flex items-center gap-4 p-3 bg-bg-main rounded-2xl border border-border-main transition-all">
-                        <div className="w-10 h-10 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
+                      <div key={f.id} className="flex items-center gap-3 p-3 bg-bg-main rounded-2xl border border-border-main transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
                           {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
                             <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
                           ) : (
@@ -549,46 +578,48 @@ export const Profile = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="font-bold text-sm text-text-primary truncate">{f.name}</p>
-                          <p className="text-[10px] font-mono font-bold text-text-secondary uppercase tracking-tighter truncate">{f.luminaId || getShortId(f.id)}</p>
+                          <p className="font-black text-sm text-text-primary truncate">{f.name}</p>
+                          <p className="text-[9px] font-mono font-black text-text-secondary uppercase tracking-tight truncate opacity-60">#{f.luminaId || getShortId(f.id)}</p>
                         </div>
                         <div className="flex gap-2">
                            {user.followingIds?.includes(f.id) ? (
-                             <span className="text-[9px] font-black uppercase text-text-secondary tracking-widest bg-success-green/10 px-2 py-1 rounded">Mutual</span>
+                             <span className="text-[8px] font-black uppercase text-brand-gold tracking-widest bg-[#1A2B48] px-2 py-1.5 rounded-lg border border-brand-gold/20">Elite Link</span>
                            ) : (
                              <button 
-                              onClick={() => {
-                                dbService.followUser(user.id, f.id);
-                                toast.success(`Following ${f.name}`);
-                              }} 
-                              className="text-[9px] font-black uppercase text-[#D4AF37] tracking-widest bg-[#1A2B48] px-3 py-1 rounded-lg hover:bg-black transition-colors"
+                               onClick={() => {
+                                 dbService.followUser(user.id, f.id);
+                                 toast.success(`Connected with ${f.name}`);
+                               }} 
+                               className="text-[8px] font-black uppercase text-bg-main tracking-widest bg-brand-gold px-3 py-1.5 rounded-lg hover:scale-105 transition-all shadow-lg shadow-brand-gold/10"
                              >
-                               Follow Back
+                               Connect
                              </button>
                            )}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-10 bg-bg-main rounded-2xl border border-dashed border-border-main">
-                      <Heart className="w-8 h-8 mx-auto mb-2 opacity-20 text-rose-500" />
-                      <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">No followers yet</p>
-                      <p className="text-[9px] font-medium text-text-secondary mt-1">Consistency brings respect.</p>
+                    <div className="text-center py-12 bg-bg-main rounded-[2rem] border border-dashed border-border-main">
+                      <Heart className="w-10 h-10 mx-auto mb-3 opacity-20 text-rose-500" />
+                      <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">No signals detected</p>
+                      <p className="text-[9px] font-black text-text-secondary mt-1 tracking-tighter opacity-60">Status comes from domination.</p>
                     </div>
                   )}
                 </div>
               </div>
-           </motion.div>
-        ) : activeTab === 'settings' ? (
+            </motion.div>
+        )}
+
+        {activeTab === 'settings' && (
           <motion.div 
             key="settings"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
-            {/* Customization Settings */}
-            <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8">
+            {/* Column 1: Appearance */}
+            <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8 h-fit">
                <div className="flex items-center justify-between gap-3 mb-6">
-                 <h3 className="font-black text-text-primary text-xl font-bold flex items-center gap-3">
+                 <h3 className="font-black text-text-primary text-xl flex items-center gap-3">
                    <Palette className="w-6 h-6 text-brand-gold"/> Appearance
                  </h3>
                </div>
@@ -596,12 +627,12 @@ export const Profile = () => {
                <div className="space-y-8">
                  <div>
                    <p className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-4">Avatar Symbol</p>
-                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-3 max-h-64 overflow-y-auto p-2 -m-2">
+                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-3 max-h-64 overflow-y-auto p-2 -m-2 no-scrollbar">
                      {AVATARS.map(avatar => (
                        <button 
                          key={avatar} 
                          onClick={() => handleSaveAvatar(avatar)}
-                         className={cn("text-2xl aspect-square flex items-center justify-center rounded-xl transition hover:scale-110", user.avatar === avatar ? "bg-brand-gold-secondary-hover border-2 border-indigo-500 scale-110" : "bg-bg-main border border-border-main hover:bg-border-main")}
+                         className={cn("text-2xl aspect-square flex items-center justify-center rounded-xl transition hover:scale-110", user.avatar === avatar ? "bg-brand-gold/10 border-2 border-brand-gold scale-110" : "bg-bg-main border border-border-main hover:bg-border-main")}
                        >
                          {avatar}
                        </button>
@@ -611,17 +642,18 @@ export const Profile = () => {
                </div>
             </div>
 
-            {/* Account & Preferences */}
-            <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8 space-y-8">
-               <div>
-                  <h3 className="font-black text-text-primary text-xl font-bold flex items-center gap-3 mb-6">
+            {/* Column 2: Account & System */}
+            <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 space-y-8 h-fit">
+               {/* Account Section */}
+               <div className="space-y-6">
+                  <h3 className="font-black text-text-primary text-xl flex items-center gap-3 mb-6">
                     <UserIcon className="w-6 h-6 text-brand-gold"/> Account
                   </h3>
                   <div className="space-y-4">
-                     <div className="bg-bg-main p-4 rounded-xl flex items-center justify-between border border-border-main">
+                     <div className="bg-bg-main p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border-main">
                         <div>
-                           <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Display Name</p>
-                           <p className="font-medium text-text-primary">{user.name}</p>
+                           <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-1">Display Name</p>
+                           <p className="font-black text-text-primary">{user.name}</p>
                         </div>
                         <button onClick={() => {
                            setActiveTab('overview');
@@ -629,117 +661,119 @@ export const Profile = () => {
                            setEditName(user.name || '');
                            setEditAvatar(user.avatar || '');
                            setEditBanner(user.bannerColor || '');
-                        }} className="text-brand-gold hover:text-brand-gold-hover bg-brand-gold/10 hover:bg-brand-gold/20 px-4 py-2 rounded-lg font-bold text-sm transition-colors cursor-pointer">
-                           Edit Name & Image
+                        }} className="text-brand-gold hover:text-bg-main bg-brand-gold/10 hover:bg-brand-gold px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer border border-brand-gold/20 text-center">
+                           Modify Identity
                         </button>
                      </div>
-                     <div className="bg-bg-main p-4 rounded-xl flex items-center justify-between border border-border-main">
-                        <div>
-                           <p className="text-xs font-bold text-text-secondary uppercase tracking-widest mb-1">Email <span className="text-emerald-500 lowercase normal-case text-[10px] bg-emerald-500/10 px-1.5 py-0.5 rounded ml-2">Verified</span></p>
-                           <p className="font-medium text-text-primary">{user.email}</p>
+                     <div className="bg-bg-main p-4 md:p-5 rounded-2xl flex flex-col gap-1 border border-border-main">
+                        <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Email Identity</p>
+                        <div className="flex items-center gap-2">
+                           <p className="font-black text-text-primary truncate">{user.email}</p>
+                           <span className="text-[9px] font-black bg-emerald-500 text-white uppercase px-2 py-0.5 rounded-full tracking-widest shrink-0">Verified</span>
                         </div>
                      </div>
                   </div>
                </div>
 
-               <div>
-                 <h3 className="font-black text-text-primary text-xl font-bold flex items-center gap-3 mb-6">
-                   <Settings className="w-6 h-6 text-brand-gold"/> Preferences
+               {/* System Section */}
+               <div className="pt-6 border-t border-border-main">
+                 <h3 className="font-black text-text-primary text-xl flex items-center gap-3 mb-6">
+                   <Settings className="w-6 h-6 text-brand-gold"/> System
                  </h3>
                  <div className="space-y-3">
-                   <div className="flex items-center justify-between p-4 bg-bg-main rounded-xl border border-border-main">
-                     <div>
-                       <p className="font-bold text-text-primary text-sm">Leaderboard Visibility</p>
-                       <p className="text-xs text-text-secondary mt-0.5">Show my name on the global leaderboard</p>
+                   <div className="flex items-center justify-between p-4 md:p-5 bg-bg-main rounded-[1.5rem] border border-border-main">
+                     <div className="pr-4">
+                       <p className="font-black text-text-primary text-sm uppercase tracking-tight">Public Presence</p>
+                       <p className="text-[11px] text-text-secondary font-medium mt-0.5 leading-tight">Appear in the global domination rankings</p>
                      </div>
-                     <div className="w-12 h-6 bg-brand-gold rounded-full relative cursor-pointer opacity-80" aria-label="Toggle setting" onClick={() => toast("Privacy settings coming soon!", { icon: '🔒' })}>
-                       <div className="w-4 h-4 bg-bg-surface rounded-full absolute top-1 right-1"></div>
+                     <div className="w-12 h-6 bg-brand-gold rounded-full relative cursor-pointer shadow-inner shrink-0" aria-label="Toggle setting" onClick={() => toast("Privacy focus: Forced public for now", { icon: '🔒' })}>
+                       <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 shadow-sm"></div>
                      </div>
                    </div>
-                   <div className="flex items-center justify-between p-4 bg-bg-main rounded-xl border border-border-main">
-                     <div>
-                       <p className="font-bold text-text-primary text-sm">Email Notifications</p>
-                       <p className="text-xs text-text-secondary mt-0.5">Receive updates about new assignments</p>
+                   <div className="flex items-center justify-between p-4 md:p-5 bg-bg-main rounded-[1.5rem] border border-border-main">
+                     <div className="pr-4">
+                       <p className="font-black text-text-primary text-sm uppercase tracking-tight">Neural Alerts</p>
+                       <p className="text-[11px] text-text-secondary font-medium mt-0.5 leading-tight">Notifications about mission status</p>
                      </div>
-                     <div className="w-12 h-6 bg-border-main rounded-full relative cursor-pointer" aria-label="Toggle setting" onClick={() => toast("Notification settings coming soon!", { icon: '🔔' })}>
-                       <div className="w-4 h-4 bg-bg-surface rounded-full absolute top-1 left-1"></div>
+                     <div className="w-12 h-6 bg-bg-surface border border-border-main rounded-full relative cursor-pointer shrink-0" aria-label="Toggle setting" onClick={() => toast("Notifications under maintenance", { icon: '🔔' })}>
+                       <div className="w-4 h-4 bg-text-secondary rounded-full absolute top-0.5 left-0.5 mt-0.5 ml-0.5"></div>
                      </div>
                    </div>
                    <div 
                      onClick={() => setShowRules(true)}
-                     className="flex items-center justify-between p-4 bg-bg-main hover:bg-border-main rounded-xl border border-border-main cursor-pointer transition-all active:scale-[0.98]"
+                     className="flex items-center justify-between p-4 md:p-5 bg-[#1A2B48] hover:bg-black group rounded-[1.5rem] border border-brand-gold/30 cursor-pointer transition-all active:scale-[0.98] shadow-lg shadow-brand-gold/5"
                    >
                      <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center">
-                          <BookOpen className="w-5 h-5" />
+                       <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20">
+                          <BookOpen className="w-5 h-5 shadow-sm" />
                        </div>
                        <div>
-                         <p className="font-bold text-text-primary text-sm flex items-center gap-2">Rules & Regulations</p>
-                         <p className="text-xs text-text-secondary mt-0.5">View grading, rewards, and retry policies</p>
+                         <p className="font-black text-brand-gold text-sm uppercase tracking-widest">Platform Codex</p>
+                         <p className="text-[10px] text-brand-gold/60 mt-0.5 font-bold uppercase tracking-tight">Regulations & Economy</p>
                        </div>
                      </div>
-                     <ChevronRight className="w-5 h-5 text-text-secondary" />
+                     <ChevronRight className="w-5 h-5 text-brand-gold group-hover:translate-x-1 transition-transform" />
                    </div>
                  </div>
                  <button 
                    onClick={logOut}
-                   className="w-full mt-4 bg-bg-surface hover:bg-rose-500/10 text-rose-500 border border-border-main hover:border-rose-500/20 transition-all font-bold text-sm p-4 rounded-xl shadow-sm flex items-center justify-center gap-2"
+                   className="w-full mt-6 bg-rose-600/5 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-600/20 transition-all font-black text-xs uppercase tracking-[0.2em] p-5 rounded-2xl shadow-sm flex items-center justify-center gap-2 group"
                    title="Logout"
                  >
-                   <LogOut className="w-5 h-5" /> <span>Sign Out</span>
+                   <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> <span>Terminate Session</span>
                  </button>
                </div>
             </div>
           </motion.div>
-        ) : (
+        )}
+
+        {activeTab === 'overview' && (
           <motion.div 
             key="overview"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             className="space-y-6"
           >
-                {/* Bento Quick Stats Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 md:gap-4">
-                      <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col relative overflow-hidden group col-span-1">
+            {/* Bento Quick Stats Grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
+                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center items-center relative overflow-hidden group">
                     <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
                       <Star className="w-20 h-20" />
                     </div>
-                    <div className="relative z-10">
-                      <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Lvl {currentLevel}</p>
-                      <div className="flex items-end gap-1">
-                        <span className="text-xl font-black text-text-primary leading-none">{xpCurrent}</span>
-                        <span className="text-[10px] font-bold text-text-secondary mb-0.5">/ {xpMax}</span>
-                      </div>
-                    </div>
-                    <div className="relative z-10 w-full h-1.5 bg-bg-main rounded-full overflow-hidden mt-3">
-                      <div className="h-full bg-brand-gold rounded-full" style={{ width: `${xpProgress}%` }}></div>
+                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Level</p>
+                    <div className="relative z-10 flex items-center gap-1">
+                      <span className="text-xl font-black text-text-primary">{currentLevel}</span>
                     </div>
                   </div>
 
-                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center relative overflow-hidden group col-span-1 md:col-span-2">
-                    <div className="absolute -right-4 -top-4 text-amber-500/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
                       <Crown className="w-20 h-20" />
                     </div>
-                    <div className="relative z-10 flex justify-between items-end mb-1">
-                      <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">VIP {getVIPLevel(user).level}</p>
-                      <Link to="/wallet" className="text-[10px] border border-amber-500/30 text-amber-500 px-2 rounded-full hover:bg-amber-500/10 transition-colors">Recharge</Link>
-                    </div>
-                    <div className="relative z-10 flex items-end gap-1">
-                      <span className="text-xl font-black text-amber-500 leading-none">{getVIPLevel(user).xp}</span>
-                      <span className="text-[10px] font-bold text-text-secondary mb-0.5">/ {getVIPLevel(user).nextLevelXP} XP</span>
-                    </div>
-                    <div className="relative z-10 w-full h-1.5 bg-bg-main rounded-full overflow-hidden mt-3">
-                      <div className="h-full bg-amber-500 rounded-full" style={{ width: `${getVIPLevel(user).progress}%` }}></div>
+                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">VIP</p>
+                    <div className="relative z-10 flex items-center gap-1">
+                      <span className="text-xl font-black text-brand-gold">{getVIPLevel(user).level}</span>
                     </div>
                   </div>
 
-                    <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center relative overflow-hidden group">
+                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center relative overflow-hidden group">
                     <div className="absolute -right-4 -top-4 text-orange-500/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
                       <Flame className="w-20 h-20" />
                     </div>
                     <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Streak</p>
                     <div className="relative z-10 flex items-center gap-1">
                       <span className="text-xl font-black text-text-primary">{user.streak || 0}</span>
-                      <Flame className="w-3.5 h-3.5 text-orange-500 fill-current" />
+                      <span className="text-[10px] font-bold text-text-secondary">DAYS</span>
+                    </div>
+                  </div>
+                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col relative overflow-hidden group border-brand-gold/10">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                      <Trophy className="w-20 h-20" />
+                    </div>
+                    <div className="relative z-10 w-full overflow-hidden">
+                      <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Rank</p>
+                      <div className="flex items-end gap-1">
+                        <span className="text-xl font-black text-text-primary leading-none">#{user.rank || '---'}</span>
+                      </div>
                     </div>
                   </div>
 
@@ -811,20 +845,20 @@ export const Profile = () => {
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                        <div className="p-4 bg-bg-main rounded-[20px] border border-border-main">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <div className="p-4 bg-bg-main rounded-[20px] border border-border-main flex flex-col justify-center items-center text-center">
                           <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-1">Coin Power</p>
                           <p className="text-lg font-black text-text-primary">+{user.coins || 0}</p>
                         </div>
-                        <div className="p-4 bg-orange-500/10 rounded-[20px] border border-orange-500/20">
+                        <div className="p-4 bg-orange-500/10 rounded-[20px] border border-orange-500/20 flex flex-col justify-center items-center text-center">
                           <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Streak Bonus</p>
                           <p className="text-lg font-black text-orange-500">+{ (user.streak || 0) * 50 }</p>
                         </div>
-                        <div className="p-4 bg-fuchsia-500/10 rounded-[20px] border border-fuchsia-500/20">
+                        <div className="p-4 bg-fuchsia-500/10 rounded-[20px] border border-fuchsia-500/20 flex flex-col justify-center items-center text-center">
                           <p className="text-[10px] font-black text-fuchsia-500 uppercase tracking-widest mb-1">Achievement</p>
                           <p className="text-lg font-black text-fuchsia-500">+{ (user.achievements?.length || 0) * 200 }</p>
                         </div>
-                        <div className="p-4 bg-brand-gold/10 rounded-[20px] border border-brand-gold/20">
+                        <div className="p-4 bg-brand-gold/10 rounded-[20px] border border-brand-gold/20 flex flex-col justify-center items-center text-center">
                           <p className="text-[10px] font-black text-brand-gold uppercase tracking-widest mb-1">Stockpile</p>
                           <p className="text-lg font-black text-brand-gold">+{ (user.inventory?.length || 0) * 150 }</p>
                         </div>
@@ -869,63 +903,65 @@ export const Profile = () => {
                             const timeRemaining = expiringSoon ? Math.ceil((expiringSoon - Date.now()) / (1000 * 60 * 60 * 24)) : null;
 
                             return (
-                              <div key={itemId} className="group relative flex flex-col p-4 bg-bg-main rounded-3xl border border-border-main shadow-sm hover:border-brand-gold/30 transition duration-300">
-                                <div className="flex items-center">
-                                  <div className={`w-14 h-14 bg-gradient-to-br ${shopItem.color} text-bg-main rounded-2xl flex items-center justify-center shadow-lg shrink-0 mr-4 group-hover:scale-105 transition-transform duration-300`}>
-                                    <Icon className="w-7 h-7" />
+                              <div key={itemId} className="group relative flex flex-col p-5 bg-bg-main rounded-3xl border border-border-main shadow-sm hover:border-brand-gold/30 transition-all duration-300">
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                                    <div className={`w-14 h-14 bg-gradient-to-br ${shopItem.color} text-bg-main rounded-2xl flex items-center justify-center shadow-lg shrink-0 group-hover:scale-105 transition-transform duration-300`}>
+                                      <Icon className="w-7 h-7" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                       <div className="flex items-center gap-2">
+                                         <p className="font-black text-text-primary capitalize truncate text-base">{shopItem.name}</p>
+                                         <button 
+                                           onClick={() => setShowInfoId(showInfo ? null : itemId)}
+                                           className={cn("p-1 transition-colors", showInfo ? "text-brand-gold" : "text-text-secondary hover:text-brand-gold")}
+                                         >
+                                           <Info className="w-3.5 h-3.5" />
+                                         </button>
+                                       </div>
+                                       <div className="flex items-center gap-2 mt-0.5">
+                                          <div className="bg-[#1A2B48]/5 text-[#1A2B48] font-black text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider border border-[#1A2B48]/10">x{String(data.count)}</div>
+                                          {timeRemaining !== null && (
+                                            <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
+                                               <Clock className="w-3 h-3" /> {timeRemaining}d left
+                                            </p>
+                                          )}
+                                          {isConsumable && (
+                                             <div className={cn(
+                                               "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg",
+                                               isManual ? "bg-brand-gold/10 text-brand-gold" : "bg-bg-surface text-text-secondary/60 border border-border-main"
+                                             )}>
+                                               {isManual ? 'Active' : 'Passive'}
+                                             </div>
+                                          )}
+                                       </div>
+                                    </div>
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                     <div className="flex items-center gap-2">
-                                       <p className="font-black text-text-primary capitalize truncate text-base">{shopItem.name}</p>
-                                       <button 
-                                         onClick={() => setShowInfoId(showInfo ? null : itemId)}
-                                         className={cn("p-1 transition-colors", showInfo ? "text-brand-gold" : "text-text-secondary hover:text-brand-gold")}
-                                       >
-                                         <Info className="w-3.5 h-3.5" />
-                                       </button>
-                                     </div>
-                                     <div className="flex items-center gap-2 mt-0.5">
-                                        <div className="bg-bg-surface text-text-secondary font-black text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider border border-border-main">x{String(data.count)}</div>
-                                        {timeRemaining !== null && (
-                                          <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
-                                             <Clock className="w-3 h-3" /> {timeRemaining}d left
-                                          </p>
-                                        )}
-                                        {isConsumable && (
-                                           <div className={cn(
-                                             "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg",
-                                             isManual ? "bg-brand-gold/20 text-brand-gold" : "bg-border-main text-text-secondary/80"
-                                           )}>
-                                             {isManual ? 'Action Item' : 'Passive'}
-                                           </div>
-                                        )}
-                                     </div>
-                                  </div>
-                                  <div className="flex items-center gap-2">
+                                  
+                                  <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                                      <button 
                                        onClick={() => setSendingItemId(itemId)}
-                                       className="flex flex-col items-center justify-center p-3 bg-rose-500/10 text-rose-600 hover:bg-rose-600 hover:text-bg-main rounded-xl transition-all shadow-sm active:scale-95 text-[10px] font-black uppercase tracking-tighter"
+                                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2B48]/5 text-[#1A2B48] hover:bg-[#1A2B48] hover:text-white rounded-xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest border border-[#1A2B48]/10"
                                        title="Gift to Friend"
                                      >
-                                       <Gift className="w-4 h-4 mb-0.5" /> Send
+                                       <Gift className="w-4 h-4" /> <span>Gift</span>
                                      </button>
                                      {isManual && (
                                        <button 
                                          onClick={() => consumeItem(itemId)}
-                                         className="flex flex-col items-center justify-center p-3 bg-brand-gold-hover text-bg-main hover:bg-indigo-700 rounded-xl transition-all shadow-lg shadow-indigo-100 active:scale-95 text-[10px] font-black uppercase tracking-tighter min-w-[60px]"
+                                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-brand-gold text-[#1A2B48] hover:shadow-lg hover:shadow-brand-gold/20 rounded-xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest"
                                          title="Use Item"
                                        >
-                                         <Zap className="w-4 h-4 mb-0.5" /> Use
+                                         <Zap className="w-4 h-4" /> <span>Use</span>
                                        </button>
                                      )}
                                      {!isManual && isConsumable && (
-                                       <div className="bg-border-main text-text-secondary/80 p-3 rounded-xl flex flex-col items-center justify-center text-[8px] font-black uppercase tracking-tighter opacity-60">
-                                          <div className="italic">Auto</div>
-                                          <div>Passive</div>
+                                       <div className="flex-1 sm:flex-none bg-bg-surface border border-border-main text-text-secondary/60 px-4 py-3 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60">
+                                          <Shield className="w-4 h-4" /> <span>Passive</span>
                                        </div>
                                      )}
                                    </div>
-                                 </div>
+                                </div>
 
                                  <div className="mt-3 overflow-hidden">
                                      <div className="p-3 bg-bg-main/50 rounded-2xl border border-border-main/50">
@@ -956,9 +992,9 @@ export const Profile = () => {
                     </div>
                   </div>
                 </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+          )}
+        </AnimatePresence>
 
       <ShareModal isOpen={showShare} onClose={() => setShowShare(false)} />
       <AnimatePresence>
@@ -1058,8 +1094,17 @@ export const Profile = () => {
         )}
       </AnimatePresence>
 
-      <div className="mt-8 mb-4 text-center text-sm font-semibold text-text-secondary pb-20 md:pb-0">
-        Lumina v2.0.3 • Quality Improvements
+      <div className="mt-8 mb-4 flex flex-col items-center justify-center gap-1 text-sm font-semibold text-text-secondary pb-20 md:pb-0">
+        <div>Lumora v2.0.3 • Quality Improvements</div>
+        <a 
+          href="https://www.samjuniors.com" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="flex items-center gap-2 mt-3 px-4 py-2 bg-brand-gold/10 hover:bg-brand-gold/20 border justify-center border-brand-gold/30 rounded-full transition-all text-brand-gold shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] group"
+        >
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Welcome" className="w-5 h-5 drop-shadow-md group-hover:rotate-12 transition-transform" />
+          <span className="font-black uppercase tracking-widest text-[9px]">Powered by Samjuniors • Visit Us</span>
+        </a>
       </div>
       <AnimatePresence>
         {showRules && <RulesModal key="rules-modal" onClose={() => setShowRules(false)} />}

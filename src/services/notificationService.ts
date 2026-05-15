@@ -7,7 +7,7 @@ export async function queueEmailNotification(to: string | string[], subject: str
 
     const fullHtml = `
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 16px;">
-        <h1 style="color: #6366f1; font-weight: 900; margin-bottom: 20px;">Lumina Academy</h1>
+        <h1 style="color: #6366f1; font-weight: 900; margin-bottom: 20px;">Lumora Academy</h1>
         <div style="font-size: 16px; line-height: 1.6; color: #1e293b;">
           ${html}
         </div>

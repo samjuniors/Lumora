@@ -3927,7 +3927,7 @@ Format your response accurately but concisely.`;
 
 const SettingsManager = () => {
     const [mobileNumber, setMobileNumber] = useState('');
-    const [payeeName, setPayeeName] = useState('Lumina');
+    const [payeeName, setPayeeName] = useState('Lumora');
     const [paymentLink, setPaymentLink] = useState('');
     const [loading, setLoading] = useState(false);
 

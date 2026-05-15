@@ -609,6 +609,48 @@ export const Dashboard = () => {
         <ResourceCollector />
       </div>
 
+      {/* Active Buffs / Timed Effects */}
+      {(user?.taxHavenUntil || user?.doubleDownShieldUntil || user?.xpBoosterUntil) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {user.taxHavenUntil && user.taxHavenUntil > Date.now() && (
+            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group">
+              <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
+              <div className="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 relative z-10">
+                <Send size={20} />
+              </div>
+              <div className="flex-1 relative z-10">
+                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Tax Haven Active</p>
+                <p className="text-sm font-bold text-indigo-600">Reduced 20% platform tax</p>
+              </div>
+            </div>
+          )}
+          {user.doubleDownShieldUntil && user.doubleDownShieldUntil > Date.now() && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-amber-500/5 animate-pulse" />
+              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 relative z-10">
+                <Target size={20} />
+              </div>
+              <div className="flex-1 relative z-10">
+                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">D-Down Shield Active</p>
+                <p className="text-sm font-bold text-amber-700">50% Penalty Protection</p>
+              </div>
+            </div>
+          )}
+          {user.xpBoosterUntil && user.xpBoosterUntil > Date.now() && (
+            <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden">
+              <div className="absolute inset-0 bg-purple-500/5 animate-pulse" />
+              <div className="w-10 h-10 bg-purple-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 relative z-10">
+                <Plus size={20} />
+              </div>
+              <div className="flex-1 relative z-10">
+                <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Neural Link Upgrade</p>
+                <p className="text-sm font-bold text-purple-600">Passive 1.5x XP Multiplier</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="grid md:grid-cols-3 gap-6 md:gap-8">
         {/* Recent Assignments section */}
         <div className="md:col-span-2 space-y-6 md:space-y-8">

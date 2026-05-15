@@ -154,7 +154,7 @@ export const Syndicates = () => {
             <div className="text-center space-y-4">
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold rounded-full text-[10px] font-black uppercase tracking-widest border border-brand-gold/20">
                     <Shield size={12} />
-                    Lumina Global Network
+                    Lumora Global Network
                 </div>
                 <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tighter">The Syndicates</h1>
                 <p className="text-text-secondary font-medium max-w-xl mx-auto italic text-sm">

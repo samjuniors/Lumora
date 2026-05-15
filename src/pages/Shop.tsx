@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbProvider';
-import { ShoppingBag, Zap, Shield, Sparkles, Clock, Check, Palette } from 'lucide-react';
+import { ShoppingBag, Zap, Shield, Sparkles, Clock, Check, Palette, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-hot-toast';
 import { useSound } from '../hooks/useSound';
@@ -12,122 +12,122 @@ export const SHOP_ITEMS = [
   {
     id: 'late_pass_1',
     name: 'Late Submission Pass',
-    description: 'Bypass the penalty fee for one late submission.',
-    price: 50,
+    description: 'Bypass the penalty fee for one late mission submission.',
+    price: 75,
     currency: 'coins',
     icon: Clock,
     color: 'text-orange-500',
     bg: 'bg-orange-500/10',
     type: 'consumable',
-    category: 'Boosts'
+    category: 'Logistics'
   },
   {
     id: 'resubmission_ticket',
     name: 'Resubmission Ticket',
-    description: 'Clear an already graded assignment and try again to get a better score.',
-    price: 100,
+    description: 'Wipe a graded mission and re-attempt for a higher score.',
+    price: 200,
     currency: 'coins',
     icon: Sparkles,
     color: 'text-emerald-500',
     bg: 'bg-emerald-500/10',
     type: 'consumable',
-    category: 'Boosts'
+    category: 'Recovery'
   },
   {
-    id: 'reevaluation_pass',
-    name: 'Re-evaluation Pass',
-    description: 'Ask the AI to look at your submission again. Good if you think it graded too harshly.',
-    price: 40,
-    currency: 'coins',
-    icon: Zap,
-    color: 'text-blue-500',
-    bg: 'bg-blue-500/10',
-    type: 'consumable',
-    category: 'Boosts'
-  },
-  {
-    id: 'vip_bronze',
-    name: 'VIP Bronze Status',
-    description: 'Lifetime 1.2x XP Boost & Exclusive Bronze Badge. Unlocks early transfer access.',
-    price: 250,
+    id: 'tax_haven_24h',
+    name: 'Tax Haven (24h)',
+    description: 'Illegal logic patch! Reduce platform tax by 10% for 24 hours. Vital for high-volatility sessions.',
+    price: 45,
     currency: 'diamonds',
     icon: Shield,
-    color: 'text-amber-700',
-    bg: 'bg-amber-700/10',
-    type: 'cosmetic',
-    category: 'Premium'
+    color: 'text-indigo-400',
+    bg: 'bg-indigo-500/10',
+    type: 'consumable',
+    category: 'High-Stakes'
+  },
+  {
+    id: 'double_down_insurance',
+    name: 'Double Down Shield',
+    description: 'Guaranteed 75% stake refund if you fail a Double Down mission. Non-negotiable safety net.',
+    price: 60,
+    currency: 'diamonds',
+    icon: Shield,
+    color: 'text-amber-500',
+    bg: 'bg-amber-500/10',
+    type: 'consumable',
+    category: 'High-Stakes'
   },
   {
     id: 'ai_extraction_booster',
-    name: 'AI Extraction Booster',
-    description: 'Permanent 2x XP from AI-assessed assignments.',
+    name: 'Neural Link Upgrade',
+    description: 'Permanent 1.5x XP multiplier for all AI-assessed missions.',
     price: 1500,
     currency: 'coins',
     icon: Zap,
     color: 'text-purple-500',
     bg: 'bg-purple-500/10',
     type: 'cosmetic',
-    category: 'Premium'
+    category: 'Upgrades'
   },
   {
     id: 'streak_freeze',
-    name: 'Streak Freeze',
-    description: 'Missed a day? Automatically keeps your streak alive for a single missed day.',
-    price: 60,
+    name: 'Zero-Day Freeze',
+    description: 'Protects your streak automatically for one missed mission.',
+    price: 80,
     currency: 'coins',
     icon: Zap,
     color: 'text-cyan-500',
     bg: 'bg-cyan-500/10',
     type: 'consumable',
-    category: 'Passes'
-  },
-  {
-    id: 'streak_repair',
-    name: 'Streak Repair',
-    description: 'Lost your streak? Restore your highest streak from the past 7 days.',
-    price: 200,
-    currency: 'coins',
-    icon: Shield,
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10',
-    type: 'consumable',
-    category: 'Passes'
-  },
-  {
-    id: 'streak_shield_7d',
-    name: '7-Day Streak Shield',
-    description: 'Protect your streak for the next 7 days automatically. Passive protection.',
-    price: 15,
-    currency: 'diamonds',
-    icon: Shield,
-    color: 'text-cyan-400',
-    bg: 'bg-cyan-500/10',
-    type: 'consumable',
-    category: 'Premium'
+    category: 'Logistics'
   },
   {
     id: 'mystery_gift_box',
-    name: 'Mystery Gift Box',
-    description: 'Open a mystery box! Could contain rare profile items, massive coins, or an XP boost.',
-    price: 150,
+    name: 'Lumora Mystery Crate',
+    description: 'High-variance rewards. Could contain Diamonds, Gold status, or Elite Badges.',
+    price: 250,
     currency: 'coins',
     icon: ShoppingBag,
     color: 'text-fuchsia-500',
     bg: 'bg-fuchsia-500/10',
     type: 'consumable',
-    category: 'Specials'
+    category: 'Hazards'
   },
   {
     id: 'badge_scholar',
-    name: 'Scholar Badge',
-    description: 'Display a shiny scholar badge on your profile.',
-    price: 150,
+    name: 'Elite Scholar Sigil',
+    description: 'A premium animated badge for your profile (Non-tradable).',
+    price: 450,
     currency: 'coins',
     icon: Check,
-    color: 'text-indigo-500',
-    bg: 'bg-indigo-500/10',
+    color: 'text-brand-gold',
+    bg: 'bg-brand-gold/10',
     type: 'cosmetic',
-    category: 'Badges'
+    category: 'Prestige'
+  },
+  {
+    id: 'theme_gold_limited',
+    name: 'Midas Touch Profile',
+    description: 'Exclusive Navy & Gold animated profile theme. The ultimate symbol of academic dominance.',
+    price: 250,
+    currency: 'diamonds',
+    icon: Palette,
+    color: 'text-brand-gold',
+    bg: 'bg-brand-gold/10',
+    type: 'cosmetic',
+    category: 'Prestige'
+  },
+  {
+    id: 'syndicate_legacy',
+    name: 'Syndicate War Chest',
+    description: 'Instantly grants 5000 Syndicate XP and a exclusive collective banner for all members.',
+    price: 15000,
+    currency: 'coins',
+    icon: ShoppingBag,
+    color: 'text-emerald-500',
+    bg: 'bg-emerald-500/10',
+    type: 'consumable',
+    category: 'Group'
   }
 ];
 
@@ -135,26 +135,76 @@ export const Shop = () => {
   const { user, setUser } = useAuth();
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const { playSound } = useSound();
-  const [activeTab, setActiveTab] = useState<'all' | 'consumables' | 'cosmetics'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'consumables' | 'cosmetics' | 'inventory'>('all');
   const [showMysteryBox, setShowMysteryBox] = useState(false);
   const [mysteryReward, setMysteryReward] = useState<any>(null);
+
+  const handleActivateItem = async (itemId: string) => {
+    if (!user) return;
+    
+    setPurchasing(itemId); // Use this for loading state
+    try {
+      const inventory = user.inventory || [];
+      const itemIdx = inventory.indexOf(itemId);
+      if (itemIdx === -1) return;
+
+      const newInventory = [...inventory];
+      newInventory.splice(itemIdx, 1);
+
+      const updates: any = {
+        inventory: newInventory,
+        updatedAt: Date.now()
+      };
+
+      if (itemId === 'tax_haven_24h') {
+        updates.taxHavenUntil = Date.now() + (24 * 60 * 60 * 1000);
+        toast.success("Tax Haven activated for 24 hours!");
+      } else if (itemId === 'double_down_insurance') {
+        updates.doubleDownShieldUntil = Date.now() + (7 * 24 * 60 * 60 * 1000);
+        toast.success("Double Down Shield activated for 7 days!");
+      } else if (itemId === 'ai_extraction_booster') {
+         updates.xpBoosterUntil = Date.now() + (30 * 24 * 60 * 60 * 1000);
+         toast.success("Neural Link Upgrade: 1.5x XP active for 30 days!");
+      } else if (itemId === 'badge_scholar') {
+         const badges = user.badgeIds || [];
+         if (!badges.includes('elite_scholar')) badges.push('elite_scholar');
+         updates.badgeIds = badges;
+         toast.success("Elite Scholar Sigil added to your profile!");
+      } else if (itemId === 'theme_gold_limited') {
+         updates.themeId = 'gold_prestige';
+         toast.success("Midas Touch Profile theme equipped!");
+      } else {
+        toast.error("This item must be used during a mission.");
+        setPurchasing(null);
+        return;
+      }
+
+      await dbService.updateUser(user.id, updates);
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      playSound('success');
+    } catch (err) {
+      toast.error("Failed to activate item");
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   const handleOpenMysteryBox = async () => {
     const roll = Math.random();
     let reward: any = { type: 'coins', amount: 0, label: '', icon: '🪙' };
 
-    if (roll > 0.95) { // 5% Legendary
-      reward = { type: 'diamonds', amount: 50, label: '50 Diamonds (LEGENDARY)', icon: '💎', color: 'text-cyan-400' };
-    } else if (roll > 0.90) { // 5% Epic
-      reward = { type: 'coins', amount: 500, label: '500 Coins (EPIC)', icon: '🪙', color: 'text-brand-gold' };
-    } else if (roll > 0.70) { // 20% Rare
-      const isDia = Math.random() > 0.5;
+    if (roll > 0.98) { // 2% Legendary
+      reward = { type: 'diamonds', amount: 200, label: '200 Diamonds (KINGSHIP)', icon: '👑', color: 'text-brand-gold' };
+    } else if (roll > 0.90) { // 8% Epic
+      reward = { type: 'diamonds', amount: 50, label: '50 Diamonds (EPIC)', icon: '💎', color: 'text-cyan-400' };
+    } else if (roll > 0.60) { // 30% Rare
+      const isDia = Math.random() > 0.7;
       reward = isDia 
-        ? { type: 'diamonds', amount: 10, label: '10 Diamonds (RARE)', icon: '💎', color: 'text-cyan-400' }
-        : { type: 'coins', amount: 200, label: '200 Coins (RARE)', icon: '🪙', color: 'text-emerald-400' };
-    } else { // 70% Common
-      const amt = Math.floor(Math.random() * 31) + 20; // 20-50
-      reward = { type: 'coins', amount: amt, label: `${amt} Coins (Common)`, icon: '🪙' };
+        ? { type: 'diamonds', amount: 15, label: '15 Diamonds (RARE)', icon: '💎', color: 'text-cyan-400' }
+        : { type: 'coins', amount: 1000, label: '1000 Coins (RARE)', icon: '🪙', color: 'text-emerald-400' };
+    } else { // 60% Common
+      const amt = Math.floor(Math.random() * 201) + 100; // 100-300
+      reward = { type: 'coins', amount: amt, label: `${amt} Coins (Utility)`, icon: '🪙' };
     }
 
     setMysteryReward(reward);
@@ -165,8 +215,12 @@ export const Shop = () => {
       if (reward.type === 'coins') updates.coins = (user.coins || 0) + reward.amount;
       if (reward.type === 'diamonds') updates.diamonds = (user.diamonds || 0) + reward.amount;
       
-      await dbService.updateUser(user.id, updates);
-      setUser(prev => prev ? { ...prev, ...updates } : null);
+      try {
+        await dbService.updateUser(user.id, updates);
+        setUser(prev => prev ? { ...prev, ...updates } : null);
+      } catch (err) {
+        toast.error("Failed to sync mystery reward");
+      }
     }
   };
 
@@ -281,24 +335,34 @@ export const Shop = () => {
             Exchange your hard-earned coins for powerful boosts, exclusive cosmetics, and theme unlocks.
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-bg-surface border border-border-main rounded-2xl p-4 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-brand-gold/10 flex items-center justify-center">
+        <div className="flex items-center gap-4 bg-[#1A2B48] border border-brand-gold/30 rounded-2xl p-4 shadow-xl shadow-brand-gold/5 min-w-[280px]">
+          <div className="w-12 h-12 rounded-xl bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
             <span className="text-2xl drop-shadow-sm">🪙</span>
           </div>
-          <div>
-            <p className="text-xs font-bold text-text-secondary uppercase tracking-wider">Your Balance</p>
-                    <p className="text-2xl font-black text-text-primary">
-                      {user?.coins || 0} <span className="text-xs text-text-secondary opacity-60 ml-1">Coins</span>
-                      <span className="mx-2 opacity-10">|</span>
-                      {user?.diamonds || 0} <span className="text-xs text-text-secondary opacity-60 ml-1 font-mono">DIA</span>
-                    </p>
+          <div className="flex-1">
+            <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em] mb-1">Asset Portfolio</p>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black text-white">{user?.coins.toLocaleString() || 0}</span>
+                <span className="text-[9px] font-bold text-white/40 uppercase">Coins</span>
+              </div>
+              <div className="w-px h-6 bg-white/10" />
+              <div className="flex items-baseline gap-1">
+                <span className="text-xl font-black text-cyan-400">{(user?.diamonds || 0).toLocaleString()}</span>
+                <span className="text-[9px] font-bold text-cyan-400/40 uppercase">DIA</span>
+              </div>
+            </div>
+            <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-1.5 opacity-60">
+               <Info className="w-3 h-3 text-brand-gold" />
+               <p className="text-[8px] font-bold text-white uppercase tracking-tighter">Automatic 30% Platform Tax applied to all rewards</p>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
       <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-border-main">
-        {['all', 'consumables', 'cosmetics'].map((tab) => (
+        {['all', 'consumables', 'cosmetics', 'inventory'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
@@ -323,74 +387,95 @@ export const Shop = () => {
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <AnimatePresence>
-          {filteredItems.map((item) => {
+          {(activeTab === 'inventory' 
+            ? (user?.inventory || []).map((id, index) => {
+                const item = SHOP_ITEMS.find(i => i.id === id);
+                if (!item) return null;
+                return { ...item, instanceId: `${id}-${index}` };
+              }).filter(Boolean)
+            : filteredItems
+          ).map((item: any) => {
             const isOwned = item.type === 'cosmetic' && user?.inventory?.includes(item.id);
             const ownedCount = item.type === 'consumable' ? (user?.inventory?.filter(id => id === item.id).length || 0) : 0;
             const balance = item.currency === 'diamonds' ? (user?.diamonds || 0) : (user?.coins || 0);
             const canAfford = balance >= item.price;
+            const isInventoryView = activeTab === 'inventory';
             
             return (
               <motion.div 
                 variants={itemVariants}
-                key={item.id}
+                key={isInventoryView ? item.instanceId : item.id}
                 layout
                 className={cn(
-                  "bg-bg-surface rounded-3xl border transition-all duration-300 flex flex-col overflow-hidden",
-                  isOwned ? "border-border-main opacity-80" : "border-border-main hover:border-brand-gold/20 shadow-sm hover:shadow-xl"
+                  "bg-bg-surface rounded-3xl border transition-all duration-300 flex flex-col overflow-hidden group",
+                  !isInventoryView && isOwned ? "border-border-main opacity-80" : "border-border-main hover:border-brand-gold/40 shadow-sm hover:shadow-2xl hover:shadow-brand-gold/5"
                 )}
               >
                 {/* Image / Icon Header */}
-                <div className="p-6 flex items-center justify-center relative border-b border-border-main/50 overflow-hidden">
-                  <div className={cn("absolute inset-0 opacity-20", item.bg)}></div>
-                  <div className={cn("w-20 h-20 rounded-2xl flex items-center justify-center relative z-10 bg-bg-main border border-border-main shadow-inner")}>
+                <div className="p-8 flex items-center justify-center relative border-b border-border-main/50 overflow-hidden">
+                  <div className={cn("absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity", item.bg)}></div>
+                  <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center relative z-10 bg-bg-main border border-border-main shadow-inner group-hover:scale-110 transition-transform duration-500")}>
                      <item.icon className={cn("w-10 h-10", item.color)} strokeWidth={1.5} />
                   </div>
-                  {ownedCount > 0 && (
-                    <div className="absolute top-4 right-4 bg-bg-surface border border-border-main text-text-primary font-bold px-2 py-1 rounded-lg text-xs shadow-sm z-20 flex items-center gap-1">
+                  <div className="absolute inset-0 bg-gradient-to-t from-bg-surface/50 to-transparent pointer-events-none" />
+                  
+                  {!isInventoryView && ownedCount > 0 && (
+                    <div className="absolute top-4 right-4 bg-bg-surface/80 backdrop-blur-md border border-border-main text-text-primary font-bold px-2 py-1 rounded-lg text-[10px] shadow-sm z-20 flex items-center gap-1">
                       <ShoppingBag className="w-3 h-3 text-brand-gold" /> {ownedCount}
                     </div>
                   )}
-                  {isOwned && (
-                    <div className="absolute top-4 right-4 bg-brand-gold/10 border border-brand-gold/30 text-brand-gold font-bold px-2 py-1 rounded-lg text-xs z-20 flex items-center gap-1">
-                      <Check className="w-3 h-3" /> Owned
+                  {!isInventoryView && isOwned && (
+                    <div className="absolute top-4 right-4 bg-brand-gold text-bg-main font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-widest z-20 flex items-center gap-1 shadow-lg shadow-brand-gold/20">
+                      <Check className="w-3 h-3" strokeWidth={3} /> Owned
                     </div>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="p-5 flex-1 flex flex-col">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-[10px] font-bold tracking-widest text-text-secondary uppercase">
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-[9px] font-black tracking-[0.2em] text-brand-gold/70 bg-brand-gold/5 px-2 py-0.5 rounded uppercase">
                       {item.category}
                     </span>
+                    {item.price > 100 && item.currency === 'diamonds' && (
+                       <span className="text-[9px] font-black bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded uppercase tracking-widest">Limited</span>
+                    )}
                   </div>
-                  <h3 className="font-bold text-lg text-text-primary mb-2 line-clamp-1">{item.name}</h3>
-                  <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-1">{item.description}</p>
+                  <h3 className="font-black text-xl text-text-primary mb-2 line-clamp-1 group-hover:text-brand-gold transition-colors">{item.name}</h3>
+                  <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-1 font-medium">{item.description}</p>
                   
                   {/* Action Button */}
-                  {isOwned ? (
-                    <button disabled className="w-full bg-bg-main border border-border-main text-text-secondary font-semibold py-3 rounded-xl flex items-center justify-center gap-2 text-sm cursor-not-allowed">
-                      <Check className="w-4 h-4" /> Already Owned
+                  {isInventoryView ? (
+                    <button 
+                      onClick={() => handleActivateItem(item.id)}
+                      disabled={purchasing === item.id}
+                      className="w-full bg-brand-gold text-bg-main font-black py-4 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                      {purchasing === item.id ? "Processing..." : (item.type === 'cosmetic' ? "Equip Item" : "Activate Effect")}
+                    </button>
+                  ) : isOwned ? (
+                    <button disabled className="w-full bg-bg-main border border-border-main text-text-secondary font-bold py-4 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-not-allowed">
+                      <Check className="w-4 h-4" /> Item Active
                     </button>
                   ) : (
                     <button 
                       disabled={!canAfford || purchasing === item.id}
                       onClick={() => handlePurchase(item)}
                       className={cn(
-                        "w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm transition-all duration-200",
+                        "w-full py-4 rounded-2xl font-black flex items-center justify-center gap-2 text-xs uppercase tracking-[0.15em] transition-all duration-300 shadow-lg",
                         canAfford 
-                          ? "bg-text-primary text-bg-main hover:bg-text-secondary active:scale-[0.98]" 
-                          : "bg-bg-main text-text-secondary border border-border-main cursor-not-allowed"
+                          ? "bg-brand-gold text-bg-main hover:scale-[1.02] active:scale-[0.98] shadow-brand-gold/20" 
+                          : "bg-bg-main text-text-secondary border border-border-main cursor-not-allowed opacity-50"
                       )}
                     >
                       {purchasing === item.id ? (
-                         <span className="animate-pulse">Processing...</span>
+                         <span className="animate-pulse">Authorizing...</span>
                       ) : (
-                        <div className="flex items-center gap-1">
-                          <span className={cn("text-lg", item.currency === 'diamonds' ? "text-cyan-500" : "text-brand-gold")}>
+                        <div className="flex items-center gap-2">
+                          <span className={cn("text-xl", item.currency === 'diamonds' ? "text-cyan-500" : "text-bg-main")}>
                              {item.currency === 'diamonds' ? '💎' : '🪙'}
                           </span> 
-                          <span className="text-lg">{item.price}</span>
+                          <span className="text-lg font-black">{item.price.toLocaleString()}</span>
                         </div>
                       )}
                     </button>

@@ -145,7 +145,9 @@ export class FirebaseService implements IDatabaseService {
 
     // Calculate level up before applying increments
     const oldTotalXP = (user.xp || 0) + (user.lifetimeDiamonds || 0);
-    const newTotalXP = oldTotalXP + xpToAdd + Math.max(0, diamondsToAdd);
+    const hasXpBooster = user.xpBoosterUntil && user.xpBoosterUntil > Date.now();
+    const effectiveXpToAdd = hasXpBooster ? Math.floor(xpToAdd * 1.5) : xpToAdd;
+    const newTotalXP = oldTotalXP + effectiveXpToAdd + Math.max(0, diamondsToAdd);
     const levelUpData = checkLevelUp(oldTotalXP, newTotalXP);
 
     if (diamondsToAdd !== 0) {
@@ -169,8 +171,8 @@ export class FirebaseService implements IDatabaseService {
       }
     }
 
-    if (xpToAdd !== 0) {
-      updates.xp = increment(xpToAdd);
+    if (effectiveXpToAdd !== 0) {
+      updates.xp = increment(effectiveXpToAdd);
     }
     
     return { updates, levelUpData };
@@ -1029,7 +1031,9 @@ export class FirebaseService implements IDatabaseService {
         }
 
         // --- 30% Platform Tax for Admin Profit ---
-        const platformTax = Math.floor(bonusEarned * 0.3);
+        const hasTaxHaven = student.taxHavenUntil && student.taxHavenUntil > now;
+        const taxRate = hasTaxHaven ? 0.2 : 0.3; // 10% reduction (30% -> 20%)
+        const platformTax = Math.floor(bonusEarned * taxRate);
         bonusEarned = bonusEarned - platformTax;
         // ------------------------------------------
 
@@ -1283,7 +1287,16 @@ export class FirebaseService implements IDatabaseService {
           const enrId = enr?.id || `enr_pen_${now}_${s.id}_${a.id}`;
           
           let basePenalty = a.penaltyFee || 0;
-          if (enr?.isDoubleDown) basePenalty *= 2;
+          if (enr?.isDoubleDown) {
+            const hasShield = s.doubleDownShieldUntil && s.doubleDownShieldUntil > now;
+            if (hasShield) {
+              basePenalty = Math.floor(basePenalty * 1.0); // Penalty is 2x usually, shield makes it 1x (50% refund effectively on the penalty part)
+              // Wait, description says "50% stake refund".
+              // Double Down penalty is 2x. 1x would be 50% refund.
+            } else {
+              basePenalty *= 2;
+            }
+          }
           const finalPenalty = Math.min(basePenalty, 100);
           
           const currentCoins = s.coins || 0;
@@ -1864,7 +1877,7 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
-  async generateLuminaId(userId: string): Promise<string> {
+  async generateLumoraId(userId: string): Promise<string> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
     const randomNum = Math.floor(1000 + Math.random() * 9000);

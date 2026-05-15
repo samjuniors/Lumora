@@ -11,7 +11,7 @@ export const Logo = ({ className = "" }: { className?: string }) => {
         xmlns="http://www.w3.org/2000/svg"
         className="w-full h-auto drop-shadow-sm transition-all"
       >
-        {/* Abstract Geometric Lumina Prism */}
+        {/* Abstract Geometric Lumora Prism */}
         <path d="M12 20L20 4L36 36L12 20Z" fill="#D4AF37" fillOpacity="0.4" />
         <path d="M28 20L20 4L12 36L28 20Z" fill="#D4AF37" fillOpacity="0.7" />
         <path d="M20 36L12 20L28 20L20 36Z" fill="#D4AF37" />

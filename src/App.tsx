@@ -235,6 +235,11 @@ const AppRoutes = () => {
   const location = useLocation();
   const { toasts } = useToasterStore();
 
+  // Scroll to top on location change
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname, location.search]);
+
   // Limit toasts to 5 (dismiss oldest first)
   useEffect(() => {
     const visibleToasts = toasts.filter((t) => t.visible);

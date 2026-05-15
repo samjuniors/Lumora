@@ -32,7 +32,7 @@ export const PWAUpdatePrompt = () => {
                                     <h4 className="text-bg-main font-black text-sm tracking-tight uppercase">Update Ready</h4>
                                     <Sparkles size={12} className="text-indigo-400" />
                                 </div>
-                                <p className="text-text-secondary/80 text-[11px] font-bold leading-tight uppercase tracking-widest">A new version of Lumina is available</p>
+                                <p className="text-text-secondary/80 text-[11px] font-bold leading-tight uppercase tracking-widest">A new version of Lumora is available</p>
                             </div>
                             
                             <button 

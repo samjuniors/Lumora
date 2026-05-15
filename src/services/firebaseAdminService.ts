@@ -72,7 +72,7 @@ export class FirebaseAdminService implements IDatabaseService {
     });
   }
 
-  async generateLuminaId(userId: string): Promise<string> {
+  async generateLumoraId(userId: string): Promise<string> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     const lid = `LMN-${chars.charAt(Math.floor(Math.random() * chars.length))}${Math.floor(1000 + Math.random() * 9000)}`;
     await this.db.collection('users').doc(userId).update({ luminaId: lid });

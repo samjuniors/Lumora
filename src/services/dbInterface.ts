@@ -17,7 +17,7 @@ export interface IDatabaseService {
   followUser(followerId: string, targetId: string): Promise<void>;
   unfollowUser(followerId: string, targetId: string): Promise<void>;
   updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void>;
-  generateLuminaId(userId: string): Promise<string>;
+  generateLumoraId(userId: string): Promise<string>;
 
   // Assignment operations
   getAssignment(assignmentId: string): Promise<Assignment | null>;

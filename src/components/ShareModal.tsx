@@ -13,7 +13,7 @@ interface ShareModalProps {
 export const ShareModal: React.FC<ShareModalProps> = ({ 
   isOpen, 
   onClose, 
-  title = "Join Lumina Platform", 
+  title = "Join Lumora Platform", 
   url = "https://app.samjuniors.com" 
 }) => {
   const shareText = `🚀 Check out Lumina! The ultimate gamified learning platform. Join me here: ${url}`;

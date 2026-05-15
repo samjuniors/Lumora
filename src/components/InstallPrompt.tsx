@@ -94,7 +94,7 @@ export const InstallPrompt = () => {
                 <Download className="w-7 h-7 text-bg-main" />
               </div>
               <div>
-                <h4 className="font-black text-text-primary text-lg">Install Lumina</h4>
+                <h4 className="font-black text-text-primary text-lg">Install Lumora</h4>
                 <p className="text-xs text-text-secondary font-medium leading-relaxed">Add to Home Screen for the best experience</p>
               </div>
             </div>

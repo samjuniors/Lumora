@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               dbService.updateUser(fUser.uid, { role: 'superadmin' });
             }
             
-            // Generate Lumina ID if missing
+            // Generate Lumora ID if missing
             if (!data.luminaId) {
               dbService.generateLuminaId(fUser.uid);
             }

@@ -41,6 +41,11 @@ export interface User {
   bio?: string;
   academicRoadmap?: string;
   isOracleUnlocked?: boolean;
+  taxHavenUntil?: number;
+  doubleDownShieldUntil?: number;
+  themeId?: string;
+  badgeIds?: string[];
+  rank?: number;
   createdAt: number;
   updatedAt: number;
 }
