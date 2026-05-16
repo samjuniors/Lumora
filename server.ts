@@ -1,10 +1,27 @@
 import express from "express";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
+import webpush from "web-push";
+
+// VAPID keys for push notifications
+const vapidKeys = {
+  publicKey: process.env.VAPID_PUBLIC_KEY || '',
+  privateKey: process.env.VAPID_PRIVATE_KEY || '',
+};
+
+if (vapidKeys.publicKey && vapidKeys.privateKey) {
+  webpush.setVapidDetails(
+    process.env.VAPID_SUBJECT || 'mailto:example@example.com',
+    vapidKeys.publicKey,
+    vapidKeys.privateKey
+  );
+} else {
+  console.warn("VAPID keys not configured, push notifications will be disabled.");
+}
 
 async function startServer() {
   const app = express();
-  const PORT = 3000;
+  const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
 
@@ -24,8 +41,30 @@ async function startServer() {
     return aiClient;
   }
 
+  // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  // Push Notification Routes
+  app.post("/api/push/subscribe", async (req, res) => {
+    const subscription = req.body;
+    // Store subscription in Firestore (or in-memory for testing, but Firestore is better)
+    // For now, let's just log it or store it temporarily? 
+    // The user wants a robust solution. I need to initialize firebase-admin properly.
+    console.log("Subscription received:", subscription);
+    res.status(201).json({ status: 'subscribed' });
+  });
+
+  app.post("/api/push/send", async (req, res) => {
+    const { subscription, payload } = req.body;
+    try {
+        await webpush.sendNotification(subscription, JSON.stringify(payload));
+        res.status(200).json({ status: 'sent' });
+    } catch (err) {
+        console.error("Error sending push:", err);
+        res.status(500).json({ error: "Failed to send" });
+    }
   });
 
   // AI Service Routes

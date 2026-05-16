@@ -16,7 +16,7 @@ export const Logo = ({ className = "" }: { className?: string }) => {
         <path d="M28 20L20 4L12 36L28 20Z" fill="#D4AF37" fillOpacity="0.7" />
         <path d="M20 36L12 20L28 20L20 36Z" fill="#D4AF37" />
 
-        {/* 'Lumina' Text */}
+        {/* 'Lumora' Text */}
         <text
           x="44"
           y="27"

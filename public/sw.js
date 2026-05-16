@@ -1,5 +1,5 @@
-// Lumina Service Worker
-const CACHE_NAME = 'lumina-v1';
+// Lumora Service Worker
+const CACHE_NAME = 'lumora-v1';
 
 self.addEventListener('install', (event) => {
   // We don't skipWaiting() automatically anymore so we can show a prompt
@@ -25,7 +25,7 @@ self.addEventListener('push', (event) => {
   const data = event.data ? event.data.json() : {};
   const title = data.title || 'New Mission Available!';
   const options = {
-    body: data.message || 'Check out the new research opportunities in Lumina.',
+    body: data.message || 'Check out the new research opportunities in Lumora.',
     icon: '/app-icon.svg',
     badge: '/app-icon.svg',
     data: {

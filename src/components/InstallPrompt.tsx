@@ -163,7 +163,7 @@ export const InstallPrompt = () => {
             </button>
             <button
               onClick={handleInstallClick}
-              className="flex-1 px-4 py-3 bg-brand-gold-hover hover:bg-indigo-700 text-bg-main rounded-2xl text-sm font-bold transition shadow-lg shadow-indigo-600/30 active:scale-95"
+              className="flex-1 px-4 py-3 bg-brand-gold hover:bg-brand-gold-hover text-bg-main rounded-2xl text-sm font-bold transition shadow-lg shadow-brand-gold/20 active:scale-95"
             >
               Install App
             </button>

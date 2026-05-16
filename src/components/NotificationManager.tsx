@@ -74,15 +74,39 @@ export const NotificationManager: React.FC = () => {
           position: 'top-right'
         });
 
-        // Request browser notification permission for high-priority alerts
+      // Request browser notification permission for high-priority alerts
         if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-          Notification.requestPermission();
+          Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+              subscribeToPushNotifications();
+            }
+          });
         }
       }
     });
 
     return () => unsubscribe();
   }, [user]);
+
+  async function subscribeToPushNotifications() {
+    try {
+      if (!('serviceWorker' in navigator && 'PushManager' in window)) return;
+      
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: import.meta.env.VITE_VAPID_PUBLIC_KEY
+      });
+      
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        body: JSON.stringify(subscription),
+        headers: { 'content-type': 'application/json' }
+      });
+    } catch (err) {
+      console.error("Failed to subscribe to push notifications:", err);
+    }
+  }
 
   return null;
 };

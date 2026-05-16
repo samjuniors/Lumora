@@ -174,7 +174,7 @@ const MobileNavLink = ({ to, icon: Icon, label, currentPath, isDanger, shadowCol
               ? "bg-gradient-to-br from-brand-gold/90 to-amber-500 border-brand-gold/30 shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 animate-pulse-glow"
               : isDanger
                 ? "bg-rose-500 border-rose-500 shadow-[0_12px_30px_rgba(225,29,72,0.5)]"
-                : "bg-white border-border-main/50 shadow-black/10 hover:scale-105"
+                : "bg-bg-surface border-border-main/50 shadow-black/10 hover:scale-105"
         )}>
           <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7", isActive || isDanger || highlighted ? "text-white" : "text-brand-slate")} strokeWidth={isActive || highlighted ? 3 : 2.5} />
         </div>
