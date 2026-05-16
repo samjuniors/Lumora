@@ -376,7 +376,7 @@ export const Dashboard = () => {
       .slice(0, 3); // show top 3 campaigns on dashboard
   }, [assignments]);
 
-  if (isLoading) return <DashboardSkeleton />;
+  // if (isLoading && assignments.length === 0) return <DashboardSkeleton />;
 
   const missedCount = studentEnrollments.filter(e => e.status === 'missed').length;
   const activeMissions = assignments.filter(a => {
@@ -522,9 +522,10 @@ export const Dashboard = () => {
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold mb-3 tracking-tight text-text-primary uppercase"
+            className="text-4xl md:text-5xl font-bold mb-3 tracking-tight text-text-primary uppercase flex items-center gap-4"
           >
             Welcome, {user?.name.split(" ")[0]}
+            {isLoading && assignments.length === 0 && <span className="w-5 h-5 border-[3px] border-amber-500 border-t-transparent rounded-full animate-spin opacity-70" />}
           </motion.h1>
           <motion.p
             initial={{ y: 10, opacity: 0 }}

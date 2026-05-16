@@ -71,7 +71,7 @@ export const Navbar = () => {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex-1 flex items-center justify-end gap-3 sm:gap-4 pr-2 lg:mr-[41px]">
+            <div className="flex-1 flex items-center justify-end gap-3 sm:gap-4 pr-2 lg:mr-[50px] -ml-[11px] mr-[50px]">
                 <button 
                   onClick={() => setShowInvite(true)}
                   className="hidden lg:flex items-center gap-2 bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full hover:bg-brand-gold/20 transition-colors border border-brand-gold/20 font-bold text-xs ring-1 ring-brand-gold/10 shadow-sm"

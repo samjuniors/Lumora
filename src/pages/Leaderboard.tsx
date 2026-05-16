@@ -64,7 +64,7 @@ const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[],
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: (3 - rank) * 0.1, type: "spring", stiffness: 250, damping: 20 }}
               className={cn(
-                "flex flex-col items-center justify-center relative group w-full md:flex-1 max-w-[280px] rounded-3xl p-6 border-2 transition-all duration-300 hover:-translate-y-2",
+                "flex flex-col items-center justify-center relative group w-full md:flex-1 max-w-[280px] rounded-3xl p-6 border-2 transition-all duration-300",
                 bgClass, borderClass,
                 isFirst ? "md:order-2 md:h-80 z-10" : i === 0 ? "md:order-1 md:h-64" : "md:order-3 md:h-64"
               )}
@@ -274,7 +274,6 @@ export const Leaderboard = () => {
           
           return (
             <motion.div 
-              layout
               variants={itemVariants}
               key={student.id} 
               className={cn(

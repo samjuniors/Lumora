@@ -26,7 +26,10 @@ export const UserProfileModal = ({
   const { currentLevel } = getUserLevelAndXP(profileUser);
   const perfScore = calculatePerformanceScore(profileUser);
   const badge = getPerformanceBadge(perfScore);
-  const isFollowing = currentUser?.followingIds?.includes(profileUser.id) || false;
+  const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
+  const isFollowing = optimisticFollowing !== null 
+    ? optimisticFollowing 
+    : (currentUser?.followingIds?.includes(profileUser.id) || false);
   const [loading, setLoading] = useState(false);
 
   const isFriend = currentUser?.id === profileUser.id || 
@@ -34,16 +37,19 @@ export const UserProfileModal = ({
                   currentUser?.followerIds?.includes(profileUser.id);
 
   const handleFollowToggle = async () => {
-    if (loading || !currentUser) return;
-    setLoading(true);
+    if (!currentUser) return;
+    const newFollowingState = !isFollowing;
+    setOptimisticFollowing(newFollowingState);
+    if (!loading) setLoading(true);
     try {
-      if (isFollowing) {
+      if (!newFollowingState) {
         await dbService.unfollowUser(currentUser.id, profileUser.id);
       } else {
         await dbService.followUser(currentUser.id, profileUser.id);
       }
     } catch (error) {
       console.error("Follow error:", error);
+      setOptimisticFollowing(!newFollowingState);
     } finally {
       setLoading(false);
     }
@@ -69,12 +75,12 @@ export const UserProfileModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[60] flex items-center justify-center p-2 sm:p-4">
         <motion.div 
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="bg-bg-surface rounded-[2.5rem] w-full max-w-sm p-6 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-bg-surface rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-[320px] sm:max-w-sm p-4 sm:p-6 overflow-y-auto max-h-[75vh] shadow-2xl relative border border-border-main no-scrollbar"
         >
           <button 
             onClick={onClose} 
@@ -128,18 +134,14 @@ export const UserProfileModal = ({
               <div className="flex gap-2 w-full mb-6">
                 <button 
                   onClick={handleFollowToggle}
-                  disabled={loading}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all border-2",
-                    loading ? "opacity-50 cursor-not-allowed" : "",
                     isFollowing 
                       ? "bg-bg-surface border-border-main text-text-secondary hover:text-red-500 hover:border-red-200" 
                       : "bg-[#1A2B48] border-[#1A2B48] text-[#D4AF37] hover:bg-[#0A1128]"
                   )}
                 >
-                  {loading ? (
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  ) : isFollowing ? (
+                  {isFollowing ? (
                     <><UserCheck className="w-4 h-4" /> Following</>
                   ) : (
                     <><UserPlus className="w-4 h-4" /> Follow</>
