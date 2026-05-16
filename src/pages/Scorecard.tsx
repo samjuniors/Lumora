@@ -117,35 +117,53 @@ export const Scorecard = () => {
 
     const fetchData = async () => {
       setLoading(true);
+      
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('timeout')), 10000); // 10s timeout
+      });
+
       try {
-        const studentData = await dbService.getUser(viewingUserId);
-        setTargetStudent(studentData);
+        await Promise.race([
+          (async () => {
+            const studentData = await dbService.getUser(viewingUserId);
+            setTargetStudent(studentData);
 
-        if (!studentData) {
-          setLoading(false);
-          return;
-        }
+            if (!studentData) {
+              setLoading(false);
+              return;
+            }
 
-        const allAssignments = await dbService.getAllAssignments();
-        
-        const relevantAssignments = allAssignments.filter(a => {
-           if (a.dueDate < studentData!.createdAt) return false;
-           if (!a.allowedStudents || a.allowedStudents.length === 0) return true;
-           return a.allowedStudents.includes(viewingUserId) || (studentData.email && a.allowedStudents.includes(studentData.email.toLowerCase()));
-        });
-        setAssignments(relevantAssignments);
+            const allAssignments = await dbService.getAllAssignments();
+            
+            const relevantAssignments = allAssignments.filter(a => {
+               if (a.dueDate < studentData!.createdAt) return false;
+               if (!a.allowedStudents || a.allowedStudents.length === 0) return true;
+               return a.allowedStudents.includes(viewingUserId) || (studentData.email && a.allowedStudents.includes(studentData.email.toLowerCase()));
+            });
+            setAssignments(relevantAssignments);
 
-        const studentSubmissions = await dbService.getSubmissionsByStudent(viewingUserId);
-        setSubmissions(studentSubmissions);
+            const studentSubmissions = await dbService.getSubmissionsByStudent(viewingUserId);
+            setSubmissions(studentSubmissions);
 
-        // Calculate Rank based on lifetime diamonds (standard Hall of Fame metric)
-        const allStudents = await dbService.getUsersByRole('student');
-        const sorted = allStudents.sort((a, b) => (b.lifetimeDiamonds || 0) - (a.lifetimeDiamonds || 0));
-        const rank = sorted.findIndex(s => s.id === viewingUserId) + 1;
-        setGlobalRank(rank > 0 ? rank : null);
+            try {
+              // Rank calculation might be slow, try to fetch but don't blow up scorecard if it fails
+              const allStudents = await dbService.getUsersByRole('student');
+              const sorted = allStudents.sort((a, b) => (b.lifetimeDiamonds || 0) - (a.lifetimeDiamonds || 0));
+              const rank = sorted.findIndex(s => s.id === viewingUserId) + 1;
+              setGlobalRank(rank > 0 ? rank : null);
+            } catch (rankErr) {
+              console.warn("Failed to calculate global rank:", rankErr);
+            }
+          })(),
+          timeoutPromise
+        ]);
         
       } catch (err: any) {
-        handleFirestoreError(err, OperationType.GET, 'scorecard/data');
+        if (err.message !== 'timeout') {
+          handleFirestoreError(err, OperationType.GET, 'scorecard/data');
+        } else {
+          console.error("Scorecard fetch timed out");
+        }
       } finally {
         setLoading(false);
       }
