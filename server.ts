@@ -3,20 +3,22 @@ import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import webpush from "web-push";
 
-// VAPID keys for push notifications
-const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY || '',
-  privateKey: process.env.VAPID_PRIVATE_KEY || '',
-};
-
-if (vapidKeys.publicKey && vapidKeys.privateKey) {
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:example@example.com',
-    vapidKeys.publicKey,
-    vapidKeys.privateKey
-  );
-} else {
-  console.warn("VAPID keys not configured, push notifications will be disabled.");
+// VAPID keys for push notifications lazily
+let vapidConfigured = false;
+function configureWebPush() {
+  if (vapidConfigured) return;
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (publicKey && privateKey) {
+    webpush.setVapidDetails(
+      process.env.VAPID_SUBJECT || 'mailto:example@example.com',
+      publicKey,
+      privateKey
+    );
+    vapidConfigured = true;
+  } else {
+    console.warn("VAPID keys not configured, push notifications will be disabled.");
+  }
 }
 
 async function startServer() {
@@ -59,6 +61,7 @@ async function startServer() {
   app.post("/api/push/send", async (req, res) => {
     const { subscription, payload } = req.body;
     try {
+        configureWebPush();
         await webpush.sendNotification(subscription, JSON.stringify(payload));
         res.status(200).json({ status: 'sent' });
     } catch (err) {

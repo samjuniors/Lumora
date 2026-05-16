@@ -228,15 +228,12 @@ export const Login = () => {
                   <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
                   Google
                 </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleProviderSignIn(appleProvider)}
-                  className="flex items-center justify-center gap-2 bg-bg-main border border-border-main text-text-primary px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:bg-bg-surface-hover shadow-sm"
+                <div
+                  className="flex items-center justify-center gap-2 bg-bg-main border border-border-main text-text-secondary px-4 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed opacity-60"
                 >
                   <svg className="w-5 h-5 fill-current opacity-80" viewBox="0 0 24 24"><path d="M16.92 14.88c-.03-2.61 2.24-3.9 2.34-3.96-1.2-1.74-3.1-1.99-3.79-2.03-1.63-.16-3.18 1.04-4.02 1.04-.84 0-2.14-.99-3.48-.96-1.74.03-3.34 1.02-4.24 2.56-1.84 3.16-.48 7.82 1.3 10.37.87 1.25 1.9 2.65 3.25 2.61 1.32-.04 1.83-.84 3.42-.84 1.58 0 2.05.84 3.44.81 1.43-.02 2.32-1.28 3.18-2.52 1.01-1.46 1.43-2.88 1.46-2.95-.03-.01-2.85-1.07-2.86-4.13zm-2.52-6.52c.67-.84 1.13-2 1.01-3.16-1.01.04-2.22.68-2.91 1.51-.55.65-1.09 1.83-.94 2.97 1.13.08 2.2-.55 2.84-1.32z"/></svg>
-                  Apple
-                </motion.button>
+                  Coming Soon
+                </div>
               </div>
 
               <div className="text-center mt-6">

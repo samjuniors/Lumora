@@ -44,7 +44,7 @@ export const Navbar = () => {
   return (
     <>
       <nav className="bg-[#0A0F1A]/95 backdrop-blur-xl fixed top-0 w-full z-[120] border-b border-white/10 pt-[env(safe-area-inset-top)] transition-all">
-        <div className="container mx-auto px-6 sm:px-10 max-w-7xl">
+        <div className="container mx-auto px-6 sm:px-10 max-w-5xl">
           <div className="flex h-20 md:h-36 justify-between items-center">
             <div className="flex-1 flex justify-start">
               <Link to="/dashboard" className="inline-flex items-center group transition-all hover:scale-105 active:scale-95">
@@ -92,20 +92,20 @@ export const Navbar = () => {
                       </Link>
                     </div>
                   )}
-          <div className="flex items-center gap-6 sm:gap-10">
-            <Link to="/leaderboard?tab=diamonds" className="flex w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 items-center justify-center bg-bg-main text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30 group" title="Hall of Fame">
-              <Trophy className="h-5 w-5 sm:h-6 sm:w-6 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-110" />
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Link to="/leaderboard?tab=diamonds" className="flex w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 items-center justify-center bg-bg-main text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30 group" title="Hall of Fame">
+              <Trophy className="h-5 w-5 sm:h-5 sm:w-5 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-110" />
             </Link>
-            <div className="relative pr-3 sm:pr-6 border-r border-white/10 flex items-center">
+            <div className="relative pr-3 sm:pr-4 border-r border-white/10 flex items-center">
               <NotificationDropdown />
             </div>
-            <Link to="/profile" className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-110 active:scale-95 transition-all ring-[2.5px] ring-[#D4AF37] ring-offset-[2px] ring-offset-[#0A0F1A] shadow-[0_0_20px_rgba(212,175,55,0.25)]" title="Profile">
+            <Link to="/profile" className="w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-110 active:scale-95 transition-all ring-[2.5px] ring-[#D4AF37] ring-offset-[2px] ring-offset-[#0A0F1A] shadow-[0_0_20px_rgba(212,175,55,0.25)]" title="Profile">
                       {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                         <img src={user.avatar} key={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                       ) : user.avatar ? (
-                        <span className="text-xl sm:text-2xl md:text-3xl">{user.avatar}</span>
+                        <span className="text-lg sm:text-lg md:text-xl">{user.avatar}</span>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-bold text-sm sm:text-lg uppercase">
+                        <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-bold text-xs sm:text-sm uppercase">
                           {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </div>
                       )}
@@ -135,7 +135,7 @@ export const Navbar = () => {
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Home" currentPath={location.pathname} />
               <MobileNavLink to="/assignments" icon={Calendar} label="Mission" currentPath={location.pathname} />
-              <MobileNavLink to="/syndicates" icon={Shield} label="Network" currentPath={location.pathname} isCenterFloating highlighted />
+              <MobileNavLink to="/syndicates" icon={Shield} label="Network" currentPath={location.pathname} isCenterFloating />
               <MobileNavLink to="/badges" icon={Award} label="Awards" currentPath={location.pathname} />
               <MobileNavLink to="/shop" icon={ShoppingBag} label="Shop" currentPath={location.pathname} />
             </>
@@ -174,14 +174,14 @@ const MobileNavLink = ({ to, icon: Icon, label, currentPath, isDanger, shadowCol
               ? "bg-gradient-to-br from-brand-gold/90 to-amber-500 border-brand-gold/30 shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 animate-pulse-glow"
               : isDanger
                 ? "bg-rose-500 border-rose-500 shadow-[0_12px_30px_rgba(225,29,72,0.5)]"
-                : "bg-bg-surface border-border-main/50 shadow-black/10 hover:scale-105"
+                : "bg-[#0A0F1A] border-white/10 shadow-black/10 hover:scale-105"
         )}>
-          <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7", isActive || isDanger || highlighted ? "text-white" : "text-brand-slate")} strokeWidth={isActive || highlighted ? 3 : 2.5} />
+          <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7", isActive || isDanger || highlighted ? "text-white" : "text-[#4A5D7A]")} strokeWidth={isActive || highlighted ? 3 : 2.5} />
         </div>
         <span 
           className={cn(
             "absolute bottom-0 text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-            isActive || isDanger || highlighted ? "text-brand-gold translate-y-0 text-shadow-sm shadow-black" : "text-text-secondary opacity-60 translate-y-1"
+            isActive || isDanger || highlighted ? "text-brand-gold translate-y-0 text-shadow-sm shadow-black" : "text-text-secondary opacity-40 translate-y-1"
           )}
         >
           {label}
