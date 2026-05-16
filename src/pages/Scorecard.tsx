@@ -39,22 +39,22 @@ const ScorecardAssessmentItem = ({ item }: { item: any }) => {
           </p>
         </div>
         
-        <div className="shrink-0 flex items-center gap-4">
+        <div className="w-full md:w-auto shrink-0 flex items-center justify-between md:justify-end gap-3 sm:gap-4 mt-2 md:mt-0">
            {(isCompleted || isPastDue) ? (
-              <div className="text-right flex items-center gap-4">
-                 <div className="bg-bg-main px-4 py-2 rounded-xl border border-border-main shadow-inner">
-                   <span className="block text-2xl font-black text-text-primary">
-                      {item.score} <span className="text-text-secondary/60 text-lg">/ {item.maxPossible}</span>
+              <div className="flex items-center justify-between w-full md:w-auto gap-3 sm:gap-4">
+                 <div className="bg-bg-main px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-border-main shadow-inner flex-1 md:flex-none text-center md:text-right">
+                   <span className="block text-xl sm:text-2xl font-black text-text-primary">
+                      {item.score} <span className="text-text-secondary/60 text-base sm:text-lg">/ {item.maxPossible}</span>
                    </span>
                  </div>
-                 {isExpanded ? <ChevronUp className="w-5 h-5 text-text-secondary w-8 h-8 flex items-center justify-center bg-bg-surface rounded-full shadow-sm" /> : <ChevronDown className="w-5 h-5 text-text-secondary w-8 h-8 flex items-center justify-center bg-bg-surface rounded-full shadow-sm" />}
+                 {isExpanded ? <ChevronUp className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" /> : <ChevronDown className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" />}
               </div>
            ) : (
-              <div className="text-right flex items-center gap-4">
-                 <div className="bg-bg-main px-4 py-2 rounded-xl border border-border-main shadow-inner text-text-secondary/80 text-sm font-medium italic">
+              <div className="flex items-center justify-between w-full md:w-auto gap-3 sm:gap-4">
+                 <div className="bg-bg-main px-3 sm:px-4 py-2 rounded-xl border border-border-main shadow-inner text-text-secondary/80 text-xs sm:text-sm font-medium italic flex-1 md:flex-none text-center">
                     Not Graded Yet
                  </div>
-                 {isExpanded ? <ChevronUp className="w-5 h-5 text-text-secondary w-8 h-8 flex items-center justify-center bg-bg-surface rounded-full shadow-sm" /> : <ChevronDown className="w-5 h-5 text-text-secondary w-8 h-8 flex items-center justify-center bg-bg-surface rounded-full shadow-sm" />}
+                 {isExpanded ? <ChevronUp className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" /> : <ChevronDown className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" />}
               </div>
            )}
         </div>
@@ -111,9 +111,16 @@ export const Scorecard = () => {
   const viewingUserId = studentId || user?.id;
 
   useEffect(() => {
-    if (!viewingUserId) return;
+    if (!viewingUserId) {
+      // Don't set loading to false yet if we're waiting for user object to arrive, 
+      // but if user is loaded and no viewingUserId, it's an error.
+      return; 
+    }
 
-    if (!studentId && user?.role !== 'student') return;
+    if (!studentId && user?.role !== 'student') {
+      setLoading(false);
+      return;
+    }
 
     const fetchData = async () => {
       setLoading(true);
@@ -136,7 +143,7 @@ export const Scorecard = () => {
             const allAssignments = await dbService.getAllAssignments();
             
             const relevantAssignments = allAssignments.filter(a => {
-               if (a.dueDate < studentData!.createdAt) return false;
+               if (studentData.createdAt && a.dueDate < studentData.createdAt) return false;
                if (!a.allowedStudents || a.allowedStudents.length === 0) return true;
                return a.allowedStudents.includes(viewingUserId) || (studentData.email && a.allowedStudents.includes(studentData.email.toLowerCase()));
             });
@@ -170,7 +177,7 @@ export const Scorecard = () => {
     };
 
     fetchData();
-  }, [viewingUserId, user, navigate]);
+  }, [viewingUserId, user, studentId]);
 
   const stats = useMemo(() => {
     let totalScore = 0;
@@ -304,39 +311,39 @@ export const Scorecard = () => {
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[60px] -ml-20 -mb-20 pointer-events-none"></div>
         
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 relative z-10 w-full">
-           <div className="w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-indigo-50 to-bg-main rounded-3xl shrink-0 border-[4px] border-bg-surface shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-8 relative z-10 w-full">
+           <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-indigo-50 to-bg-main rounded-3xl md:rounded-[2.5rem] shrink-0 border-[4px] border-bg-surface shadow-xl flex items-center justify-center overflow-hidden">
              {targetStudent.avatar?.startsWith('http') || targetStudent.avatar?.startsWith('data:image') ? (
                <img src={targetStudent.avatar} alt="Avatar" className="w-full h-full object-cover" />
              ) : targetStudent.avatar ? (
-                <span className="text-6xl">{targetStudent.avatar}</span>
+                <span className="text-5xl md:text-6xl">{targetStudent.avatar}</span>
              ) : (
-                <Award className="w-12 h-12 text-brand-gold" />
+                <Award className="w-10 h-10 md:w-12 md:h-12 text-brand-gold" />
              )}
            </div>
            
           <div className="flex-1 mt-2 md:mt-4 text-center md:text-left">
-            <div className="inline-block px-3 py-1 bg-border-main text-text-secondary rounded-lg text-xs font-black uppercase tracking-widest mb-3 border border-border-main">Official Transcript</div>
-            <h1 className="text-3xl md:text-4xl font-black text-text-primary mb-2 line-clamp-1">{targetStudent.name}</h1>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
-              <p className="text-sm text-text-secondary font-medium">Student ID: {getShortId(targetStudent.id)}</p>
+            <div className="inline-block px-3 py-1.5 bg-border-main/50 text-text-secondary rounded-lg text-xs font-black uppercase tracking-widest mb-3 border border-border-main">Official Transcript</div>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-text-primary mb-2 line-clamp-1">{targetStudent.name}</h1>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 sm:gap-3">
+              <p className="text-xs sm:text-sm text-text-secondary font-medium bg-bg-main px-2.5 py-1 rounded-lg border border-border-main">ID: {getShortId(targetStudent.id)}</p>
               {globalRank && (
-                <div className="flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-2.5 py-1 rounded-lg border border-brand-gold/20 text-[10px] font-black uppercase tracking-tighter">
-                  <Trophy className="w-3.5 h-3.5" /> Global Rank #{globalRank}
+                <div className="flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-2.5 py-1 rounded-lg border border-brand-gold/20 text-[10px] sm:text-xs font-black uppercase tracking-tighter">
+                  <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Global Rank #{globalRank}
                 </div>
               )}
             </div>
           </div>
           
-          <div className="shrink-0 bg-gradient-to-br from-[#0A1128] to-indigo-950 text-bg-main p-6 w-full md:w-56 rounded-2xl md:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.15)] border border-indigo-500/20 flex flex-col items-center justify-center relative overflow-hidden group">
+          <div className="shrink-0 bg-gradient-to-br from-[#0A1128] to-indigo-950 text-bg-main p-5 sm:p-6 w-full sm:w-64 md:w-56 rounded-[2rem] shadow-xl border border-indigo-500/20 flex flex-col items-center justify-center relative overflow-hidden group">
             <div className="absolute inset-0 bg-brand-gold opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500"></div>
-            <div className="text-indigo-200/80 text-[10px] md:text-xs font-extrabold uppercase tracking-widest mb-2 z-10">Global Grade</div>
-            <div className="text-6xl font-black mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/80 filter drop-shadow z-10">
+            <div className="text-indigo-200/80 text-[10px] uppercase font-extrabold tracking-widest mb-1 sm:mb-2 z-10 w-full text-center">Global Grade</div>
+            <div className="text-5xl sm:text-6xl font-black mb-2 sm:mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/80 filter drop-shadow z-10">
               {stats.grade}
             </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-xl px-4 py-2 border border-white/10 z-10">
-               <span className="font-bold text-sm tracking-tight">{stats.percentage}%</span>
-               <span className="text-indigo-200/80 text-xs ml-1.5 uppercase font-semibold">Total Average</span>
+            <div className="bg-white/10 backdrop-blur-md rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 border border-white/10 z-10 flex items-center justify-center whitespace-nowrap w-full">
+               <span className="font-bold text-xs sm:text-sm tracking-tight">{stats.percentage}%</span>
+               <span className="text-indigo-200/80 text-[10px] sm:text-xs ml-1.5 uppercase font-semibold">Average</span>
             </div>
           </div>
         </div>
@@ -347,38 +354,38 @@ export const Scorecard = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.5 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
       >
-         <div className="bg-bg-surface p-6 rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-brand-gold/30">
+         <div className="bg-bg-surface p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-brand-gold/30">
             <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-full flex items-center justify-center mb-3">
                <Award className="w-5 h-5" />
             </div>
-            <div className="text-2xl font-black text-text-primary mb-1">{stats.totalScore} <span className="text-sm font-bold text-text-secondary/60">/ {stats.maxPossiblePoints}</span></div>
-            <div className="text-text-secondary/80 text-[10px] font-bold uppercase tracking-widest text-center">Total Points Earned</div>
+            <div className="text-xl sm:text-2xl font-black text-text-primary mb-1 flex items-baseline gap-1">{stats.totalScore} <span className="text-xs sm:text-sm font-bold text-text-secondary/60">/ {stats.maxPossiblePoints}</span></div>
+            <div className="text-text-secondary/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-center line-clamp-1">Total Points</div>
          </div>
          
-         <div className="bg-bg-surface p-6 rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-emerald-500/30">
+         <div className="bg-bg-surface p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-emerald-500/30">
             <div className="w-10 h-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center mb-3">
                <CheckCircle className="w-5 h-5" />
             </div>
-            <div className="text-2xl font-black text-text-primary mb-1">{stats.completedCount} <span className="text-sm font-bold text-text-secondary/60">/ {stats.totalCount}</span></div>
-            <div className="text-text-secondary/80 text-[10px] font-bold uppercase tracking-widest text-center">Missions Completed</div>
+            <div className="text-xl sm:text-2xl font-black text-text-primary mb-1 flex items-baseline gap-1">{stats.completedCount} <span className="text-xs sm:text-sm font-bold text-text-secondary/60">/ {stats.totalCount}</span></div>
+            <div className="text-text-secondary/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-center line-clamp-1">Completed</div>
          </div>
 
-         <div className="bg-bg-surface p-6 rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-blue-500/30">
+         <div className="bg-bg-surface p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-blue-500/30">
             <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mb-3">
                <Clock className="w-5 h-5" />
             </div>
-            <div className="text-2xl font-black text-text-primary mb-1">{stats.pendingCount}</div>
-            <div className="text-text-secondary/80 text-[10px] font-bold uppercase tracking-widest text-center">Active / Pending</div>
+            <div className="text-xl sm:text-2xl font-black text-text-primary mb-1">{stats.pendingCount}</div>
+            <div className="text-text-secondary/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-center line-clamp-1">Pending</div>
          </div>
 
-         <div className="bg-bg-surface p-6 rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-rose-500/30">
+         <div className="bg-bg-surface p-4 sm:p-6 rounded-3xl sm:rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md hover:border-rose-500/30">
             <div className="w-10 h-10 bg-rose-500/10 text-rose-500 rounded-full flex items-center justify-center mb-3">
                <AlertTriangle className="w-5 h-5" />
             </div>
-            <div className="text-2xl font-black text-text-primary mb-1">{stats.missedCount}</div>
-            <div className="text-text-secondary/80 text-[10px] font-bold uppercase tracking-widest text-center">Missions Missed</div>
+            <div className="text-xl sm:text-2xl font-black text-text-primary mb-1">{stats.missedCount}</div>
+            <div className="text-text-secondary/80 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-center line-clamp-1">Missed</div>
          </div>
       </motion.div>
 
