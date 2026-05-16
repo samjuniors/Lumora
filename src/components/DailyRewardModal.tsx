@@ -40,7 +40,7 @@ export const DailyRewardModal = () => {
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user]);
+  }, [user?.id, user?.lastRewardClaimed]);
 
   const generateReward = (): DailyReward => {
     const roll = Math.random();

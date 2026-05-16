@@ -10,8 +10,7 @@
     <link rel="apple-touch-icon" href="/favicon-dark.png" />
     <link rel="manifest" href="/manifest.json" />
     <style>
-      :root { --bg-main: #F8F9FA; }
-      @media (prefers-color-scheme: dark) { :root { --bg-main: #0A1128; } }
+      :root { --bg-main: #051221; }
       html, body { 
         background-color: var(--bg-main); 
         margin: 0; 
@@ -30,12 +29,7 @@
         width: 160px;
         height: auto;
         animation: pulse 2s infinite ease-in-out;
-        color: #0A1128;
-      }
-      @media (prefers-color-scheme: dark) {
-        .splash-logo {
-          color: #ffffff;
-        }
+        color: #ffffff;
       }
       @keyframes pulse {
         0% { transform: scale(0.98); opacity: 0.8; }
@@ -46,15 +40,9 @@
     <script>
       (function() {
         try {
-          var user = JSON.parse(localStorage.getItem('auth_user') || '{}');
-          var theme = user.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-          if (theme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.documentElement.classList.add('dark');
-            document.body.style.backgroundColor = '#0A1128';
-          } else {
-            document.body.style.backgroundColor = '#F8F9FA';
-          }
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.documentElement.classList.add('dark');
+          document.body.style.backgroundColor = '#051221';
         } catch (e) {
           console.error('Theme initialization failed', e);
         }

@@ -133,7 +133,7 @@ export const AssignmentDetail = () => {
 
   useEffect(() => {
     fetchData();
-  }, [id, user]);
+  }, [id, user?.id, user?.role]);
 
   const fetchData = async () => {
     if (!id || !user) return;

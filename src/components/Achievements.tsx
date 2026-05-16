@@ -106,7 +106,7 @@ export const Achievements = () => {
     };
 
     fetchProgress();
-  }, [user]);
+  }, [user?.id, user?.achievements?.length, user?.totalScore, user?.streak, user?.gradedCount]);
 
   const claimAchievement = async (achievementId: string, exactClaimId: string, reward: { coins: number, diamonds: number }) => {
     if (!user) return;

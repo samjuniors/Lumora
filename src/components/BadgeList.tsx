@@ -30,7 +30,7 @@ export const BadgeList = () => {
       }
     };
     fetchData();
-  }, [user]);
+  }, [user?.id]);
 
   const handleClaim = async (badgeId: string) => {
     if (!user) return;

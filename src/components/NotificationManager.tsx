@@ -86,7 +86,7 @@ export const NotificationManager: React.FC = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.id]);
 
   async function subscribeToPushNotifications() {
     try {

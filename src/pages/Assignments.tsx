@@ -237,7 +237,7 @@ export const Assignments = () => {
         }
         return status === filterStatus;
     });
-  }, [assignments, filterStatus, studentEnrollments, user]);
+  }, [assignments, filterStatus, studentEnrollments]);
 
   const groupedAssignments = useMemo(() => {
     const groups: Record<string, { sKey: string, items: Assignment[] }> = {};
@@ -318,7 +318,7 @@ export const Assignments = () => {
        });
     }
     return sorted;
-  }, [assignments, sortBy, studentEnrollments, user]);
+  }, [assignments, sortBy, studentEnrollments]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

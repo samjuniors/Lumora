@@ -39,7 +39,7 @@ export const CompletedMissionsStack = () => {
     };
 
     fetchCompletedMissions();
-  }, [user]);
+  }, [user?.id, user?.gradedCount]);
 
   if (loading || missions.length === 0) return null;
 

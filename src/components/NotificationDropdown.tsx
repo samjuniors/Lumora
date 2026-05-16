@@ -33,7 +33,7 @@ export const NotificationDropdown = () => {
     });
 
     return () => unsubscribe();
-  }, [user]);
+  }, [user?.id]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

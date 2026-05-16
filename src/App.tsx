@@ -300,7 +300,18 @@ const AppRoutes = () => {
         position="top-center"
         toastOptions={{ 
           className: "rounded-2xl font-semibold shadow-lg",
-          duration: 2000
+          duration: 2000,
+          style: {
+            background: '#081B33',
+            color: '#F7F7F5',
+            border: '1px solid #142A4A',
+          },
+          success: {
+            iconTheme: {
+              primary: '#D4AF37',
+              secondary: '#081B33',
+            },
+          },
         }}
       />
       <Navbar />

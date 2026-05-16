@@ -58,9 +58,9 @@ export function showErrorMessage(message: string, defaultMessage = 'An unexpecte
     position: 'top-center',
     style: {
       borderRadius: '16px',
-      background: '#ffffff',
-      color: '#e11d48', // rose-600
-      border: '1px solid #fda4af', // rose-200
+      background: '#081B33', // bg-surface
+      color: '#f43f5e', // rose-500
+      border: '1px solid #142A4A', // border-main
     },
   });
 }

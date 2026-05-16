@@ -39,7 +39,7 @@ export const ResourceCollector = () => {
     checkStatus();
     const timer = setInterval(checkStatus, 60000); // Check every minute
     return () => clearInterval(timer);
-  }, [user]);
+  }, [user?.id, user?.lastCollectionTime]);
 
   const handleCollect = async () => {
     if (!user || loading || !canCollect) return;

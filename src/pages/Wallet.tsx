@@ -24,7 +24,7 @@ export const Wallet = () => {
   useEffect(() => {
     fetchTransactions();
     fetchSettings();
-  }, [user]);
+  }, [user?.id]);
 
   const fetchSettings = async () => {
     try {

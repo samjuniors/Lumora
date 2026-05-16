@@ -41,6 +41,8 @@ export const AIPet = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { playSound } = useSound();
 
+  const isStudent = user?.role === 'student';
+
   const { currentLevel } = useMemo(() => getUserLevelAndXP(user), [user]);
 
   const petStageLevel = useMemo(() => {
@@ -60,6 +62,18 @@ export const AIPet = () => {
     if (petStageLevel === 3) return { name: "Sage Nova", icon: Brain, color: "from-orange-500 to-rose-600", scale: 1.15 };
     return { name: "Divine Nova", icon: Trophy, color: "from-amber-400 to-orange-500", scale: 1.25 };
   }, [petStageLevel]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      scrollToBottom();
+    }
+  }, [messages, isOpen]);
+
+  if (!isStudent) return null;
 
   const handleOpen = () => {
     playSound('popOpen');
@@ -87,18 +101,6 @@ export const AIPet = () => {
       return () => clearInterval(interval);
     }
   }, [isOpen, user]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    if (isOpen) {
-      scrollToBottom();
-    }
-  }, [messages, isOpen]);
-
-  if (!user || user.role !== 'student') return null;
 
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
