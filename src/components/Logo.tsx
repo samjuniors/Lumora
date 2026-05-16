@@ -26,7 +26,7 @@ export const Logo = ({ className = "" }: { className?: string }) => {
           letterSpacing="-0.03em"
           fill="currentColor"
         >
-          Lumina
+          Lumora
         </text>
       </svg>
     </div>
