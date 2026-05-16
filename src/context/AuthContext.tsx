@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // Generate Lumora ID if missing
             if (!data.luminaId) {
-              dbService.generateLuminaId(fUser.uid);
+              dbService.generateLumoraId(fUser.uid);
             }
 
             setUser(data);
@@ -66,6 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   name: fUser.displayName || 'Grand Admin',
                   role: 'superadmin',
                   coins: 1000,
+                  diamonds: 500,
                   createdAt: Date.now(),
                   updatedAt: Date.now(),
                   achievements: [],
@@ -84,9 +85,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             };
             createAdmin();
           } else {
-            // Requires invite code, handled in Login page
-            setUser(null);
-            setLoading(false);
+            // Auto-create standard user with 50 coins and 50 diamonds
+            const createUserAccount = async () => {
+              try {
+                const newUser: User = {
+                  id: fUser.uid,
+                  email: fUser.email || '',
+                  name: fUser.displayName || fUser.email?.split('@')[0] || 'User',
+                  role: 'student',
+                  coins: 50,
+                  diamonds: 50,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                  achievements: [],
+                  inventory: [],
+                  streak: 0,
+                  vipExp: 0,
+                  vipLevel: 0,
+                  xp: 0
+                };
+                await dbService.createUser(fUser.uid, newUser);
+              } catch (err) {
+                console.error('Failed to auto-create user:', err);
+                setUser(null);
+                setLoading(false);
+              }
+            };
+            createUserAccount();
           }
         });
       } else {

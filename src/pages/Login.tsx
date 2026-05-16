@@ -83,7 +83,11 @@ export const Login = () => {
         await createUserWithEmailAndPassword(auth, email, password);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed');
+      if (err.code === 'auth/operation-not-allowed') {
+        setErrorMsg('Authentication provider not enabled. Please enable "Email/Password" and "Google" in your Firebase Console Settings.');
+      } else {
+        setErrorMsg(err.message || 'Authentication failed');
+      }
       handleAsyncError(err, 'Authentication failed');
     } finally {
       setLoading(false);
@@ -95,7 +99,9 @@ export const Login = () => {
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request' && error?.code !== 'auth/user-cancelled') {
+      if (error?.code === 'auth/operation-not-allowed') {
+        setErrorMsg('This provider is not enabled in Firebase. Please enable it in the Firebase Console (Authentication > Sign-in method).');
+      } else if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request' && error?.code !== 'auth/user-cancelled') {
         setErrorMsg(error.message || 'Authentication failed');
         handleAsyncError(error, 'Provider sign in failed');
       }
@@ -123,65 +129,17 @@ export const Login = () => {
           className="bg-bg-surface/80 backdrop-blur-xl p-8 rounded-3xl border border-border-main shadow-2xl"
         >
           {firebaseUser && !user ? (
-            <motion.form 
+            <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="space-y-6"
-              onSubmit={handleVerifyInvite} 
+              className="space-y-6 text-center py-8"
             >
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-brand-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-gold/20">
-                  <Key className="w-8 h-8 text-brand-gold" />
-                </div>
-                <h2 className="text-2xl font-bold text-text-primary tracking-tight">Enter Invite Code</h2>
-                <p className="text-text-secondary text-sm mt-2 font-medium">Hello <span className="text-text-primary">{firebaseUser.email}</span>, you need an invite code to join.</p>
+              <div className="w-16 h-16 bg-brand-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-gold/20">
+                <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
               </div>
-
-              <AnimatePresence>
-                {errorMsg && (
-                  <motion.div 
-                    key="error-msg"
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-sm text-red-500 flex items-center gap-2 font-medium bg-red-500/10 p-3 rounded-xl border border-red-500/20"
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0"/> {errorMsg}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <div className="space-y-4">
-                <input 
-                  type="text" 
-                  value={inviteCode} 
-                  onChange={(e) => setInviteCode(e.target.value)}
-                  placeholder="Invite Code"
-                  className="w-full px-4 py-3.5 bg-bg-main border border-border-main rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all uppercase font-semibold text-text-primary placeholder:text-text-secondary/50 placeholder:normal-case font-mono text-center tracking-widest shadow-inner-sm"
-                  required
-                />
-                
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 bg-brand-gold hover:bg-brand-gold-hover text-white px-4 py-3.5 rounded-xl font-bold transition-all disabled:opacity-50 shadow-md"
-                >
-                  {loading ? 'Verifying...' : 'Redeem Code'}
-                </motion.button>
-              </div>
-              
-              <div className="mt-6 text-center">
-                 <button 
-                   type="button" 
-                   onClick={logOut} 
-                   className="text-sm text-text-secondary hover:text-text-primary transition-colors font-medium underline underline-offset-4"
-                 >
-                   Use a different account
-                 </button>
-              </div>
-            </motion.form>
+              <h2 className="text-2xl font-bold text-text-primary tracking-tight">Setting up your profile...</h2>
+              <p className="text-text-secondary text-sm mt-2 font-medium">Please wait while we initialize your account.</p>
+            </motion.div>
           ) : (
             <motion.div 
               initial={{ opacity: 0 }}

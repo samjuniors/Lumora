@@ -115,16 +115,15 @@ export const NotificationDropdown = () => {
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className="absolute top-12 right-0 sm:-right-2 md:right-0 w-[280px] min-[360px]:w-[320px] sm:w-80 md:w-96 bg-bg-surface border border-border-main rounded-3xl shadow-2xl z-50 overflow-hidden origin-top-right"
         >
-          <div className="px-6 py-5 bg-bg-main/80 border-b border-border-main flex justify-between items-center">
+          <div className="px-5 py-4 bg-bg-surface border-b border-border-main flex justify-between items-center rounded-t-3xl shadow-sm z-10 relative">
             <div>
-              <h3 className="font-black text-text-primary leading-tight">Notifications</h3>
-              <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest mt-0.5">Stay Updated</p>
+              <h3 className="text-sm font-black text-text-primary uppercase tracking-wider">Notifications</h3>
             </div>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button 
                   onClick={markAllRead}
-                  className="text-[10px] font-black text-brand-gold uppercase tracking-widest hover:text-indigo-700 bg-brand-gold-secondary-hover px-3 py-1.5 rounded-lg transition-colors"
+                  className="text-[10px] font-bold text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20 px-2 py-1 rounded transition-colors"
                 >
                   Mark Read
                 </button>
@@ -132,7 +131,7 @@ export const NotificationDropdown = () => {
               {notifications.length > 0 && (
                 <button 
                   onClick={clearAll}
-                  className="p-1.5 text-text-secondary/80 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors"
+                  className="p-1.5 text-text-secondary hover:text-rose-500 rounded transition-colors"
                   title="Clear All"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -140,29 +139,30 @@ export const NotificationDropdown = () => {
               )}
             </div>
           </div>
-          <div className="max-h-[28rem] overflow-y-auto hide-scrollbar">
+          <div className="max-h-[22rem] overflow-y-auto hide-scrollbar bg-bg-main">
             {notifications.length === 0 ? (
-              <div className="px-6 py-20 text-center flex flex-col items-center">
-                <div className="w-16 h-16 bg-bg-main rounded-full flex items-center justify-center mb-4">
-                    <Bell className="w-8 h-8 text-text-secondary/30" />
+              <div className="px-6 py-16 text-center flex flex-col items-center">
+                <div className="w-14 h-14 bg-bg-surface rounded-full flex items-center justify-center mb-3 shadow-inner">
+                    <Bell className="w-6 h-6 text-text-secondary/40" />
                 </div>
-                <p className="text-text-secondary text-sm font-bold">No notifications yet.</p>
-                <p className="text-[10px] text-text-secondary/60 font-medium uppercase mt-1">We'll alert you here</p>
+                <p className="text-text-primary text-sm font-bold">You're all caught up!</p>
+                <p className="text-xs text-text-secondary mt-1">No new notifications.</p>
               </div>
             ) : (
               notifications.map(notif => (
                 <div 
                   key={notif.id} 
                   className={cn(
-                      "group px-6 py-5 border-b border-border-main/30 transition-colors flex gap-4",
-                      !notif.read ? "bg-brand-gold/5" : "hover:bg-bg-main"
+                      "group px-5 py-4 border-b border-border-main/50 transition-all flex gap-4 hover:bg-bg-surface relative",
+                      !notif.read ? "bg-brand-gold/5" : "opacity-80"
                   )}
                 >
+                  {!notif.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-gold" />}
                   <div className={cn(
-                      "w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 border shadow-sm",
-                      notif.type === 'success' ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" :
-                      notif.type === 'alert' ? "bg-rose-500/10 text-rose-500 border-rose-500/20" :
-                      "bg-brand-gold/10 text-brand-gold border-brand-gold/20"
+                      "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm",
+                      notif.type === 'success' ? "bg-emerald-500/10 text-emerald-500" :
+                      notif.type === 'alert' ? "bg-rose-500/10 text-rose-500" :
+                      "bg-brand-gold/10 text-brand-gold"
                   )}>
                       {notif.type === 'success' ? <CheckCircle size={18} /> : 
                        notif.type === 'alert' ? <AlertCircle size={18} /> : 
@@ -170,22 +170,21 @@ export const NotificationDropdown = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                        <span className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">
-                            {format(notif.createdAt, 'MMM dd, p')}
+                        <span className="font-bold text-sm text-text-primary leading-tight truncate pr-4">{notif.title}</span>
+                        <span className="text-[10px] text-text-secondary font-medium shrink-0">
+                            {format(notif.createdAt, 'MMM dd, HH:mm')}
                         </span>
-                        {!notif.read && <span className="w-2 h-2 bg-brand-gold rounded-full"></span>}
                     </div>
-                    <p className="font-black text-sm text-text-primary leading-tight mb-1">{notif.title}</p>
-                    <p className="text-xs text-text-secondary font-medium leading-relaxed">{notif.message}</p>
+                    <p className="text-xs text-text-secondary leading-relaxed line-clamp-2">{notif.message}</p>
                     
-                    <div className="flex items-center gap-3 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-4 mt-2">
                         {!notif.read && (
-                            <button onClick={(e) => markRead(e, notif.id)} className="flex items-center gap-1 text-[10px] font-black text-brand-gold uppercase hover:underline">
-                                <Check size={12} /> Read
+                            <button onClick={(e) => markRead(e, notif.id)} className="flex items-center gap-1 text-[10px] font-bold text-brand-gold hover:text-amber-400 transition-colors">
+                                <Check size={12} /> Mark read
                             </button>
                         )}
-                        <button onClick={(e) => deleteNotif(e, notif.id)} className="flex items-center gap-1 text-[10px] font-black text-text-secondary/80 hover:text-rose-500 uppercase">
-                            <Trash2 size={12} /> Remove
+                        <button onClick={(e) => deleteNotif(e, notif.id)} className="flex items-center gap-1 text-[10px] font-medium text-text-secondary hover:text-rose-500 transition-colors">
+                            <Trash2 size={12} /> Delete
                         </button>
                     </div>
                   </div>
@@ -193,11 +192,6 @@ export const NotificationDropdown = () => {
               ))
             )}
           </div>
-          {notifications.length > 0 && (
-              <div className="p-4 bg-bg-main border-t border-border-main text-center">
-                   <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Showing latest 5 updates</p>
-              </div>
-          )}
         </motion.div>
       )}
       </AnimatePresence>

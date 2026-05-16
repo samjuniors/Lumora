@@ -1886,7 +1886,7 @@ export class FirebaseService implements IDatabaseService {
     // Check if exists
     const q = query(collection(db, 'users'), where('luminaId', '==', lid), fsLimit(1));
     const snap = await getDocs(q);
-    if (!snap.empty) return this.generateLuminaId(userId);
+    if (!snap.empty) return this.generateLumoraId(userId);
     
     await updateDoc(doc(db, 'users', userId), { luminaId: lid });
     return lid;
