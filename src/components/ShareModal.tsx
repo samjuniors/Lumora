@@ -16,7 +16,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   title = "Join Lumora Platform", 
   url = "https://app.samjuniors.com" 
 }) => {
-  const shareText = `🚀 Check out Lumina! The ultimate gamified learning platform. Join me here: ${url}`;
+  const shareText = `🚀 Check out Lumora! The ultimate gamified learning platform. Join me here: ${url}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(url);
@@ -28,7 +28,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       try {
         await navigator.share({
           title,
-          text: `Join me on Lumina Platform!`,
+          text: `Join me on Lumora Platform!`,
           url,
         });
         toast.success('Shared successfully!');
@@ -84,7 +84,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 <Share2 className="w-8 h-8 text-bg-main" />
               </div>
               <h2 className="text-2xl font-black text-text-primary tracking-tight">Invite Friends</h2>
-              <p className="text-text-secondary font-medium text-sm mt-2">Help others level up their skills on Lumina!</p>
+              <p className="text-text-secondary font-medium text-sm mt-2">Help others level up their skills on Lumora!</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-8">

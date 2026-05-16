@@ -3935,7 +3935,7 @@ const SettingsManager = () => {
         dbService.getPlatformSettings().then(settings => {
             if (settings) {
                 setMobileNumber(settings.mobileNumber || '');
-                setPayeeName(settings.payeeName || 'Lumina');
+                setPayeeName(settings.payeeName || 'Lumora');
                 setPaymentLink(settings.paymentLink || '');
             }
         });
@@ -3980,7 +3980,7 @@ const SettingsManager = () => {
                           type="text" 
                           value={payeeName} 
                           onChange={e => setPayeeName(e.target.value)} 
-                          placeholder="Lumina Limited" 
+                          placeholder="Lumora Limited" 
                           className="w-full px-6 py-4 bg-bg-main border border-transparent rounded-[20px] outline-none focus:bg-bg-surface focus:border-indigo-500 transition-all font-bold text-text-primary" 
                         />
                     </div>

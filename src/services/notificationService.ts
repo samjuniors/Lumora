@@ -13,7 +13,7 @@ export async function queueEmailNotification(to: string | string[], subject: str
         </div>
         <hr style="margin: 30px 0; border: 0; border-top: 1px solid #f1f5f9;">
         <p style="font-size: 12px; color: #94a3b8; text-align: center;">
-          This is an automated notification from Lumina Platform. Please do not reply.
+          This is an automated notification from Lumora Platform. Please do not reply.
         </p>
       </div>
     `;
