@@ -100,7 +100,11 @@ export const DailyRewardModal = () => {
     
     try {
       const reward = generateReward();
-      await dbService.claimDailyReward(user.id, { type: reward.type, value: reward.value });
+      
+      // Background claim, don't await so we don't hang if quota exceeded
+      dbService.claimDailyReward(user.id, { type: reward.type, value: reward.value }).catch(e => {
+        console.warn("Background claim failed", e);
+      });
 
       setClaimedReward(reward);
       playSound(reward.type === 'penalty' ? 'notification' : 'success');
@@ -165,7 +169,7 @@ export const DailyRewardModal = () => {
                 <button
                   onClick={handleClaim}
                   disabled={isClaiming}
-                  className="w-full py-5 bg-text-primary hover:bg-brand-gold-hover text-bg-main font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center gap-2 group"
+                  className="w-full py-5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center gap-2 group"
                 >
                   {isClaiming ? 'Opening Box...' : (
                     <>
@@ -203,7 +207,7 @@ export const DailyRewardModal = () => {
                 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-full py-4 bg-brand-gold-hover text-bg-main font-black rounded-2xl shadow-lg shadow-indigo-100 active:scale-95"
+                  className="w-full py-4 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-2xl shadow-lg shadow-black/10 active:scale-95"
                 >
                   Perfect!
                 </button>

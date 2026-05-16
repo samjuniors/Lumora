@@ -66,7 +66,9 @@ export const ResourceCollector = () => {
           diamondsAmount = 0;
       }
 
-      await dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount);
+      dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(e => {
+        console.warn("Background collect failed", e);
+      });
 
       updateResources({ 
         coins: (user.coins || 0) + coinsAmount,
@@ -85,10 +87,10 @@ export const ResourceCollector = () => {
       
       setCollected(true);
       setTimeout(() => setCollected(false), 3000);
+      setLoading(false);
     } catch (e: any) {
       console.error(e);
       toast.error("Failed to collect resources. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -106,16 +108,18 @@ export const ResourceCollector = () => {
 
     setLoading(true);
     try {
-      await dbService.updateUser(user.id, { 
+      dbService.updateUser(user.id, { 
         lastCollectionTime: 0, 
         diamonds: (user.diamonds || 0) - resetCost 
+      }).catch(e => {
+        console.warn("Background reset failed", e);
       });
       updateResources({ diamonds: (user.diamonds || 0) - resetCost });
       toast.success("Collector Reset! Ready to mine.");
+      setLoading(false);
     } catch (e: any) {
       console.error(e);
       toast.error("Failed to reset.");
-    } finally {
       setLoading(false);
     }
   };

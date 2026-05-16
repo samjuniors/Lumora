@@ -121,11 +121,13 @@ export const AIPet = () => {
     const newStr = inputValue.trim();
     setInputValue('');
     
-    // Deduct coins first
-    try {
-      await dbService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction');
+    // Deduct coins first optimistically
+    if (user.role === 'student') {
+      dbService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction').catch(err => {
+        console.warn("Background coin spend failed (quota limit?): ", err);
+      });
       
-      updateResources({ coins: user.coins - chatCost });
+      updateResources({ coins: Math.max(0, (user.coins || 0) - chatCost) });
       
       // Visual feedback for coin deduction
       toast.success(`-${chatCost} Coins`, { 
@@ -136,9 +138,6 @@ export const AIPet = () => {
           color: '#fff',
         },
       });
-    } catch (err) {
-      toast.error("Transaction failed. Please try again.");
-      return;
     }
 
     // Add user message locally

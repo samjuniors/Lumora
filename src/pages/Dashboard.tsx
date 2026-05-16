@@ -74,98 +74,97 @@ export const Dashboard = () => {
     return <Navigate to="/admin" replace />;
   }
 
+  // We'll track the last streak check in memory to prevent dependency loops
+  const streakChecked = React.useRef(false);
+
   useEffect(() => {
-    if (user?.id) {
-      const checkStreak = async () => {
-        const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-        const year = nowIST.getFullYear();
-        const month = String(nowIST.getMonth() + 1).padStart(2, '0');
-        const day = String(nowIST.getDate()).padStart(2, '0');
-        const today = `${year}-${month}-${day}`;
-        
-        if (user.lastActive !== today) {
-          let newStreak = user.streak || 0;
-          let diffDays = 0;
-          let missingPenaltyCoins = 0;
+    if (!user?.id) return;
 
-          if (user.lastActive) {
-            const lastDate = new Date(user.lastActive);
-            const todayDate = new Date(today);
-            const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
-            diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const checkStreak = async () => {
+      const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      const year = nowIST.getFullYear();
+      const month = String(nowIST.getMonth() + 1).padStart(2, '0');
+      const day = String(nowIST.getDate()).padStart(2, '0');
+      const today = `${year}-${month}-${day}`;
+      
+      // If we already know the user is active today from local memory or DB, skip
+      if (user.lastActive === today || streakChecked.current) {
+        return;
+      }
+      
+      streakChecked.current = true; // immediately mark as checked to stop loops
 
-            if (diffDays === 1) {
-              newStreak += 1;
-            } else if (diffDays > 1) {
-              const missedDays = diffDays - 1;
-              // Check for streak freeze
-              if (user.inventory?.includes('streak_freeze')) {
-                const newInventory = [...user.inventory];
-                const index = newInventory.indexOf('streak_freeze');
-                newInventory.splice(index, 1);
-                
-                await dbService.updateUser(user.id, {
-                  inventory: newInventory
-                });
-                // Streak stays the same (frozen)
-                console.log("Streak Freeze used!");
-              } else {
-                newStreak = 1;
-                // Calculate missed streak penalty
-                let currentPen = 20;
-                for (let i = 0; i < missedDays; i++) {
-                  missingPenaltyCoins += Math.floor(currentPen);
-                  currentPen *= 1.5;
-                }
-              }
-            }
+      let newStreak = user.streak || 0;
+      let diffDays = 0;
+      let missingPenaltyCoins = 0;
+
+      if (user.lastActive) {
+        const lastDate = new Date(user.lastActive);
+        const todayDate = new Date(today);
+        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
+        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+          newStreak += 1;
+        } else if (diffDays > 1) {
+          const missedDays = diffDays - 1;
+          // Check for streak freeze
+          if (user.inventory?.includes('streak_freeze')) {
+            const newInventory = [...user.inventory];
+            const index = newInventory.indexOf('streak_freeze');
+            newInventory.splice(index, 1);
+            
+            dbService.updateUser(user.id, {
+              inventory: newInventory
+            }).catch(console.warn);
+            console.log("Streak Freeze used!");
           } else {
             newStreak = 1;
-          }
-
-          if (missingPenaltyCoins > 0) {
-            try {
-                // Since writeBatch is Firestore-specific, we'll do sequential updates or implement a batch method in dbInterface
-                // For now, sequential is safer for generic IDatabaseService
-                await dbService.createTransaction({
-                    senderId: user.id,
-                    receiverId: "SYSTEM",
-                    amount: missingPenaltyCoins,
-                    type: "penalty",
-                    status: 'completed',
-                    timestamp: Date.now()
-                });
-                
-                await dbService.updateUser(user.id, {
-                    coins: (user.coins || 0) - missingPenaltyCoins,
-                    streak: newStreak,
-                    lastActive: today,
-                });
-
-                updateResources({ coins: (user.coins || 0) - missingPenaltyCoins });
-                toast.error(`You lost ${missingPenaltyCoins} coins for breaking your login streak!`, { icon: '💸' });
-                return; // Skip normal update below
-            } catch (err: any) {
-                console.error('Streak penalty error:', err);
+            let currentPen = 20;
+            for (let i = 0; i < missedDays; i++) {
+              missingPenaltyCoins += Math.floor(currentPen);
+              currentPen *= 1.5;
             }
           }
-
-          try {
-            await dbService.updateUser(user.id, {
-              streak: newStreak,
-              lastActive: today
-            });
-          } catch (err: any) {
-            console.error('Update streak error:', err);
-          }
         }
-      };
-      checkStreak();
-      
-      const interval = setInterval(checkStreak, 60000); // Check every minute for midnight rollovers
-      return () => clearInterval(interval);
-    }
-  }, [user?.id, user?.lastActive, user?.streak, user?.coins, updateResources]);
+      } else {
+        newStreak = 1;
+      }
+
+      if (missingPenaltyCoins > 0) {
+        // Fire and forget penalties to prevent loops
+        dbService.createTransaction({
+            senderId: user.id,
+            receiverId: "SYSTEM",
+            amount: missingPenaltyCoins,
+            type: "penalty",
+            status: 'completed',
+            timestamp: Date.now()
+        }).catch(console.warn);
+        
+        dbService.updateUser(user.id, {
+            coins: Math.max(0, (user.coins || 0) - missingPenaltyCoins),
+            streak: newStreak,
+            lastActive: today,
+        }).catch(console.warn);
+
+        updateResources({ coins: Math.max(0, (user.coins || 0) - missingPenaltyCoins) });
+        toast.error(`You lost ${missingPenaltyCoins} coins for breaking your login streak!`, { icon: '💸' });
+      } else {
+        dbService.updateUser(user.id, {
+          streak: newStreak,
+          lastActive: today
+        }).catch(console.warn);
+      }
+    };
+
+    checkStreak();
+    
+    // Check at intervals in case they leave tab open past midnight
+    const interval = setInterval(checkStreak, 60000); 
+    return () => clearInterval(interval);
+  }, [user?.id]); // ONLY depend on user ID. Never depend on state that gets updated in the hook.
+
 
   useEffect(() => {
     if (!user?.id) return;

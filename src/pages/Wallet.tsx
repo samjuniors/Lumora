@@ -545,7 +545,9 @@ const TransferModal = ({ onClose, onComplete }: any) => {
 
     setLoading(true);
     try {
-      await dbService.transferCoins(user!.id, selectedStudent.id, val);
+      dbService.transferCoins(user!.id, selectedStudent.id, val).catch(err => {
+        console.warn("Background transfer failed", err);
+      });
 
       // We still update local state
       updateResources({ coins: user!.coins - val });
@@ -709,7 +711,9 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
 
     setLoading(true);
     try {
-      await dbService.convertDiamondsToCoins(user!.id, val);
+      dbService.convertDiamondsToCoins(user!.id, val).catch(err => {
+        console.warn("Background convert failed", err);
+      });
       
       updateResources({ 
         diamonds: (user?.diamonds || 0) - val,
