@@ -218,7 +218,7 @@ export const AdminAnalytics = () => {
              AI Performance Insights
            </h3>
            <button 
-             onClick={analyzePerformance}
+             onClick={() => analyzePerformance(studentStats)}
              disabled={analyzing}
              className="bg-brand-gold text-bg-main px-6 py-2 rounded-xl font-black shadow-lg hover:bg-brand-gold-hover transition-all disabled:opacity-50"
            >

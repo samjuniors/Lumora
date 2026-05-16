@@ -27,6 +27,8 @@ import {
   Shield,
   Edit,
   Gem,
+  Target,
+  Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "../lib/utils";
@@ -670,154 +672,82 @@ export const AssignmentDetail = () => {
 
       <button
         onClick={() => navigate("/assignments")}
-        className="flex items-center gap-1 md:gap-2 text-brand-gold hover:text-indigo-700 transition text-sm font-bold bg-brand-gold-secondary-hover hover:bg-brand-gold-secondary-hover w-fit px-3 py-2 md:px-4 md:py-2 rounded-xl mb-2 md:mb-0"
+        className="flex items-center gap-2 text-brand-gold hover:text-white transition text-xs font-bold uppercase tracking-widest bg-navy-900 border border-navy-700 w-fit px-4 py-2 rounded-xl"
       >
-        <ArrowLeft className="w-4 h-4" />{" "}
-        <span className="hidden sm:inline">Back to Missions</span>
-        <span className="sm:hidden">Back</span>
+        <ArrowLeft size={14} /> Back to Missions
       </button>
 
       {/* Assignment Header */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1, duration: 0.4 }}
         className={cn(
-          "rounded-3xl md:rounded-[2rem] p-6 md:p-12 border shadow-sm relative overflow-hidden",
-          assignment.isBonus
-            ? "bg-brand-gold/20 border-brand-gold/40 ring-4 ring-amber-100/50 shadow-amber-200 w-full"
-            : "bg-bg-surface border-border-main",
+          "bg-navy-900 rounded-[2.5rem] border border-brand-gold/20 shadow-glow-gold overflow-hidden relative",
+          assignment.isBonus && "ring-1 ring-brand-gold/40"
         )}
       >
-        {assignment.isBonus && (
-          <>
-            <div className="absolute inset-0 bg-gradient-to-r from-amber-200/50 via-amber-100 to-amber-200/50 animate-pulse mix-blend-overlay"></div>
-            <div className="absolute -right-8 -top-8 md:-right-12 md:-top-12 opacity-10">
-              <Sparkles className="w-48 h-48 md:w-64 md:h-64" />
-            </div>
-          </>
-        )}
-
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-6 md:gap-8">
-          <div className="w-full max-w-3xl">
-            {(user?.role === 'admin' || user?.role === 'superadmin') && (
-              <div className="mb-4">
-                 <button 
-                  onClick={() => navigate('/assignments', { state: { editId: assignment.id } })}
-                  className="flex items-center gap-2 px-4 py-2 bg-brand-gold-hover text-bg-main rounded-xl hover:bg-indigo-700 transition shadow-lg font-black text-xs uppercase tracking-wider"
-                 >
-                   <Edit className="w-4 h-4" /> Edit Mission Template
-                 </button>
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[90px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        
+        <div className="p-8 md:p-12 relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-10">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-5">
+                {assignment.isBonus && (
+                  <span className="bg-brand-gold text-navy-950 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest shadow-glow-gold">
+                    Special Operation
+                  </span>
+                )}
+                {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                  <button 
+                    onClick={() => navigate('/assignments', { state: { editId: assignment.id } })}
+                    className="flex items-center gap-1.5 text-brand-gold hover:text-white transition font-bold text-[10px] uppercase tracking-wider"
+                  >
+                    <Edit size={12} /> Configure Template
+                  </button>
+                )}
               </div>
-            )}
-            {assignment.isBonus && (
-              <span className="inline-block bg-bg-surface/90 text-brand-gold text-[10px] md:text-xs font-black px-2.5 py-1 md:px-3 md:py-1.5 rounded-lg mb-3 md:mb-4 uppercase tracking-widest shadow-sm">
-                {assignment.isDuoBonus ? 'Special Duo Bonus Mission' : 'Special Bonus Mission'} • {assignment.bonusType === 'presentation' ? 'Presentation' : 'Test'} M{assignment.missionNumber || 1}
-              </span>
-            )}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className={cn(
-                "text-3xl md:text-6xl font-black mb-4 md:mb-6 tracking-tighter leading-tight",
-                assignment.isBonus ? "text-amber-950" : "text-text-primary",
-              )}
-            >
-              {assignment.title}
-            </motion.h1>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="flex flex-wrap gap-2 md:gap-3 text-xs md:text-sm font-bold mb-6 md:mb-8"
-            >
-              <span
-                className={cn(
-                  "py-2 px-3 md:px-4 rounded-xl flex items-center gap-1.5 md:gap-2",
-                  assignment.isBonus
-                    ? "bg-amber-500/20"
-                    : "bg-border-main text-text-secondary",
-                )}
-              >
-                <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4" /> Due:{" "}
-                {format(assignment.dueDate, "MMM d, p")}
-              </span>
-              <span
-                className={cn(
-                  "py-2 px-3 md:px-4 rounded-xl flex items-center gap-1.5 md:gap-2",
-                  assignment.isBonus
-                    ? "bg-bg-surface/20"
-                    : "bg-brand-gold-secondary-hover text-indigo-700",
-                )}
-              >
-                Entry: 🪙 {assignment.entryFee}
-              </span>
-              <span
-                className={cn(
-                  "py-2 px-3 md:px-4 rounded-xl flex items-center gap-1.5 md:gap-2",
-                  assignment.isBonus
-                    ? "bg-emerald-400/20 text-emerald-950"
-                    : "bg-success-green/10 text-success-green",
-                )}
-              >
-                Reward: 🪙 {assignment.bonusReward}
-              </span>
-              <span
-                className={cn(
-                  "py-2 px-3 md:px-4 rounded-xl flex items-center gap-1.5 md:gap-2",
-                  assignment.isBonus
-                    ? "bg-rose-400/20 text-rose-950"
-                    : "bg-rose-500/10 text-rose-700",
-                )}
-              >
-                Penalty: 🪙 -{assignment.penaltyFee}
-              </span>
-            </motion.div>
+              <h1 className={cn(
+                "text-3xl md:text-5xl font-display font-bold tracking-tight mb-6",
+                assignment.isBonus ? "text-brand-gold" : "text-white"
+              )}>
+                {assignment.title}
+              </h1>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className={cn(
-                "prose max-w-none text-base md:text-lg leading-relaxed font-medium select-none",
-                assignment.isBonus ? "text-amber-900/80" : "text-text-secondary",
-              )}
-            >
-              <ExpandableText text={assignment.description} maxLength={300} />
-            </motion.div>
-
-            {assignment.rubric && assignment.rubric.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-                className="mt-8"
-              >
-                <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary mb-4">
-                  Grading Rubric
-                </h3>
-                <div className="grid gap-3">
-                  {assignment.rubric.map((r, i) => (
-                    <div
-                      key={i}
-                      className="flex flex-wrap items-center justify-between gap-4 bg-bg-main/50 border border-border-main rounded-xl p-4 select-none"
-                    >
-                      <div>
-                        <div className="font-bold text-text-primary">{r.name}</div>
-                        <div className="text-sm font-medium text-text-secondary mt-0.5">
-                          {r.description}
-                        </div>
-                      </div>
-                      <div className="text-xs font-black bg-brand-gold-secondary-hover text-indigo-700 px-3 py-1.5 rounded-lg">
-                        {r.weight}% WEIGHT
-                      </div>
-                    </div>
-                  ))}
+              <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
+                  <Calendar size={14} className="text-brand-gold" />
+                  <span>Due {format(assignment.dueDate, "MMM d, h:mm a")}</span>
                 </div>
-              </motion.div>
-            )}
+                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
+                  <span>Stake: <span className="text-brand-gold font-bold">🪙 {finalEntryFee}</span></span>
+                </div>
+                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
+                  <span>Yield: <span className="text-emerald-400 font-bold">🪙 {finalBonusReward}</span></span>
+                </div>
+              </div>
+
+              <div className="text-text-muted leading-relaxed max-w-2xl font-medium">
+                <ExpandableText text={assignment.description} maxLength={300} />
+              </div>
+            </div>
+
+            <div className="w-full md:w-72 space-y-4">
+                <div className="p-6 bg-navy-950 rounded-[2rem] border border-brand-gold/10 shadow-inner">
+                    <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <Target size={12} className="text-brand-gold" /> Critical Rubric
+                    </h4>
+                    <div className="space-y-3">
+                        {assignment.rubric?.map((r, i) => (
+                            <div key={i} className="flex items-center justify-between gap-3">
+                                <span className="text-xs text-white font-medium truncate">{r.name}</span>
+                                <span className="text-[11px] font-bold text-brand-gold shrink-0 tabular-nums">{r.weight}%</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -826,430 +756,199 @@ export const AssignmentDetail = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-bg-surface rounded-[2rem] p-10 text-center border border-border-main shadow-xl max-w-2xl mx-auto shadow-indigo-100/30"
+          className="bg-navy-900 border border-brand-gold/10 p-8 md:p-12 rounded-[2.5rem] text-center max-w-xl mx-auto shadow-2xl relative overflow-hidden"
         >
-          <div className="w-20 h-20 bg-bg-main rounded-full flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-10 h-10 text-text-secondary/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-brand-gold/[0.02] to-transparent pointer-events-none" />
+          <div className="w-16 h-16 bg-navy-950 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-navy-800 shadow-inner ring-1 ring-white/5">
+            <Lock size={32} className="text-text-muted/30" />
           </div>
-          <h3 className="text-2xl font-black mb-3 text-text-primary">
-            Unlock this Mission
-          </h3>
-          <p className="text-text-secondary mb-8 font-medium max-w-md mx-auto text-lg leading-relaxed">
-            Commit 🪙 {finalEntryFee} coins to participate. Succeed to
-            earn 🪙 {finalBonusReward} bonus reward. Failing to succeed will result in a 🪙 -{finalPenalty} Loss.
+          <h3 className="text-2xl font-display font-bold text-white tracking-tight mb-3">Initiate Operation</h3>
+          <p className="text-sm text-text-muted mb-10 leading-relaxed font-medium">
+            This operation requires a strategic commitment of <span className="text-brand-gold font-bold">🪙 {finalEntryFee}</span>.
+            Successful completion yields up to <span className="text-emerald-400 font-bold">🪙 {finalBonusReward}</span>.
           </p>
 
-          <div className="mb-8 p-6 bg-white/5 border border-white/10 rounded-3xl group transition-all hover:bg-white/10">
-             <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                   <div className={cn("p-3 rounded-2xl transition-colors", isDoubleDown ? "bg-rose-500 text-white shadow-lg shadow-rose-500/20" : "bg-white/10 text-white/40")}>
-                      <Zap size={24} className={isDoubleDown ? "animate-pulse" : ""} />
-                   </div>
-                   <div className="text-left">
-                      <h4 className="text-sm font-black text-white uppercase tracking-wider">Double Down</h4>
-                      <p className="text-[10px] text-white/50 font-bold uppercase">2x Stake | 2.5x Reward | 2x Penalty</p>
-                   </div>
+          <div className="mb-10 p-5 bg-navy-950 border border-navy-800 rounded-[2rem] flex items-center justify-between gap-6 shadow-inner">
+             <div className="flex items-center gap-4">
+                <div className={cn("p-2.5 rounded-xl transition-all duration-500", isDoubleDown ? "bg-error text-white shadow-glow-error" : "bg-navy-800 text-text-muted/30")}>
+                   <Zap size={20} className={isDoubleDown ? "animate-pulse" : ""} />
                 </div>
-                <button 
-                  onClick={() => setIsDoubleDown(!isDoubleDown)}
-                  className={cn(
-                    "w-14 h-8 rounded-full relative transition-all duration-300",
-                    isDoubleDown ? "bg-rose-500" : "bg-white/20"
-                  )}
-                >
-                  <motion.div 
-                    animate={{ x: isDoubleDown ? 24 : 4 }}
-                    className="absolute top-1 w-6 h-6 bg-white rounded-full shadow-md"
-                  />
-                </button>
+                <div className="text-left">
+                   <h4 className="text-[11px] font-bold text-white uppercase tracking-widest leading-none mb-1.5">Double Down</h4>
+                   <p className="text-[9px] text-text-muted font-bold uppercase tracking-tight">2.5x Revenue | 2x Liability</p>
+                </div>
              </div>
+             <button 
+               onClick={() => setIsDoubleDown(!isDoubleDown)}
+               className={cn("w-12 h-7 rounded-full relative transition-all duration-300", isDoubleDown ? "bg-error" : "bg-navy-700")}
+             >
+               <motion.div 
+                 animate={{ x: isDoubleDown ? 22 : 4 }}
+                 className="absolute top-1.5 w-4 h-4 bg-white rounded-full shadow-md"
+               />
+             </button>
           </div>
 
-          {hasNotStarted ? (
-            <div className="bg-brand-gold/10 text-brand-gold font-bold p-6 rounded-2xl flex items-center justify-center gap-3 border border-amber-100">
-              <Clock className="w-6 h-6 animate-pulse" />
-              Mission unlocks on {format(assignment.startDate!, "PPp")}
-            </div>
-          ) : isSubmissionLate ? (
-            <div className="bg-rose-500/10 p-6 rounded-2xl border border-rose-500/20 text-center space-y-4">
-              <p className="text-rose-600 font-bold">
-                This mission is past its deadline.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+          <div className="space-y-4">
+            {hasNotStarted ? (
+              <div className="bg-navy-950 text-text-muted text-xs font-bold p-5 rounded-2xl flex items-center justify-center gap-3 border border-navy-800 italic">
+                <Clock size={16} /> Operation Commences: {format(assignment.startDate!, "MMM d, h:mm a")}
+              </div>
+            ) : (
+                <button
                 onClick={handleEnroll}
-                disabled={
-                  enrolling ||
-                  user.coins <
-                    assignment.entryFee +
-                      (user.inventory?.includes("late_pass_1") ? 0 : 30)
-                }
-                className="bg-brand-gold-hover hover:bg-indigo-700 disabled:opacity-50 text-bg-main font-black text-lg py-4 px-8 rounded-2xl transition w-full shadow-lg"
+                disabled={enrolling || user.coins < finalEntryFee}
+                className="w-full bg-brand-gold text-navy-950 py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-glow-gold hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
               >
-                {enrolling
-                  ? "Unlocking..."
-                  : user.inventory?.includes("late_pass_1")
-                    ? `Pay 🪙 ${assignment.entryFee} (Uses 1 Late Pass)`
-                    : `Pay 🪙 ${assignment.entryFee + 30} to Enroll Late`}
-              </motion.button>
-            </div>
-          ) : (
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={handleEnroll}
-              disabled={enrolling || user.coins < assignment.entryFee}
-              className="bg-brand-gold-hover hover:bg-indigo-700 disabled:opacity-50 text-bg-main font-black text-lg py-5 px-8 rounded-2xl transition w-full shadow-lg shadow-indigo-200 hover:shadow-xl hover:shadow-indigo-200"
-            >
-              {enrolling
-                ? "Securing Stakes..."
-                : `Commit 🪙 ${assignment.entryFee} Stakes & Begin`}
-            </motion.button>
-          )}
-          {user.coins <
-            (hasNotStarted
-              ? assignment.entryFee
-              : isSubmissionLate
-                ? assignment.entryFee +
-                  (user.inventory?.includes("late_pass_1") ? 0 : 30)
-                : assignment.entryFee) && (
-            <p className="text-rose-500 text-sm mt-4 font-bold flex items-center justify-center gap-2">
-              <ShieldAlert className="w-4 h-4" /> Insufficient funds.{" "}
-              <button
-                onClick={() => navigate("/wallet")}
-                className="underline decoration-rose-300 underline-offset-2"
-              >
-                Recharge Wallet
+                {enrolling ? "Establishing Link..." : `Authorize Deployment • 🪙 ${finalEntryFee}`}
               </button>
-            </p>
-          )}
+            )}
+
+            {user.coins < finalEntryFee && (
+              <p className="text-error text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 mt-2">
+                <ShieldAlert size={14} /> Intelligence: Insufficient Liquidity
+              </p>
+            )}
+          </div>
         </motion.div>
       )}
 
       {user?.role === "student" && enrollment && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className="bg-bg-surface rounded-[2rem] overflow-hidden border border-border-main shadow-sm flex flex-col lg:flex-row mt-8"
-        >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Editor Area */}
-          <div className="flex-1 p-8 md:p-10 flex flex-col lg:border-r border-border-main">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex flex-col gap-2">
-                <h2 className="text-2xl font-black text-text-primary flex items-center gap-2">
-                  <FileText className="w-6 h-6 text-brand-gold" />
-                  Your Assessment
-                </h2>
-                {timeLeftStr && (
-                  <span className="text-sm font-bold text-rose-600 bg-rose-500/10 rounded-xl px-3 py-1.5 inline-flex items-center gap-2 w-fit border border-rose-500/20">
-                    <Clock className="w-4 h-4" /> Time Remaining:{" "}
-                    <span className="font-mono text-base">{timeLeftStr}</span>
-                  </span>
-                )}
+          <div className="card-premium p-6 md:p-8 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20">
+                    <FileText size={20} />
+                </div>
+                <h2 className="text-xl font-display font-bold text-text-primary tracking-tight">Mission Console</h2>
               </div>
-              {isSubmissionLate && submission?.status !== "assessed" && (
-                <span className="bg-rose-500/20 text-rose-800 text-xs font-black uppercase tracking-widest px-4 py-2 rounded-xl">
-                  LATE
-                </span>
+              {timeLeftStr && (
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-error/10 text-error rounded-lg border border-error/20 font-mono text-sm font-bold">
+                  <Clock size={14} />
+                  <span>{timeLeftStr}</span>
+                </div>
               )}
             </div>
 
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              onPaste={(e) => {
-                if (submission?.status !== "assessed" && submission?.status !== "pending_review" && !isTimeUp) {
-                  e.preventDefault();
-                  setPasteCount(prev => prev + 1);
-                }
-              }}
-              onCopy={(e) => {
-                  e.preventDefault();
-                  toast.error("Copying is blocked during assessments.", { icon: '⚠️' });
-              }}
-              onContextMenu={(e) => {
-                 if (submission?.status !== "assessed" && submission?.status !== "pending_review" && !isTimeUp) {
-                    e.preventDefault();
-                    toast.error("Context menu is disabled during assessments.", { icon: '⚠️' });
-                 }
-              }}
-              disabled={
-                submitting || submission?.status === "assessed" || submission?.status === "pending_review" || isTimeUp
-              }
-              className="flex-1 min-h-[300px] w-full p-6 text-lg border-2 border-border-main rounded-2xl resize-none outline-none focus:border-black focus:ring-4 focus:ring-gray-100 transition-all mb-6 bg-bg-main/50 disabled:bg-border-main disabled:text-text-secondary disabled:border-transparent font-medium shadow-inner"
-              placeholder={
-                isTimeUp
-                  ? "Time is up! You can no longer modify your answer."
-                  : "Construct your response here..."
-              }
+              disabled={submitting || submission?.status === "assessed" || submission?.status === "pending_review" || isTimeUp}
+              className="w-full min-h-[350px] p-5 text-sm md:text-base border border-navy-700 rounded-xl bg-navy-900 text-text-primary focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/50 outline-none transition-all resize-none shadow-inner leading-relaxed font-medium"
+              placeholder="Inject assessment response..."
             />
 
-            {/* Attachments UI */}
-            <div className="mb-8">
-              <div className="flex flex-col gap-2 mb-4">
-                <div className="flex items-center gap-4">
-                  <h3 className="font-bold text-text-primary">
-                    Supporting Materials
-                  </h3>
-                  {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review")) &&
-                    !isTimeUp && (
-                      <>
-                        <input
-                          type="file"
-                          multiple
-                          ref={fileInputRef}
-                          onChange={handleFileUpload}
-                          className="hidden"
-                          accept="image/*,application/pdf,video/*"
-                        />
-                        <button
-                          onClick={() => fileInputRef.current?.click()}
-                          className="flex items-center gap-2 text-sm font-bold text-brand-gold bg-brand-gold-secondary-hover px-4 py-2 rounded-xl hover:bg-brand-gold-secondary-hover transition border border-brand-gold/20"
-                        >
-                          <Paperclip className="w-4 h-4" /> Upload
-                        </button>
-                      </>
-                    )}
-                </div>
-                {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review")) && !isTimeUp && (
-                  <p className="text-[11px] text-text-secondary/80 font-bold uppercase tracking-tight flex flex-wrap items-center gap-x-3 gap-y-1">
-                    <span className="bg-border-main px-2.5 py-1 rounded-lg text-text-secondary border border-border-main/50">
-                      Limits: 5MB Images / 500KB Others
-                    </span>
-                    <a 
-                      href="https://www.samjuniors.com/" 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="text-brand-gold hover:text-indigo-700 underline underline-offset-4 decoration-indigo-200 hover:decoration-indigo-500 transition-all font-black"
-                    >
-                      Use our compressor if files are too large →
-                    </a>
-                  </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Evidence Attachments</h4>
+                {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
+                   <div className="flex items-center gap-2">
+                      <input type="file" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/pdf,video/*" />
+                      <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-bold text-brand-gold hover:text-white transition uppercase tracking-wider">
+                         Add File
+                      </button>
+                   </div>
                 )}
               </div>
 
               {attachments.length > 0 ? (
-                <div className="flex gap-3 flex-wrap">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {attachments.map((att, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 bg-bg-surface border border-border-main shadow-sm rounded-xl p-2 pr-4 max-w-[200px] group transition-all hover:border-brand-gold/30"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-bg-main flex items-center justify-center shrink-0">
-                        {att.type.startsWith("image") ? (
-                          <ImageIcon className="w-4 h-4 text-blue-500" />
-                        ) : att.type.startsWith("video") ? (
-                          <Video className="w-4 h-4 text-purple-500" />
-                        ) : (
-                          <FileIcon className="w-4 h-4 text-text-secondary" />
-                        )}
-                      </div>
-                      <span className="text-xs font-bold truncate text-text-secondary">
-                        {att.name}
-                      </span>
-                      {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review")) &&
-                        !isTimeUp && (
-                          <button
-                            onClick={() => removeAttachment(idx)}
-                            className="ml-auto flex shrink-0 items-center justify-center w-6 h-6 hover:bg-rose-500/10 rounded-md text-text-secondary/80 hover:text-rose-500 transition-colors"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        )}
+                    <div key={idx} className="flex items-center gap-2 bg-navy-900 border border-navy-700 p-2 rounded-lg group">
+                      <div className="shrink-0 text-brand-gold">{att.type.startsWith("image") ? <ImageIcon size={14}/> : <FileIcon size={14}/>}</div>
+                      <span className="text-[10px] font-medium text-text-secondary truncate flex-1">{att.name}</span>
+                      {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
+                        <button onClick={() => removeAttachment(idx)} className="text-text-secondary hover:text-error transition"><X size={12}/></button>
+                      )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm font-medium text-text-secondary/80 bg-bg-main/50 p-4 rounded-xl border border-dashed border-border-main inline-block">
-                  No files attached
-                </p>
+                <div className="p-4 bg-navy-900/50 border border-dashed border-navy-700 rounded-xl text-center">
+                   <p className="text-[10px] font-bold text-text-secondary/50 uppercase tracking-widest">No evidence provided</p>
+                </div>
               )}
             </div>
 
             {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review")) && (
-              <motion.button
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+              <button
                 onClick={handleSubmit}
-                disabled={
-                  submitting || (!content.trim() && attachments.length === 0)
-                }
-                className="w-full bg-text-primary hover:bg-text-primary hover:text-bg-main text-bg-main py-5 px-6 rounded-2xl font-black text-lg transition flex justify-center items-center gap-3 disabled:opacity-50 shadow-sm"
+                disabled={submitting || (!content.trim() && attachments.length === 0) || isTimeUp}
+                className="w-full bg-brand-gold text-navy-950 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
               >
-                {submitting
-                  ? "Transmitting to AI..."
-                  : isTimeUp
-                    ? "Submit Answer (Time Up)"
-                    : isSubmissionLate
-                      ? user?.inventory?.includes("late_pass_1")
-                        ? "Submit Late (Uses 1 Late Pass)"
-                        : "Submit Late (🪙 30 Fee)"
-                      : "Submit Mission"}
-                {!submitting && <Send className="w-5 h-5" />}
-              </motion.button>
+                {submitting ? "Analyzing Neural Patterns..." : "Complete Mission Authority"}
+              </button>
             )}
           </div>
 
           {/* AI Feedback Area */}
-          <div className="flex-1 p-8 md:p-10 bg-bg-main/30">
-            <h2 className="text-2xl font-black text-text-primary mb-6 flex items-center gap-2">
-              <span className="w-10 h-10 bg-success-green/20 rounded-xl flex items-center justify-center text-emerald-600">
-                <Bot className="w-6 h-6" />
-              </span>
-              AI Evaluator
-            </h2>
-            {submission?.status === "assessed" || submission?.status === "pending_review" ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="space-y-6"
-              >
-                {submission.status === "pending_review" && (
-                  <div className="bg-brand-gold/10 border border-brand-gold/30 rounded-2xl p-4 mb-4 flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-amber-500 animate-pulse" />
-                    <p className="text-sm font-bold text-amber-800">
-                      Processing Analysis... This submission is being reviewed by a Super Admin for final points allocation.
-                    </p>
-                  </div>
-                )}
-                <div className="bg-bg-surface p-8 rounded-3xl border border-border-main shadow-xl shadow-emerald-100/20 text-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-400"></div>
-                  <div className="text-sm font-black text-text-secondary/80 uppercase tracking-widest mb-4 mt-2">
-                    Evaluation Score
-                  </div>
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", delay: 0.2 }}
-                    className={cn(
-                      "text-7xl font-black mb-4 tracking-tighter",
-                      submission.status === "pending_review" 
-                        ? "text-text-secondary/60 blur-md select-none" 
-                        : submission.aiScore >= 80
-                          ? "text-emerald-500"
-                          : submission.aiScore >= 50
-                            ? "text-amber-500"
-                            : "text-rose-500",
-                    )}
-                  >
-                    {submission.status === "pending_review" ? "??" : submission.aiScore}
-                    <span className="text-3xl text-text-secondary/60">/100</span>
-                  </motion.div>
+          <div className="card-premium p-6 md:p-8 space-y-6 bg-navy-900/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20 shadow-soft">
+                  <Bot size={22} />
+              </div>
+              <h2 className="text-xl font-display font-bold text-text-primary tracking-tight">Intelligence Feedback</h2>
+            </div>
 
-                  {((submission.tabSwitches && submission.tabSwitches > 0) || (submission.pasteCount && submission.pasteCount > 0)) && (
-                    <div className="bg-rose-500/10 border border-rose-500/30 rounded-xl p-4 mt-4 text-left flex gap-3 text-sm">
-                      <ShieldAlert className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-bold text-rose-800 mb-1">Activity Tracking Flags</p>
-                        <ul className="list-disc leading-relaxed text-rose-700 ml-4">
-                          {submission.tabSwitches && submission.tabSwitches > 0 && <li>Tab switched {submission.tabSwitches} times during assessment.</li>}
-                          {submission.pasteCount && submission.pasteCount > 0 && <li>Copy-pasted content {submission.pasteCount} times.</li>}
-                        </ul>
-                      </div>
-                    </div>
-                  )}
-
-                  {submission.status === "assessed" ? (
-                    submission.aiScore >= 50 && !isSubmissionLate ? (
-                      <div className="bg-success-green/10 text-success-green text-sm font-bold py-3 rounded-xl inline-flex items-center gap-2 px-6 border border-success-green/20">
-                        <span>Reward Unlocked: 🪙 {Math.floor(assignment.bonusReward * (submission.aiScore >= 90 ? 1.0 : (submission.aiScore >= 75 ? 0.8 : 0.5)))}</span>
-                      </div>
-                    ) : submission.aiScore >= 50 && isSubmissionLate ? (
-                      <div className="bg-rose-500/10 text-rose-700 text-sm font-bold py-3 rounded-xl inline-flex items-center gap-2 px-6 border border-rose-500/20">
-                        <span>No bonus coins awarded for Late Submissions</span>
-                      </div>
-                    ) : (
-                      <div className="bg-rose-500/10 text-rose-700 text-sm font-bold py-3 rounded-xl inline-flex items-center gap-2 px-6 border border-rose-500/20">
-                        Minimum threshold not met
-                      </div>
-                    )
-                  ) : (
-                    <div className="bg-brand-gold-secondary-hover text-indigo-700 text-sm font-bold py-3 rounded-xl inline-flex items-center gap-2 px-6 border border-brand-gold/20">
-                      Rewards pending manual approval
-                    </div>
-                  )}
-                </div>
-                <div className="bg-bg-surface p-8 rounded-3xl border border-border-main shadow-sm relative overflow-hidden">
-                  {submission.status === "pending_review" && (
-                    <div className="absolute inset-0 bg-bg-surface/60 backdrop-blur-sm z-10 flex items-center justify-center p-6 text-center">
-                       <div className="bg-bg-surface shadow-xl border border-border-main p-6 rounded-3xl max-w-xs">
-                          <Bot className="w-10 h-10 text-brand-gold mx-auto mb-3" />
-                          <p className="text-sm font-bold text-text-secondary leading-relaxed italic">
-                            AI analysis is complete but awaiting Super Admin verification before revealing feedback and marks.
-                          </p>
-                       </div>
-                    </div>
-                  )}
-                  <div className="text-sm font-black text-text-primary mb-4 flex items-center gap-2 uppercase tracking-widest">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    Feedback Analysis
-                  </div>
-                  <ExpandableText maxHeight={200}>
-                    <div className="markdown-body">
-                      <Markdown>{submission.aiFeedback}</Markdown>
-                    </div>
-                  </ExpandableText>
+            {submission?.status === "pending_review" || submission?.status === "assessed" ? (
+              <div className="space-y-6">
+                <div className="p-8 bg-navy-900 border border-navy-700 rounded-2xl text-center relative overflow-hidden shadow-soft">
+                   {submission.status === "pending_review" && (
+                     <div className="absolute inset-0 bg-navy-900/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
+                        <div className="flex flex-col items-center gap-2">
+                           <Loader2 size={24} className="text-brand-gold animate-spin" />
+                           <p className="text-[10px] font-bold text-brand-gold uppercase tracking-widest">Encrypting Review</p>
+                        </div>
+                     </div>
+                   )}
+                   <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Operational Grade</div>
+                   <div className={cn(
+                     "text-6xl md:text-7xl font-display font-bold tracking-tighter",
+                     submission.aiScore >= 80 ? "text-success" : submission.aiScore >= 50 ? "text-brand-gold" : "text-error"
+                   )}>
+                      {submission.aiScore}<span className="text-2xl text-text-secondary/30 ml-1">/100</span>
+                   </div>
                 </div>
 
-                {/* Shop Interaction area */}
-                <div className="flex flex-col gap-3 mt-6">
-                  {user?.inventory?.includes("reevaluation_pass") && (
-                    <button
-                      onClick={handleReevaluate}
-                      disabled={submitting}
-                      className="w-full bg-cyan-100 hover:bg-cyan-200 text-cyan-900 border border-cyan-200 py-3 rounded-2xl font-bold transition disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      <Zap className="w-5 h-5" /> Re-evaluate with AI (Uses 1
-                      Pass)
-                    </button>
-                  )}
-                  {(user?.inventory?.includes("resubmission_ticket") ||
-                    user?.inventory?.includes("test_retake_pass")) && (
-                    <button
-                      onClick={handleResubmit}
-                      disabled={submitting}
-                      className="w-full bg-success-green/20 hover:bg-emerald-200 text-emerald-900 border border-success-green/30 py-3 rounded-2xl font-bold transition disabled:opacity-50 flex items-center justify-center gap-2"
-                    >
-                      <Sparkles className="w-5 h-5" /> Clear & Resubmit (Uses 1{" "}
-                      {user?.inventory?.includes("resubmission_ticket")
-                        ? "Resubmission Ticket"
-                        : "Test Retake Pass"}
-                      )
-                    </button>
-                  )}
+                <div className="p-5 bg-navy-900 border border-navy-700 rounded-2xl relative overflow-hidden">
+                   <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-3 opacity-50">Strategic Analysis</div>
+                   <ExpandableText maxHeight={200}>
+                      <div className="markdown-body text-sm text-text-secondary leading-relaxed font-medium italic">
+                        <Markdown>{submission.aiFeedback || ""}</Markdown>
+                      </div>
+                   </ExpandableText>
                 </div>
-              </motion.div>
+
+                <div className="flex flex-col gap-2">
+                   {user?.inventory?.includes("reevaluation_pass") && (
+                     <button onClick={handleReevaluate} className="w-full py-2 bg-navy-800 text-cyan-400 border border-cyan-500/10 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-navy-700 transition">
+                        Neural Re-scan (Uses Pass)
+                     </button>
+                   )}
+                   {(user?.inventory?.includes("resubmission_ticket") || user?.inventory?.includes("test_retake_pass")) && (
+                     <button onClick={handleResubmit} className="w-full py-2 bg-navy-800 text-success border border-success/10 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-navy-700 transition">
+                        Purge & Re-deploy (Uses Ticket)
+                     </button>
+                   )}
+                </div>
+              </div>
             ) : (
-              <div className="h-full min-h-[400px] border-2 border-dashed border-border-main rounded-3xl flex flex-col items-center justify-center text-text-secondary/80 p-10 text-center bg-bg-surface/50">
-                <div className="w-24 h-24 bg-border-main rounded-full flex items-center justify-center mb-6">
-                  <Bot className="w-12 h-12 text-text-secondary/60" />
+              <div className="py-12 md:py-20 flex flex-col items-center justify-center text-center px-6 bg-navy-900/50 rounded-2xl border border-dashed border-navy-700">
+                <div className="w-16 h-16 bg-navy-900 rounded-full flex items-center justify-center mb-6 text-text-secondary/20">
+                  <Bot size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-text-primary mb-2">
-                  Awaiting Submission
-                </h3>
-                <p className="font-medium text-text-secondary max-w-sm leading-relaxed mb-6">
-                  Complete your mission to receive an instant, detailed analysis
-                  from our AI.
+                <h3 className="text-lg font-bold text-text-primary mb-2">Awaiting Intelligence</h3>
+                <p className="text-xs text-text-secondary max-w-xs leading-relaxed italic">
+                  Analysis will trigger upon completion of mission directives. Premium neural patterns detected.
                 </p>
-
-                {user?.inventory?.includes("practical_pass") && !isTimeUp && (
-                  <button
-                    onClick={handlePracticalExemption}
-                    disabled={submitting}
-                    className="bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-900 border border-fuchsia-200 py-3 px-6 rounded-2xl font-bold transition disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    <Shield className="w-5 h-5" /> Use Practical Pass
-                    (Auto-Score 80/100)
-                  </button>
-                )}
               </div>
             )}
           </div>
-        </motion.div>
+        </div>
       )}
+
 
       {(user?.role === "admin" || user?.role === "superadmin") && (
         <motion.div

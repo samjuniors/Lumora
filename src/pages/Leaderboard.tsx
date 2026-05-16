@@ -155,29 +155,24 @@ export const Leaderboard = () => {
   const [selectedUser, setSelectedUser] = useState<(User & { averageGrade?: number, gradedCount?: number }) | null>(null);
 
   useEffect(() => {
-    let unsubscribeUsers: () => void;
-    let unsubscribeSubmissions: () => void;
-    
-    setLoading(true);
-    
-    try {
-      unsubscribeUsers = dbService.subscribeToStudents((updatedUsers) => {
-        setUsers(updatedUsers);
-        setLoading(false);
-      });
-      
-      unsubscribeSubmissions = dbService.subscribeToAssessedSubmissions((updatedSubmissions) => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [updatedUsers, updatedSubmissions] = await Promise.all([
+          dbService.getAllUsers(), // Already cached in service now
+          dbService.getAllAssessedSubmissions()
+        ]);
+        
+        setUsers(updatedUsers.filter(u => u.role === 'student'));
         setSubmissions(updatedSubmissions);
-      });
-    } catch(err) {
-      handleFirestoreError(err, OperationType.LIST, 'leaderboard_data');
-      setLoading(false);
-    }
-    
-    return () => {
-      if (unsubscribeUsers) unsubscribeUsers();
-      if (unsubscribeSubmissions) unsubscribeSubmissions();
+      } catch(err) {
+        handleFirestoreError(err, OperationType.LIST, 'leaderboard_data');
+      } finally {
+        setLoading(false);
+      }
     };
+    
+    fetchData();
   }, []);
 
   const calculatedUsers = useMemo(() => {
@@ -383,70 +378,58 @@ export const Leaderboard = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 relative pb-48 px-4 md:px-0">
-      {/* Header */}
+      {/* Premium Minimal Header */}
       <motion.div 
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden bg-[#1A2B48] rounded-[3rem] p-8 md:p-16 shadow-2xl border border-[#D4AF37]/30 text-center z-10"
+        className="text-center space-y-4 pt-12 pb-8"
       >
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10 pointer-events-none" />
-        
-        <h1 className="text-5xl md:text-6xl font-black tracking-tight flex flex-col md:flex-row items-center justify-center gap-4 mb-4 relative z-10">
-          <motion.div
-            initial={{ scale: 0, rotate: -180 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 15 }}
-            className="bg-[#D4AF37]/10 p-3 rounded-2xl border border-[#D4AF37]/50 mb-2 md:mb-0"
-          >
-            <Crown className="w-10 h-10 md:w-12 md:h-12 text-[#D4AF37] drop-shadow-md" />
-          </motion.div>
-          <span className="text-white">Hall of Fame</span>
+        <div className="inline-flex items-center justify-center p-3 bg-brand-gold/10 rounded-2xl border border-brand-gold/30 mb-2">
+           <Crown className="w-10 h-10 text-brand-gold" />
+        </div>
+        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-text-primary">
+          The <span className="text-brand-gold">Hall of Fame</span>
         </h1>
-        <p className="text-[#D4AF37] text-lg font-medium max-w-2xl mx-auto relative z-10">Compete globally, earn badges, and climb the ranks to become a legend.</p>
+        <p className="text-text-secondary text-lg font-medium max-w-xl mx-auto">Elite performers recognized by the Lumina Syndicate.</p>
         
         {/* Navigation Tabs */}
-        <div className="flex flex-col gap-4 mt-10">
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center justify-center gap-2 z-20 relative bg-[#0A1128]/50 backdrop-blur-md p-1.5 justify-between w-full max-w-sm mx-auto rounded-full border border-white/10 shadow-inner"
-          >
+        <div className="pt-8">
+          <div className="flex bg-navy-900/50 backdrop-blur-md p-1.5 w-full max-w-md mx-auto rounded-2xl border border-navy-700/50 shadow-inner">
             <button
               onClick={() => setActiveTab('diamonds')}
               className={cn(
-                "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-                activeTab === 'diamonds' ? "bg-cyan-500 text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
+                "flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                activeTab === 'diamonds' ? "bg-navy-800 text-cyan-400 border border-navy-700" : "text-text-secondary hover:text-text-primary"
               )}
             >
-              <Gem className={cn("w-4 h-4")} /> Diamonds
+              <Gem className="w-4 h-4" /> Diamonds
             </button>
             <button
               onClick={() => setActiveTab('grades')}
               className={cn(
-                "flex-1 px-4 py-3 rounded-full font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-                activeTab === 'grades' ? "bg-[#D4AF37] text-[#1A2B48] shadow-md" : "text-white/70 hover:text-white"
+                "flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
+                activeTab === 'grades' ? "bg-navy-800 text-brand-gold border border-navy-700" : "text-text-secondary hover:text-text-primary"
               )}
             >
-              <GraduationCap className={cn("w-4 h-4")} /> Mastery
+              <GraduationCap className="w-4 h-4" /> Mastery
             </button>
-          </motion.div>
+          </div>
 
           {activeTab === 'diamonds' && (
             <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="flex items-center justify-center gap-4 z-20 relative px-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex items-center justify-center gap-4 mt-6"
             >
                {['daily', 'weekly', 'overall'].map((t) => (
                  <button
                    key={t}
                    onClick={() => setTimeframe(t)}
                    className={cn(
-                     "px-6 py-2 rounded-xl text-xs font-black uppercase tracking-tighter transition-all",
+                     "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
                      timeframe === t 
-                       ? "bg-white/15 text-cyan-400 border border-cyan-500/30 shadow-lg shadow-cyan-900/40" 
-                       : "text-white/40 hover:text-white/60"
+                       ? "bg-navy-900 border border-cyan-500/30 text-cyan-400" 
+                       : "text-text-muted hover:text-text-secondary"
                    )}
                  >
                    {t}

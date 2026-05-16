@@ -127,72 +127,60 @@ export const ResourceCollector = () => {
   if (!user) return null;
 
   return (
-    <div className="relative overflow-hidden bg-[#1A2B48] border border-border-main rounded-3xl p-6 shadow-md transition-all shrink-0 w-full group">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] pointer-events-none" />
-        <div className="absolute right-0 top-0 w-32 h-32 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/20 transition-all duration-700 pointer-events-none" />
-        
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-            <div className="flex items-start gap-4">
-               <div className="w-14 h-14 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shrink-0 shadow-lg border border-white/20">
-                    <Pickaxe className="w-7 h-7 text-white" />
-               </div>
-               <div>
-                   <h3 className="text-xl font-bold text-white mb-1">Resource Collector</h3>
-                   <p className="text-sm font-medium text-white/70">Mine coins and diamonds every 12 hours.</p>
-                   <p className="text-xs font-bold text-amber-400 mt-2 bg-amber-400/10 inline-block px-2 py-1 rounded-md">{timeLeft}</p>
-               </div>
-            </div>
-
-            <div className="flex items-center justify-center shrink-0 gap-3">
-               <AnimatePresence mode="wait">
-                 {collected ? (
-                     <motion.div
-                       initial={{ scale: 0, opacity: 0 }}
-                       animate={{ scale: 1, opacity: 1 }}
-                       exit={{ scale: 0, opacity: 0 }}
-                       className="flex items-center gap-2 bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/30 px-6 py-3 rounded-2xl font-bold"
-                     >
-                         <Sparkles className="w-5 h-5"/> Collected!
-                     </motion.div>
-                 ) : (
-                     <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
-                        <button
-                            onClick={handleCollect}
-                            disabled={!canCollect || loading}
-                            className={cn(
-                                "relative w-full md:w-auto px-8 py-3 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 flex items-center justify-center gap-2 overflow-hidden",
-                                canCollect 
-                                  ? "bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg hover:shadow-orange-500/50 hover:-translate-y-1" 
-                                  : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10"
-                            )}
-                        >
-                            {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Not Ready'}
-                            {canCollect && (
-                                <motion.div 
-                                  className="absolute inset-0 bg-white/20"
-                                  initial={{ x: "-100%" }}
-                                  animate={{ x: "200%" }}
-                                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                                />
-                            )}
-                        </button>
-
-                        {!canCollect && (
-                            <button
-                                onClick={handleFastReset}
-                                disabled={loading}
-                                className="px-4 py-3 rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 font-bold text-xs hover:bg-cyan-500/20 transition-all flex items-center justify-center gap-2 group/reset whitespace-nowrap"
-                                title="Reset cooldown for 3 Diamonds"
-                            >
-                                <Gem className="w-4 h-4 group-hover/reset:rotate-12 transition-transform" />
-                                Reset for 3
-                            </button>
-                        )}
-                     </div>
-                 )}
-               </AnimatePresence>
-            </div>
+    <div className="card-premium p-5 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+      <div className="absolute right-0 top-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-3xl group-hover:bg-brand-gold/10 transition-all duration-700 pointer-events-none" />
+      
+      <div className="flex items-center gap-4 relative z-10 w-full sm:w-auto">
+        <div className="w-12 h-12 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center shrink-0 border border-brand-gold/20 shadow-soft">
+          <Pickaxe size={24} />
         </div>
+        <div>
+          <h3 className="text-base font-bold text-text-primary tracking-tight">Resource Collector</h3>
+          <p className="text-[11px] font-medium text-text-secondary">Next collection: <span className={cn("font-bold", canCollect ? "text-success" : "text-brand-gold")}>{timeLeft}</span></p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+        <AnimatePresence mode="wait">
+          {collected ? (
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-xs"
+            >
+              <Sparkles size={14}/> Extraction Success
+            </motion.div>
+          ) : (
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={handleCollect}
+                disabled={!canCollect || loading}
+                className={cn(
+                  "flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2",
+                  canCollect 
+                    ? "bg-brand-gold text-navy-950 hover:translate-y-[-1px] active:translate-y-[0px] shadow-sm" 
+                    : "bg-navy-800 text-text-secondary/50 cursor-not-allowed border border-navy-700"
+                )}
+              >
+                {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Limited'}
+              </button>
+
+              {!canCollect && (
+                <button
+                  onClick={handleFastReset}
+                  disabled={loading}
+                  className="px-4 py-2 rounded-lg bg-navy-800 text-cyan-400 border border-cyan-500/10 font-bold text-xs hover:bg-navy-700 transition-all flex items-center justify-center gap-2 group/reset"
+                >
+                  <Gem size={14} className="group-hover/reset:rotate-12 transition-transform" />
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
+
   );
 };

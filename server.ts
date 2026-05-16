@@ -78,7 +78,7 @@ async function startServer() {
       if (!ai) return res.status(503).json({ error: "AI Service Offline" });
       const { messages } = req.body;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: messages,
         config: {
           systemInstruction: "You are Nova, a friendly virtual study pet and tutor. You help students learn, stay motivated, and explain concepts simply. Use emojis and be encouraging!"
@@ -97,7 +97,7 @@ async function startServer() {
       if (!ai) return res.status(503).json({ error: "AI Service Offline" });
       const { topic } = req.body;
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: 'user', parts: [{ text: `Create a mission template for an educational platform on the topic: "${topic}". 
         Return a JSON object with:
         - name: A catchy title.
@@ -164,7 +164,7 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
       }
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: 'user', parts: parts }],
         config: { responseMimeType: 'application/json' }
       });
@@ -187,7 +187,7 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
       Data: ${JSON.stringify(stats)}`;
       
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       });
       res.json({ text: response.text });
@@ -215,7 +215,7 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
       Be authoritative, encouraging but high-stakes.`;
       
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       });
       res.json({ text: response.text });
@@ -242,7 +242,7 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
       Give concise, high-stakes suggestions. Return the content in Markdown format.`;
       
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       });
       res.json({ text: response.text });

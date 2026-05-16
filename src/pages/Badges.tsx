@@ -13,37 +13,40 @@ export const Badges = () => {
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-bg-surface p-6 md:p-10 rounded-[2.5rem] border flex flex-col items-center justify-center text-center relative overflow-hidden"
+                className="bg-navy-900 p-8 md:p-12 rounded-[2.5rem] border border-brand-gold/20 flex flex-col items-center justify-center text-center relative overflow-hidden shadow-glow-gold"
             >
-                <div className="w-20 h-20 md:w-24 md:h-24 bg-pink-500/10 rounded-3xl flex items-center justify-center mb-6 border border-pink-500/20 shadow-inner relative group cursor-pointer transition-all hover:scale-105 active:scale-95">
-                    <Award className="w-10 h-10 md:w-12 md:h-12 text-pink-500 relative z-10" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-[60px] -mr-20 -mt-20 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/5 rounded-full blur-[40px] -ml-10 -mb-10 pointer-events-none"></div>
+
+                <div className="w-20 h-20 md:w-24 md:h-24 bg-navy-950 rounded-[2rem] flex items-center justify-center mb-8 border border-brand-gold/20 shadow-inner relative group cursor-pointer transition-all hover:scale-105 active:scale-95 ring-1 ring-brand-gold/30">
+                    <Award className="w-10 h-10 md:w-12 md:h-12 text-brand-gold relative z-10" />
                     <Sparkles className="w-5 h-5 text-brand-gold absolute -top-2 -right-2 motion-safe:animate-pulse" />
                 </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-text-primary tracking-tighter mb-4 flex items-center justify-center gap-3">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-rose-500 drop-shadow-sm">Your Badges</span>
+                <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-white tracking-tight mb-4">
+                    Recognition & Achievements
                 </h1>
-                <p className="text-text-secondary text-base md:text-xl font-medium max-w-2xl leading-relaxed">
-                    Collect extreme achievements and unlock unique rewards as you progress through challenges.
+                <p className="text-text-muted text-base md:text-xl font-medium max-w-2xl leading-relaxed">
+                    Showcase your academic dominance through earned badges and unlock elite status markers.
                 </p>
                 
-                <div className="flex bg-bg-main p-1.5 rounded-2xl md:rounded-[2rem] border border-border-main mt-8">
+                <div className="flex bg-navy-950 p-1.5 rounded-2xl md:rounded-[2rem] border border-navy-700/50 mt-10 shadow-soft">
                   <button
                     onClick={() => setActiveTab('badges')}
                     className={cn(
-                      "px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-black text-sm md:text-lg transition-all duration-300 flex items-center gap-2",
-                      activeTab === 'badges' ? "bg-bg-surface text-brand-gold shadow-sm scale-105" : "text-text-secondary hover:text-text-primary"
+                      "px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-bold text-sm md:text-lg transition-all duration-300 flex items-center gap-2",
+                      activeTab === 'badges' ? "bg-navy-800 text-brand-gold shadow-glow-gold/10 border border-brand-gold/20" : "text-text-muted hover:text-white"
                     )}
                   >
-                    <Award className="w-5 h-5" /> 25 Badges
+                    <Award className="w-5 h-5" /> Hall of Honor
                   </button>
                   <button
                     onClick={() => setActiveTab('achievements')}
                     className={cn(
-                      "px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-black text-sm md:text-lg transition-all duration-300 flex items-center gap-2",
-                      activeTab === 'achievements' ? "bg-bg-surface text-pink-500 shadow-sm scale-105" : "text-text-secondary hover:text-text-primary"
+                      "px-6 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-bold text-sm md:text-lg transition-all duration-300 flex items-center gap-2",
+                      activeTab === 'achievements' ? "bg-navy-800 text-brand-gold shadow-glow-gold/10 border border-brand-gold/20" : "text-text-muted hover:text-white"
                     )}
                   >
-                    <Trophy className="w-5 h-5" /> Unlimited Tiers
+                    <Trophy className="w-5 h-5" /> Milestones
                   </button>
                 </div>
             </motion.div>

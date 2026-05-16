@@ -325,55 +325,59 @@ export const Shop = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="max-w-6xl mx-auto px-4 py-8 space-y-10"
+      className="max-w-6xl mx-auto px-4 py-8 space-y-8"
     >
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tight">E-Shop</h1>
-          <p className="text-text-secondary mt-2 max-w-2xl text-lg">
-            Exchange your hard-earned coins for powerful boosts, exclusive cosmetics, and theme unlocks.
+          <h1 className="text-4xl font-display font-bold text-text-primary tracking-tight">E-Shop</h1>
+          <p className="text-text-secondary mt-2 max-w-2xl text-sm font-medium">
+            Acquire strategic advantages, neural upgrades, and elite status symbols using your academic capital.
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-[#1A2B48] border border-brand-gold/30 rounded-2xl p-4 shadow-xl shadow-brand-gold/5 min-w-[280px]">
-          <div className="w-12 h-12 rounded-xl bg-brand-gold/10 flex items-center justify-center border border-brand-gold/20">
-            <span className="text-2xl drop-shadow-sm">🪙</span>
+        
+        <div className="bg-navy-950 border border-brand-gold/30 rounded-[2rem] p-5 shadow-glow-gold min-w-[280px] relative overflow-hidden group">
+          <div className="absolute top-0 right-0 p-4 text-brand-gold opacity-5 group-hover:opacity-10 transition-opacity">
+            <ShoppingBag size={64} />
           </div>
-          <div className="flex-1">
-            <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em] mb-1">Asset Portfolio</p>
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-white">{user?.coins.toLocaleString() || 0}</span>
-                <span className="text-[9px] font-bold text-white/40 uppercase">Coins</span>
+          
+          <div className="relative z-10">
+            <p className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.22em] mb-3">Available Capital</p>
+            <div className="flex items-center gap-6">
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-text-secondary uppercase">Coins</span>
+                <span className="text-2xl font-display font-bold text-white tracking-tighter">{user?.coins.toLocaleString() || 0}</span>
               </div>
-              <div className="w-px h-6 bg-white/10" />
-              <div className="flex items-baseline gap-1">
-                <span className="text-xl font-black text-cyan-400">{(user?.diamonds || 0).toLocaleString()}</span>
-                <span className="text-[9px] font-bold text-cyan-400/40 uppercase">DIA</span>
+              <div className="w-px h-10 bg-navy-800" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest">Diamonds</span>
+                <span className="text-2xl font-display font-bold text-cyan-400 tracking-tighter">{(user?.diamonds || 0).toLocaleString()}</span>
               </div>
-            </div>
-            <div className="mt-2 pt-2 border-t border-white/5 flex items-center gap-1.5 opacity-60">
-               <Info className="w-3 h-3 text-brand-gold" />
-               <p className="text-[8px] font-bold text-white uppercase tracking-tighter">Automatic 30% Platform Tax applied to all rewards</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Navigation Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide border-b border-border-main">
+      <div className="flex items-center gap-6 border-b border-navy-800">
         {['all', 'consumables', 'cosmetics', 'inventory'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
             className={cn(
-              "px-5 py-2.5 rounded-t-xl font-semibold text-sm transition-all duration-200 capitalize whitespace-nowrap",
+              "pb-4 text-sm font-bold uppercase tracking-widest transition-all relative",
               activeTab === tab 
-                ? "bg-bg-surface text-brand-gold border-t border-l border-r border-border-main shadow-[0_4px_0_0_var(--bg-main)] -mb-[1px]" 
-                : "text-text-secondary hover:text-text-primary hover:bg-bg-surface/50 border-t border-l border-r border-transparent"
+                ? "text-brand-gold" 
+                : "text-text-secondary hover:text-text-primary"
             )}
           >
             {tab}
+            {activeTab === tab && (
+                <motion.div 
+                    layoutId="activeTabShop"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-gold shadow-glow-gold"
+                />
+            )}
           </button>
         ))}
       </div>
@@ -383,10 +387,10 @@ export const Shop = () => {
         variants={containerVariants}
         initial="hidden"
         animate="show"
-        key={activeTab} // re-trigger animation on tab change
+        key={activeTab}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
-        <AnimatePresence>
+        <AnimatePresence mode="popLayout">
           {(activeTab === 'inventory' 
             ? (user?.inventory || []).map((id, index) => {
                 const item = SHOP_ITEMS.find(i => i.id === id);
@@ -405,87 +409,83 @@ export const Shop = () => {
               <motion.div 
                 variants={itemVariants}
                 key={isInventoryView ? item.instanceId : item.id}
-                layout
                 className={cn(
-                  "bg-bg-surface rounded-3xl border transition-all duration-300 flex flex-col overflow-hidden group",
-                  !isInventoryView && isOwned ? "border-border-main opacity-80" : "border-border-main hover:border-brand-gold/40 shadow-sm hover:shadow-2xl hover:shadow-brand-gold/5"
+                  "card-premium overflow-hidden flex flex-col group",
+                  !isInventoryView && isOwned && "opacity-60 grayscale-[0.5]"
                 )}
               >
-                {/* Image / Icon Header */}
-                <div className="p-8 flex items-center justify-center relative border-b border-border-main/50 overflow-hidden">
-                  <div className={cn("absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity", item.bg)}></div>
-                  <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center relative z-10 bg-bg-main border border-border-main shadow-inner group-hover:scale-110 transition-transform duration-500")}>
-                     <item.icon className={cn("w-10 h-10", item.color)} strokeWidth={1.5} />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-bg-surface/50 to-transparent pointer-events-none" />
-                  
-                  {!isInventoryView && ownedCount > 0 && (
-                    <div className="absolute top-4 right-4 bg-bg-surface/80 backdrop-blur-md border border-border-main text-text-primary font-bold px-2 py-1 rounded-lg text-[10px] shadow-sm z-20 flex items-center gap-1">
-                      <ShoppingBag className="w-3 h-3 text-brand-gold" /> {ownedCount}
-                    </div>
-                  )}
-                  {!isInventoryView && isOwned && (
-                    <div className="absolute top-4 right-4 bg-brand-gold text-bg-main font-black px-3 py-1 rounded-full text-[9px] uppercase tracking-widest z-20 flex items-center gap-1 shadow-lg shadow-brand-gold/20">
-                      <Check className="w-3 h-3" strokeWidth={3} /> Owned
-                    </div>
-                  )}
+                {/* Visual Header */}
+                <div className="h-40 flex items-center justify-center relative bg-navy-900/50 border-b border-navy-800">
+                   <div className={cn("absolute inset-0 opacity-5", item.bg)} />
+                   <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center bg-navy-950 border border-navy-800 shadow-soft group-hover:scale-110 transition-transform duration-500 relative z-10")}>
+                      <item.icon className={cn("w-10 h-10", item.color)} strokeWidth={1.5} />
+                   </div>
+                   
+                   {!isInventoryView && isOwned && (
+                     <div className="absolute top-4 right-4 bg-brand-gold text-navy-950 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-widest z-20 shadow-glow-gold">
+                       Acquired
+                     </div>
+                   )}
+                   {!isInventoryView && ownedCount > 0 && (
+                      <div className="absolute top-4 left-4 bg-navy-800 text-text-secondary font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-widest z-20 border border-navy-700">
+                        x{ownedCount}
+                      </div>
+                   )}
                 </div>
 
-                {/* Content */}
+                {/* Content Area */}
                 <div className="p-6 flex-1 flex flex-col">
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-[9px] font-black tracking-[0.2em] text-brand-gold/70 bg-brand-gold/5 px-2 py-0.5 rounded uppercase">
+                    <span className="text-[9px] font-bold text-brand-gold uppercase tracking-widest opacity-60">
                       {item.category}
                     </span>
-                    {item.price > 100 && item.currency === 'diamonds' && (
-                       <span className="text-[9px] font-black bg-rose-500/10 text-rose-500 px-2 py-0.5 rounded uppercase tracking-widest">Limited</span>
+                  </div>
+                  <h3 className="font-bold text-lg text-text-primary mb-2 tracking-tight group-hover:text-brand-gold transition-colors">{item.name}</h3>
+                  <p className="text-text-secondary text-xs leading-relaxed mb-6 flex-1 font-medium italic opacity-80">{item.description}</p>
+                  
+                  {/* Action */}
+                  <div className="mt-auto">
+                    {isInventoryView ? (
+                      <button 
+                        onClick={() => handleActivateItem(item.id)}
+                        disabled={purchasing === item.id}
+                        className="w-full bg-navy-800 text-white border border-navy-700 hover:bg-navy-700 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all active:scale-95"
+                      >
+                        {purchasing === item.id ? "Processing..." : (item.type === 'cosmetic' ? "Equip" : "Activate")}
+                      </button>
+                    ) : isOwned ? (
+                      <div className="w-full py-3 rounded-xl border border-navy-800 flex items-center justify-center gap-2 text-[10px] text-text-secondary font-bold uppercase tracking-widest opacity-50">
+                        <Check size={14} /> Active In Profile
+                      </div>
+                    ) : (
+                      <button 
+                        disabled={!canAfford || purchasing === item.id}
+                        onClick={() => handlePurchase(item)}
+                        className={cn(
+                          "w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-[10px] uppercase tracking-widest transition-all duration-300",
+                          canAfford 
+                            ? "bg-brand-gold text-navy-950 shadow-glow-gold hover:scale-[1.02] active:scale-[0.98]" 
+                            : "bg-navy-900 text-text-secondary border border-navy-800 cursor-not-allowed opacity-50"
+                        )}
+                      >
+                        {purchasing === item.id ? (
+                           <span className="animate-pulse">Authorizing...</span>
+                        ) : (
+                          <div className="flex items-center gap-1.5 focus-visible:outline-none">
+                            <span className="text-sm">{item.currency === 'diamonds' ? '💎' : '🪙'}</span> 
+                            <span className="text-lg font-display font-bold tabular-nums">{item.price.toLocaleString()}</span>
+                          </div>
+                        )}
+                      </button>
                     )}
                   </div>
-                  <h3 className="font-black text-xl text-text-primary mb-2 line-clamp-1 group-hover:text-brand-gold transition-colors">{item.name}</h3>
-                  <p className="text-text-secondary text-sm leading-relaxed mb-6 flex-1 font-medium">{item.description}</p>
-                  
-                  {/* Action Button */}
-                  {isInventoryView ? (
-                    <button 
-                      onClick={() => handleActivateItem(item.id)}
-                      disabled={purchasing === item.id}
-                      className="w-full bg-brand-gold text-bg-main font-black py-4 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all"
-                    >
-                      {purchasing === item.id ? "Processing..." : (item.type === 'cosmetic' ? "Equip Item" : "Activate Effect")}
-                    </button>
-                  ) : isOwned ? (
-                    <button disabled className="w-full bg-bg-main border border-border-main text-text-secondary font-bold py-4 rounded-2xl flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-not-allowed">
-                      <Check className="w-4 h-4" /> Item Active
-                    </button>
-                  ) : (
-                    <button 
-                      disabled={!canAfford || purchasing === item.id}
-                      onClick={() => handlePurchase(item)}
-                      className={cn(
-                        "w-full py-4 rounded-2xl font-black flex items-center justify-center gap-2 text-xs uppercase tracking-[0.15em] transition-all duration-300 shadow-lg",
-                        canAfford 
-                          ? "bg-brand-gold text-bg-main hover:scale-[1.02] active:scale-[0.98] shadow-brand-gold/20" 
-                          : "bg-bg-main text-text-secondary border border-border-main cursor-not-allowed opacity-50"
-                      )}
-                    >
-                      {purchasing === item.id ? (
-                         <span className="animate-pulse">Authorizing...</span>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <span className={cn("text-xl", item.currency === 'diamonds' ? "text-cyan-500" : "text-bg-main")}>
-                             {item.currency === 'diamonds' ? '💎' : '🪙'}
-                          </span> 
-                          <span className="text-lg font-black">{item.price.toLocaleString()}</span>
-                        </div>
-                      )}
-                    </button>
-                  )}
                 </div>
               </motion.div>
             );
           })}
         </AnimatePresence>
       </motion.div>
+
 
       {/* Mystery Box Reveal Modal */}
       <AnimatePresence>

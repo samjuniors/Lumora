@@ -50,10 +50,13 @@ const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.15, ease: "linear" }}
+      initial={{ opacity: 0, y: 10, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      transition={{ 
+        duration: 0.3, 
+        ease: [0.16, 1, 0.3, 1] // Custom ease-out (Quartic)
+      }}
       className="h-full w-full relative"
     >
       {children}
@@ -315,8 +318,8 @@ const AppRoutes = () => {
         }}
       />
       <Navbar />
-      <main className="flex-grow w-full relative pb-[calc(136px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(72px+env(safe-area-inset-top))] md:pt-[calc(88px+env(safe-area-inset-top))] overflow-x-hidden">
-        <div className="container mx-auto px-4 py-4 md:py-8 min-h-full">
+      <main className="flex-grow w-full relative pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(64px+env(safe-area-inset-top))] md:pt-[calc(80px+env(safe-area-inset-top))] overflow-x-hidden">
+        <div className="mx-auto px-4 md:px-6 lg:px-8 max-w-7xl min-h-full">
           <AnimatedRoutes />
           <DailyRewardModal />
           <VersionUpdateModal />

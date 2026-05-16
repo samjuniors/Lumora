@@ -728,6 +728,23 @@ export class FirebaseAdminService implements IDatabaseService {
     return { penalizedCount };
   }
 
+  async processUserSweep(userId: string): Promise<{ coinsDeducted: number, diamondsDeducted: number }> {
+    return { coinsDeducted: 0, diamondsDeducted: 0 };
+  }
+
+  async initializeUser(userId: string, data: Partial<User>): Promise<void> {
+    await this.db.collection('users').doc(userId).update({ ...data, updatedAt: Date.now() });
+  }
+
+  async getAllAssessedSubmissions(): Promise<Submission[]> {
+    const snap = await this.db.collection('submissions').where('status', '==', 'assessed').get();
+    return snap.docs.map(d => ({ ...d.data(), id: d.id } as Submission));
+  }
+
+  async processAssessmentRewards(submissionId: string, score: number): Promise<void> {
+    return;
+  }
+
   async checkAndClaimPreRegistration(email: string, userId: string, defaultName: string): Promise<User | null> {
     const snap = await this.db.collection('pre_registered_users').where('email', '==', email).where('status', '==', 'pending').get();
     if (snap.empty) return null;

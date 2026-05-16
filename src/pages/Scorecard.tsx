@@ -16,45 +16,43 @@ const ScorecardAssessmentItem = ({ item }: { item: any }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const isPastDue = item.status === 'missed';
   const isCompleted = item.status === 'completed';
-  const isPending = item.status === 'pending';
   const isEvaluating = item.status === 'evaluating';
 
   return (
     <div className={cn(
-      "p-6 flex flex-col gap-4 border-l-4 transition-all hover:bg-bg-main/50 cursor-pointer group",
-      isCompleted ? "border-emerald-500" : isPastDue ? "border-rose-500" : isEvaluating ? "border-amber-500" : "border-blue-500"
+      "p-6 flex flex-col gap-4 border-l-4 transition-all hover:bg-navy-950 cursor-pointer group",
+      isCompleted ? "border-emerald-500" : isPastDue ? "border-error" : isEvaluating ? "border-warning" : "border-info"
     )}
     onClick={() => setIsExpanded(!isExpanded)}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
+        <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
-             {isCompleted && <span className="px-3 py-1 bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest rounded-md shadow-sm border border-emerald-500/20 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Completed</span>}
-             {isPastDue && <span className="px-3 py-1 bg-rose-500/10 text-rose-600 text-[10px] font-black uppercase tracking-widest rounded-md shadow-sm border border-rose-500/20 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Missed (0 PTS)</span>}
-             {isPending && <span className="px-3 py-1 bg-blue-500/10 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-md shadow-sm border border-blue-500/20 flex items-center gap-1"><Clock className="w-3 h-3"/> Active</span>}
-             {isEvaluating && <span className="px-3 py-1 bg-amber-500/10 text-amber-600 text-[10px] font-black uppercase tracking-widest rounded-md shadow-sm border border-amber-500/20">Evaluating</span>}
+             {isCompleted && <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 text-[10px] font-bold uppercase tracking-widest rounded-lg border border-emerald-500/20 flex items-center gap-1"><CheckCircle className="w-3 h-3"/> Completed</span>}
+             {isPastDue && <span className="px-3 py-1 bg-error/10 text-error text-[10px] font-bold uppercase tracking-widest rounded-lg border border-error/20 flex items-center gap-1"><AlertTriangle className="w-3 h-3"/> Missed</span>}
+             {isEvaluating && <span className="px-3 py-1 bg-warning/10 text-warning text-[10px] font-bold uppercase tracking-widest rounded-lg border border-warning/20">Evaluating</span>}
           </div>
-          <h4 className="text-lg md:text-xl font-bold text-text-primary mb-1 group-hover:text-brand-gold transition-colors">{item.assignment.title}</h4>
-          <p className="text-xs text-text-secondary font-medium flex items-center gap-1">
-             <Clock className="w-3.5 h-3.5" /> Due: {format(item.assignment.dueDate, 'MMM dd, yyyy h:mm a')}
+          <h4 className="text-lg font-display font-bold text-white mb-1 group-hover:text-brand-gold transition-colors">{item.assignment.title}</h4>
+          <p className="text-xs text-text-muted font-medium flex items-center gap-1">
+             <Clock className="w-3.5 h-3.5" /> Due: {format(item.assignment.dueDate, 'MMM dd, yyyy')}
           </p>
         </div>
         
-        <div className="w-full md:w-auto shrink-0 flex items-center justify-between md:justify-end gap-3 sm:gap-4 mt-2 md:mt-0">
+        <div className="flex items-center gap-4">
            {(isCompleted || isPastDue) ? (
-              <div className="flex items-center justify-between w-full md:w-auto gap-3 sm:gap-4">
-                 <div className="bg-bg-main px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl border border-border-main shadow-inner flex-1 md:flex-none text-center md:text-right">
-                   <span className="block text-xl sm:text-2xl font-black text-text-primary">
-                      {item.score} <span className="text-text-secondary/60 text-base sm:text-lg">/ {item.maxPossible}</span>
-                   </span>
+              <div className="flex items-center gap-4">
+                 <div className="bg-navy-950 px-5 py-2 rounded-xl border border-navy-700/50 shadow-inner text-right">
+                    <span className="block text-2xl font-display font-bold text-white">
+                       {item.score}<span className="text-text-muted text-sm ml-1 italic">/ 100</span>
+                    </span>
                  </div>
-                 {isExpanded ? <ChevronUp className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" /> : <ChevronDown className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" />}
+                 {isExpanded ? <ChevronUp className="w-6 h-6 text-text-muted" /> : <ChevronDown className="w-6 h-6 text-text-muted" />}
               </div>
            ) : (
-              <div className="flex items-center justify-between w-full md:w-auto gap-3 sm:gap-4">
-                 <div className="bg-bg-main px-3 sm:px-4 py-2 rounded-xl border border-border-main shadow-inner text-text-secondary/80 text-xs sm:text-sm font-medium italic flex-1 md:flex-none text-center">
+              <div className="flex items-center gap-4">
+                 <div className="bg-navy-950 px-4 py-2 rounded-xl border border-navy-700/50 shadow-inner text-text-muted text-xs font-medium italic">
                     Not Graded Yet
                  </div>
-                 {isExpanded ? <ChevronUp className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" /> : <ChevronDown className="w-8 h-8 sm:w-10 sm:h-10 text-text-secondary flex items-center justify-center bg-bg-surface rounded-full shadow-sm border border-border-main/50" />}
+                 {isExpanded ? <ChevronUp className="w-6 h-6 text-text-muted" /> : <ChevronDown className="w-6 h-6 text-text-muted" />}
               </div>
            )}
         </div>
@@ -297,8 +295,8 @@ export const Scorecard = () => {
       animate={{ opacity: 1 }}
       className="max-w-6xl mx-auto px-4 pb-8 space-y-6 md:space-y-8 pt-4 md:pt-0"
     >
-      <button onClick={() => navigate(user?.role === 'student' ? '/profile' : '/admin')} className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition font-bold bg-bg-surface border border-border-main hover:bg-bg-main w-fit px-4 py-2.5 rounded-xl shadow-sm group">
-         <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
+      <button onClick={() => navigate(user?.role === 'student' ? '/profile' : '/admin')} className="flex items-center gap-2 text-text-secondary hover:text-white transition font-bold bg-navy-900 border border-navy-700/50 hover:bg-navy-800 w-fit px-4 py-2 rounded-xl shadow-soft group">
+         <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
       </button>
 
       {/* Hero Header */}
@@ -306,44 +304,44 @@ export const Scorecard = () => {
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="bg-bg-surface rounded-3xl md:rounded-[2.5rem] p-6 md:p-10 shadow-xl border border-border-main flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left relative overflow-hidden"
+        className="bg-navy-900 rounded-[2.5rem] p-8 md:p-12 shadow-glow-gold border border-brand-gold/20 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[80px] -mr-20 -mt-20 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-[60px] -ml-20 -mb-20 pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-[60px] -ml-20 -mb-20 pointer-events-none"></div>
         
-        <div className="flex flex-col md:flex-row items-center md:items-start gap-5 sm:gap-8 relative z-10 w-full">
-           <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 bg-gradient-to-br from-indigo-50 to-bg-main rounded-3xl md:rounded-[2.5rem] shrink-0 border-[4px] border-bg-surface shadow-xl flex items-center justify-center overflow-hidden">
+        <div className="flex flex-col md:flex-row items-center md:items-start gap-8 relative z-10 w-full">
+           <div className="w-24 h-24 md:w-32 md:h-32 bg-navy-950 rounded-3xl shrink-0 border-[3px] border-navy-800 shadow-xl flex items-center justify-center overflow-hidden ring-1 ring-brand-gold/30">
              {targetStudent.avatar?.startsWith('http') || targetStudent.avatar?.startsWith('data:image') ? (
                <img src={targetStudent.avatar} alt="Avatar" className="w-full h-full object-cover" />
              ) : targetStudent.avatar ? (
                 <span className="text-5xl md:text-6xl">{targetStudent.avatar}</span>
              ) : (
-                <Award className="w-10 h-10 md:w-12 md:h-12 text-brand-gold" />
+                <Award className="w-12 h-12 text-brand-gold" />
              )}
            </div>
            
-          <div className="flex-1 mt-2 md:mt-4 text-center md:text-left">
-            <div className="inline-block px-3 py-1.5 bg-border-main/50 text-text-secondary rounded-lg text-xs font-black uppercase tracking-widest mb-3 border border-border-main">Official Transcript</div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-text-primary mb-2 line-clamp-1">{targetStudent.name}</h1>
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 sm:gap-3">
-              <p className="text-xs sm:text-sm text-text-secondary font-medium bg-bg-main px-2.5 py-1 rounded-lg border border-border-main">ID: {getShortId(targetStudent.id)}</p>
+          <div className="flex-1 mt-4 text-center md:text-left">
+            <div className="inline-block px-3 py-1 bg-navy-950 text-text-muted rounded-lg text-[10px] font-bold uppercase tracking-[0.2em] mb-4 border border-navy-700/50">Official Academic Record</div>
+            <h1 className="text-3xl md:text-4xl font-display font-bold text-white mb-3 tracking-tight">{targetStudent.name}</h1>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <p className="text-xs text-text-muted font-mono font-medium bg-navy-950 px-2 py-1 rounded-lg border border-navy-700/50">ID: {getShortId(targetStudent.id)}</p>
               {globalRank && (
-                <div className="flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-2.5 py-1 rounded-lg border border-brand-gold/20 text-[10px] sm:text-xs font-black uppercase tracking-tighter">
-                  <Trophy className="w-3 h-3 sm:w-3.5 sm:h-3.5" /> Global Rank #{globalRank}
+                <div className="flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-3 py-1 rounded-lg border border-brand-gold/20 text-[10px] font-bold uppercase tracking-tight">
+                  <Trophy className="w-3.5 h-3.5" /> Rank #{globalRank}
                 </div>
               )}
             </div>
           </div>
           
-          <div className="shrink-0 bg-gradient-to-br from-[#0A1128] to-indigo-950 text-bg-main p-5 sm:p-6 w-full sm:w-64 md:w-56 rounded-[2rem] shadow-xl border border-indigo-500/20 flex flex-col items-center justify-center relative overflow-hidden group">
-            <div className="absolute inset-0 bg-brand-gold opacity-0 group-hover:opacity-[0.03] transition-opacity duration-500"></div>
-            <div className="text-indigo-200/80 text-[10px] uppercase font-extrabold tracking-widest mb-1 sm:mb-2 z-10 w-full text-center">Global Grade</div>
-            <div className="text-5xl sm:text-6xl font-black mb-2 sm:mb-3 text-transparent bg-clip-text bg-gradient-to-b from-white to-white/80 filter drop-shadow z-10">
+          <div className="shrink-0 bg-navy-950 p-6 w-full md:w-56 rounded-[2rem] shadow-2xl border border-brand-gold/20 flex flex-col items-center justify-center relative overflow-hidden group">
+            <div className="absolute inset-0 bg-brand-gold/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="text-text-muted text-[10px] uppercase font-bold tracking-widest mb-2 z-10">Global Grade</div>
+            <div className="text-6xl font-display font-bold mb-3 text-white filter drop-shadow z-10">
               {stats.grade}
             </div>
-            <div className="bg-white/10 backdrop-blur-md rounded-xl px-3 sm:px-4 py-1.5 sm:py-2 border border-white/10 z-10 flex items-center justify-center whitespace-nowrap w-full">
-               <span className="font-bold text-xs sm:text-sm tracking-tight">{stats.percentage}%</span>
-               <span className="text-indigo-200/80 text-[10px] sm:text-xs ml-1.5 uppercase font-semibold">Average</span>
+            <div className="bg-brand-gold/10 rounded-xl px-4 py-2 border border-brand-gold/20 z-10 flex items-center justify-center w-full">
+               <span className="font-bold text-brand-gold text-sm tracking-tight">{stats.percentage}%</span>
+               <span className="text-text-muted text-[10px] ml-1.5 uppercase font-semibold">Effort</span>
             </div>
           </div>
         </div>

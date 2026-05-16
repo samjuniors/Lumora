@@ -60,59 +60,55 @@ export const Wallet = () => {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
-          className="bg-[#1C1C1E] border border-white/10 rounded-3xl p-6 md:p-8 text-white shadow-2xl relative overflow-hidden aspect-[1.58/1] flex flex-col justify-between group"
+          className="bg-navy-950 border border-brand-gold/30 rounded-[2.5rem] p-8 text-white shadow-glow-gold relative overflow-hidden flex flex-col justify-between group h-[220px]"
         >
-          <div className="absolute top-0 right-0 p-6 text-white opacity-20 group-hover:opacity-40 transition-opacity">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 18V6"></path></svg>
+          <div className="absolute top-0 right-0 p-8 text-brand-gold opacity-10 group-hover:opacity-20 transition-opacity">
+            <Coins size={80} />
           </div>
           
-          <div className="relative z-10 w-full flex-1 flex flex-col">
-            <span className="text-zinc-400 font-medium text-xs md:text-sm tracking-widest uppercase">Current Balance</span>
+          <div className="relative z-10 w-full">
+            <span className="text-text-secondary font-bold text-[10px] uppercase tracking-[0.2em]">Portfolio Balance</span>
             <motion.div 
               key={user?.coins}
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring" }}
-              className="mt-1 md:mt-2 text-[2.5rem] md:text-5xl font-black text-white drop-shadow-md tracking-tighter"
+              className="mt-1 text-5xl font-display font-bold text-white tracking-tighter"
             >
               {user?.coins?.toLocaleString()}
+              <span className="text-xl text-brand-gold/50 ml-2">🪙</span>
             </motion.div>
           </div>
           
-          <div className="relative z-10 flex gap-2 mt-auto w-full">
+          <div className="relative z-10 flex gap-2 w-full">
             <button 
               onClick={() => setShowRecharge(true)} 
-              className="flex-1 bg-white hover:bg-zinc-200 text-black transition rounded-2xl py-3 font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+              className="flex-1 bg-brand-gold text-navy-950 hover:bg-white transition rounded-xl py-2.5 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-soft active:scale-95"
             >
-              <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" /> Add
+              <Plus size={14} /> Add
             </button>
             <button 
               onClick={() => setShowConvert(true)} 
-              className="flex-1 bg-brand-gold hover:bg-brand-gold-hover text-bg-main transition rounded-2xl py-3 font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+              className="flex-1 bg-navy-800 text-white border border-navy-700 hover:bg-navy-700 transition rounded-xl py-2.5 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-1.5 shadow-soft active:scale-95"
             >
-              <ArrowRightLeft className="w-3.5 h-3.5 md:w-4 md:h-4" /> Convert
-            </button>
-            <button 
-              onClick={() => setShowTransfer(true)} 
-              disabled={getVIPLevel(user).level < 1 && getUserLevelAndXP(user).currentLevel < 5}
-              className="flex-1 bg-white/10 hover:bg-white/20 text-white transition rounded-2xl py-3 font-bold text-xs md:text-sm flex items-center justify-center gap-1.5 backdrop-blur-md active:scale-95 relative group/btn disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {getVIPLevel(user).level < 1 && getUserLevelAndXP(user).currentLevel < 5 ? (
-                <>
-                  <Lock className="w-3.5 h-3.5 md:w-4 md:h-4 text-bg-main/50" />
-                  <span>Send</span>
-                  <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-text-primary/90 text-[10px] py-1 px-2 rounded-lg opacity-0 group-hover/btn:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                    Unlocks at Level 5 or VIP 1
-                  </div>
-                </>
-              ) : (
-                <>
-                  <Send className="w-3.5 h-3.5 md:w-4 md:h-4" /> Send
-                </>
-              )}
+              <ArrowRightLeft size={14} /> Swap
             </button>
           </div>
         </motion.div>
+
+        <div className="card-premium p-6">
+            <div className="flex items-center justify-between mb-4">
+                <h4 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Diamonds</h4>
+                <span className="text-xs font-mono font-bold text-cyan-400">{(user?.diamonds || 0).toLocaleString()} 💎</span>
+            </div>
+            <div className="h-1 w-full bg-navy-800 rounded-full overflow-hidden">
+                <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min(((user?.diamonds || 0)/1000) * 100, 100)}%` }}
+                    className="h-full bg-cyan-400 shadow-glow-cyan"
+                />
+            </div>
+            <p className="text-[9px] text-text-secondary mt-3 uppercase tracking-tighter font-bold">1000 for Elite Tier Status</p>
+        </div>
       </div>
 
       {/* Transaction History */}
@@ -120,95 +116,78 @@ export const Wallet = () => {
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.2 }}
-        onClick={() => transactions.length > 3 && setShowAllTransactions(!showAllTransactions)}
-        className={cn(
-          "md:col-span-2 bg-bg-surface rounded-3xl p-5 md:p-8 shadow-sm border border-border-main transition-all duration-300",
-          transactions.length > 3 && "cursor-pointer hover:border-brand-gold/20 hover:shadow-md"
-        )}
+        className="md:col-span-2 space-y-4"
       >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl md:text-2xl font-black text-text-primary tracking-tight">Recent Activity</h2>
+        <div className="flex justify-between items-center px-2">
+          <h2 className="text-2xl font-display font-bold text-text-primary tracking-tight">Recent Activity</h2>
           <button 
-            onClick={(e) => { e.stopPropagation(); setShowRules(true); }}
-            className="text-xs font-bold px-3 py-1.5 bg-border-main text-text-secondary rounded-lg hover:bg-border-main transition-colors flex items-center gap-1"
+            onClick={() => setShowRules(true)}
+            className="text-[10px] font-bold text-brand-gold hover:text-white transition uppercase tracking-widest"
           >
-            <BookOpen className="w-3.5 h-3.5" /> Rules
+            Ledger Rules
           </button>
         </div>
-        <div className="space-y-4">
-          {(showAllTransactions ? transactions : transactions.slice(0, 3)).map((tx, idx) => {
-            const isSender = tx.senderId === user?.id;
-            const status = tx.status || 'completed';
-            return (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + idx * 0.05 }}
-                key={tx.id} 
-                className="flex items-center justify-between p-3 md:p-4 rounded-2xl hover:bg-bg-main transition border border-gray-50 md:border-transparent md:hover:border-border-main"
-              >
-                <div className="flex items-center gap-3 md:gap-4">
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                    isSender ? "bg-border-main text-text-primary" : "bg-success-green/10 text-emerald-600"
-                  )}>
-                    {isSender ? <ArrowUpRight className="w-5 h-5"/> : <ArrowDownLeft className="w-5 h-5"/>}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                       <p className="font-semibold text-sm md:text-base text-text-primary capitalize">
-                         {tx.type.replace(/_/g, ' ')}
-                       </p>
-                       {status === 'pending' && <span className="bg-yellow-100 text-yellow-800 text-[9px] md:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Pending</span>}
-                       {status === 'rejected' && <span className="bg-red-100 text-red-800 text-[9px] md:text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Rejected</span>}
+
+        <div className="card-premium divide-y divide-navy-700 overflow-hidden">
+          {transactions.length > 0 ? (
+            (showAllTransactions ? transactions : transactions.slice(0, 6)).map((tx, idx) => {
+              const isSender = tx.senderId === user?.id;
+              const status = tx.status || 'completed';
+              return (
+                <div 
+                  key={tx.id} 
+                  className="flex items-center justify-between p-4 bg-navy-900/50 hover:bg-navy-800 transition-colors group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={cn(
+                      "w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border",
+                      isSender ? "bg-navy-800 border-navy-700 text-text-secondary" : "bg-success/10 border-success/20 text-success shadow-glow-success"
+                    )}>
+                      {isSender ? <ArrowUpRight size={18}/> : <ArrowDownLeft size={18}/>}
                     </div>
-                    {tx.message && <p className="text-[10px] text-text-secondary/80 italic line-clamp-1">"{tx.message}"</p>}
-                    <p className="text-[11px] md:text-xs text-text-secondary mt-0.5 md:mt-1">{format(tx.timestamp, 'PP p')} {tx.utr && <span className="font-mono text-[9px] md:text-[10px] ml-1 opacity-70">UTR: {tx.utr}</span>}</p>
+                    <div>
+                        <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm text-text-primary capitalize tracking-tight">
+                                {tx.type.replace(/_/g, ' ')}
+                            </p>
+                            {status !== 'completed' && (
+                                <span className={cn(
+                                    "text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest",
+                                    status === 'pending' ? "bg-brand-gold/20 text-brand-gold" : "bg-error/20 text-error"
+                                )}>
+                                    {status}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-[10px] text-text-secondary/70 font-medium">
+                            {format(tx.timestamp, 'MMM d, p')} • {tx.message || 'System transaction'}
+                        </p>
+                    </div>
+                  </div>
+                  <div className={cn("font-display font-bold text-lg tabular-nums", isSender ? "text-text-primary" : "text-success")}>
+                    {isSender ? "-" : "+"}{tx.amount}
                   </div>
                 </div>
-                <div className={cn("font-bold text-base md:text-lg shrink-0", isSender ? "text-text-primary" : "text-emerald-600")}>
-                  {isSender ? "-" : "+"}{tx.amount}
-                </div>
-              </motion.div>
-            )
-          })}
-          {transactions.length === 0 && (
-            <div className="py-12 flex flex-col items-center justify-center text-center">
-              <div className="w-16 h-16 bg-bg-main rounded-full flex items-center justify-center mb-3">
-                <Receipt className="w-8 h-8 text-text-secondary/60" />
-              </div>
-              <p className="text-text-secondary font-medium">No transactions yet.</p>
+              )
+            })
+          ) : (
+            <div className="p-12 text-center">
+              <Receipt size={40} className="text-text-secondary/20 mx-auto mb-4" />
+              <p className="text-xs text-text-secondary font-bold uppercase tracking-widest">No transaction evidence found</p>
             </div>
           )}
-        </div>
-        {!showAllTransactions && transactions.length > 3 && (
-          <div className="mt-4 flex justify-center">
+          
+          {transactions.length > 6 && (
             <button 
-              onClick={() => setShowAllTransactions(true)}
-              className="group flex flex-col items-center gap-1 focus:outline-none"
+              onClick={() => setShowAllTransactions(!showAllTransactions)}
+              className="w-full py-3 text-[10px] font-bold text-text-secondary hover:text-brand-gold transition uppercase tracking-widest bg-navy-800/30"
             >
-              <span className="text-[11px] font-bold text-text-secondary/80 uppercase tracking-widest group-hover:text-text-secondary transition-colors">Tap to reveal more</span>
-              <motion.div 
-                animate={{ y: [0, 4, 0] }} 
-                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                className="w-8 h-8 rounded-full bg-bg-main flex items-center justify-center border border-border-main group-hover:bg-border-main transition-colors"
-              >
-                <ChevronDown className="w-4 h-4 text-text-secondary/80 group-hover:text-text-secondary" />
-              </motion.div>
+              {showAllTransactions ? "Show Less" : `View ${transactions.length - 6} more records`}
             </button>
-          </div>
-        )}
-        {showAllTransactions && transactions.length > 3 && (
-          <div className="mt-4 flex justify-center">
-             <button 
-                onClick={() => setShowAllTransactions(false)}
-                className="text-[11px] font-bold text-text-secondary/80 hover:text-text-secondary uppercase tracking-widest px-4 py-2 bg-bg-main rounded-full border shadow-sm transition-colors"
-             >
-                Collapse
-             </button>
-          </div>
-        )}
+          )}
+        </div>
       </motion.div>
+
 
       <AnimatePresence>
         {showConvert && <ConvertModal onClose={() => setShowConvert(false)} onComplete={fetchTransactions} />}

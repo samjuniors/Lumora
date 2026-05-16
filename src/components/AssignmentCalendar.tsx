@@ -20,6 +20,7 @@ import { motion } from 'motion/react';
 
 interface AssignmentCalendarProps {
   assignments: Assignment[];
+  onViewMission?: (id: string) => void;
 }
 
 export const AssignmentCalendar: React.FC<AssignmentCalendarProps> = ({ assignments }) => {

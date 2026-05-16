@@ -17,6 +17,7 @@ export interface IDatabaseService {
   followUser(followerId: string, targetId: string): Promise<void>;
   unfollowUser(followerId: string, targetId: string): Promise<void>;
   updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void>;
+  initializeUser(userId: string, data: Partial<User>): Promise<void>;
   generateLumoraId(userId: string): Promise<string>;
 
   // Assignment operations
@@ -115,6 +116,9 @@ export interface IDatabaseService {
   approveRechargeRequest(requestId: string, adminId: string): Promise<void>;
   rejectRechargeRequest(requestId: string, adminId: string): Promise<void>;
   runPenaltySweep(assignmentId?: string): Promise<{ penalizedCount: number }>;
+  processUserSweep(userId: string): Promise<{ coinsDeducted: number, diamondsDeducted: number }>;
+  getAllAssessedSubmissions(): Promise<Submission[]>;
+  processAssessmentRewards(submissionId: string, score: number): Promise<void>;
 
   // Syndicate Methods
   getAllSyndicates(): Promise<Syndicate[]>;

@@ -270,17 +270,17 @@ export const Profile = () => {
       <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, false)} className="hidden" ref={bannerInputRef} />
 
       {/* Cover & Header Section */}
-      <div className="bg-bg-surface rounded-[2rem] shadow-sm border border-border-main overflow-hidden relative">
+      <div className="bg-navy-900 rounded-[2.5rem] shadow-glow-gold border border-brand-gold/20 overflow-hidden relative">
         <div className={cn(
           "h-48 md:h-64 w-full relative transition-colors duration-500 bg-cover bg-center group/banner",
-          (!currentBanner || (!currentBanner.startsWith('http') && !currentBanner.startsWith('data:image') && !currentBanner.startsWith('#') && !currentBanner.startsWith('hsl') && !currentBanner.startsWith('rgb') && !currentBanner.includes('-'))) && "bg-brand-gold",
+          (!currentBanner || (!currentBanner.startsWith('http') && !currentBanner.startsWith('data:image') && !currentBanner.startsWith('#') && !currentBanner.startsWith('hsl') && !currentBanner.startsWith('rgb') && !currentBanner.includes('-'))) && "bg-navy-950",
           (currentBanner && currentBanner.includes('-') && !currentBanner.startsWith('http')) ? currentBanner : ""
         )}
         style={{ 
           backgroundImage: (currentBanner?.startsWith('http') || currentBanner?.startsWith('data:image')) ? `url(${currentBanner})` : (!currentBanner ? 'url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop)' : 'none'),
           backgroundColor: (currentBanner && (currentBanner.startsWith('#') || currentBanner.startsWith('rgb') || currentBanner.startsWith('hsl'))) ? currentBanner : 'transparent'
         }}>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-transparent to-transparent"></div>
           
           {isEditing && (
             <div 
@@ -335,12 +335,12 @@ export const Profile = () => {
         </div>
 
         <div className="px-6 md:px-10 pb-8 pt-6 relative z-10">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4 mt-[-80px] md:mt-[-100px]">
-            <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-4 mt-[-60px] md:mt-[-80px]">
+            <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-8">
               <div 
                 className={cn(
-                  "w-28 h-28 md:w-36 md:h-36 rounded-3xl flex items-center justify-center bg-bg-surface border-[6px] md:border-8 border-bg-surface shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-6xl relative z-20 shrink-0 overflow-hidden group/avatar transition-transform",
-                  user.inventory?.includes('avatar_frame_gold') && "ring-4 ring-brand-gold border-brand-gold/10 bg-brand-gold/5",
+                  "w-28 h-28 md:w-40 md:h-40 rounded-3xl flex items-center justify-center bg-navy-900 border-[6px] border-navy-900 shadow-xl text-6xl relative z-20 shrink-0 overflow-hidden group/avatar transition-transform",
+                  "ring-2 ring-brand-gold/30",
                   isEditing && !uploadingAvatar && "cursor-pointer hover:scale-105"
                 )}
                 onClick={() => isEditing && !uploadingAvatar && avatarInputRef.current?.click()}

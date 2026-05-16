@@ -46,6 +46,8 @@ export interface User {
   themeId?: string;
   badgeIds?: string[];
   rank?: number;
+  gradedCount?: number;
+  totalScore?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -103,6 +105,8 @@ export interface Assignment {
   status?: 'active' | 'archived' | 'draft';
   campaignId?: string;
   creatorId: string;
+  gradedCount?: number;
+  totalScore?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -152,6 +156,8 @@ export interface Submission {
   status: SubmissionStatus;
   tabSwitches?: number;
   pasteCount?: number;
+  reviewedAt?: number;
+  reviewedBy?: string;
   submittedAt: number;
   updatedAt: number;
 }

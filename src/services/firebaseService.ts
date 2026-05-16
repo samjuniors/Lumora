@@ -46,6 +46,8 @@ export class FirebaseService implements IDatabaseService {
   }
 
   async updateUser(userId: string, data: Partial<User>): Promise<void> {
+    // Static fields throttle: 5 seconds. State reactive updates should be handled by components.
+    if (this.shouldThrottle(`user/update/${userId}`, 5000, data)) return;
     try {
       await updateDoc(doc(db, 'users', userId), { ...data, updatedAt: Date.now() });
     } catch (error) {
@@ -73,9 +75,15 @@ export class FirebaseService implements IDatabaseService {
   }
 
   async getAllUsers(): Promise<User[]> {
+    const now = Date.now();
+    if (this.usersCache && (now - this.usersCache.timestamp) < this.CACHE_TTL) {
+      return this.usersCache.data;
+    }
     try {
       const snap = await getDocs(collection(db, 'users'));
-      return snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+      this.usersCache = { data, timestamp: now };
+      return data;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'users');
       return [];
@@ -196,11 +204,122 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
+  private assignmentCache: { data: Assignment[], timestamp: number } | null = null;
+  private usersCache: { data: User[], timestamp: number } | null = null;
+  private CACHE_TTL = 30000; // 30 seconds
+  private lastWriteTimes: Map<string, number> = new Map();
+  private lastWriteData: Map<string, string> = new Map();
+  private writeCounts: Map<string, number> = new Map();
+  private totalWrites = 0;
+  private MAX_SESSION_WRITES = 500; // Hard stop for a single session to prevent runaway loops from burning daily quota
+  private activeListeners = 0;
+  private totalListenersCreated = 0;
+
+  private LOG_WRITE(path: string, data?: any) {
+    this.totalWrites++;
+    const count = (this.writeCounts.get(path) || 0) + 1;
+    this.writeCounts.set(path, count);
+    
+    // Detailed profiling for quota monitoring
+    if (this.totalWrites % 5 === 0 || count > 20) {
+      const dataPreview = data ? JSON.stringify(data).substring(0, 50) + '...' : 'no-data';
+      console.log(`[Firestore Quota Monitor] Total Writes: ${this.totalWrites}/${this.MAX_SESSION_WRITES}, Active Listeners: ${this.activeListeners}`);
+      console.log(`[Firestore Path Analysis] Path: ${path} (Count: ${count}). Data: ${dataPreview}`);
+    }
+    
+    if (this.totalWrites >= this.MAX_SESSION_WRITES) {
+      console.error(`[CRITICAL] SESSION WRITE CAP REACHED (${this.MAX_SESSION_WRITES}). Blocking further writes to protect daily quota.`);
+    }
+
+    if (count > 50) {
+      console.warn(`[CRITICAL] Runaway write detected on path: ${path}. Hits: ${count}`);
+    }
+  }
+
+  private TRACK_LISTENER(path: string) {
+    this.activeListeners++;
+    this.totalListenersCreated++;
+    console.log(`[Firestore Analytics] New Listener on ${path}. Total Active: ${this.activeListeners}, Lifetime: ${this.totalListenersCreated}`);
+    
+    // If we have too many active listeners, it's a sign of a leak
+    if (this.activeListeners > 15) {
+      console.warn(`[Firestore Analytics] High number of active listeners detected: ${this.activeListeners}. Possible leak!`);
+    }
+
+    const cleanup = () => {
+      this.activeListeners--;
+      console.log(`[Firestore Analytics] Listener closed on ${path}. Total Active: ${this.activeListeners}`);
+    };
+    return cleanup;
+  }
+
+  private shouldThrottle(path: string, interval: number, data?: any): boolean {
+    // Hard stop if session limit reached
+    if (this.totalWrites >= this.MAX_SESSION_WRITES) return true;
+
+    const now = Date.now();
+    
+    // Deduplication: prevent identical writes to the same path
+    if (data) {
+      const dataStr = JSON.stringify(data);
+      if (this.lastWriteData.get(path) === dataStr) {
+        // console.debug(`[Firestore] Deduplicated write to ${path}`);
+        return true;
+      }
+      this.lastWriteData.set(path, dataStr);
+    }
+
+    const lastWrite = this.lastWriteTimes.get(path) || 0;
+    if (now - lastWrite < interval) {
+      // console.debug(`[Firestore] Throttled write to ${path}`);
+      return true;
+    }
+    this.lastWriteTimes.set(path, now);
+    this.LOG_WRITE(path, data);
+    return false;
+  }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {
+    try {
+      // Heartbeat Throttle: 15 minutes (was 5). Saves Quota.
+      const throttleInterval = presence === 'offline' ? 0 : 15 * 60 * 1000;
+      // We pass { presence } specifically for deduplication to ignore the oscillating timestamp
+      if (this.shouldThrottle(`presence/${userId}`, throttleInterval, { presence })) return;
+
+      await updateDoc(doc(db, 'users', userId), {
+        presence,
+        lastSeen: Date.now()
+      });
+    } catch (error) {
+       // Suppress presence errors to avoid UI noise
+    }
+  }
+
+  async initializeUser(userId: string, data: Partial<User>): Promise<void> {
+    // Consolidated update to set role, luminaId, etc. in one go. Throttle: 24 hours (was 1 hour)
+    // Initialization should only happen once per session ideally
+    if (this.shouldThrottle(`init/${userId}`, 86400000, data)) return;
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        ...data,
+        updatedAt: Date.now()
+      });
+    } catch (error) {
+       console.error("Initialization failed", error);
+    }
+  }
+
   async getAllAssignments(): Promise<Assignment[]> {
+    const now = Date.now();
+    if (this.assignmentCache && (now - this.assignmentCache.timestamp) < this.CACHE_TTL) {
+      return this.assignmentCache.data;
+    }
     try {
       const q = query(collection(db, 'assignments'), orderBy('createdAt', 'desc'));
       const snap = await getDocs(q);
-      return snap.docs.map(d => ({ ...d.data(), id: d.id } as Assignment));
+      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as Assignment));
+      this.assignmentCache = { data, timestamp: now };
+      return data;
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'assignments');
       return [];
@@ -251,6 +370,72 @@ export class FirebaseService implements IDatabaseService {
     } catch (error) {
       handleFirestoreError(error, OperationType.LIST, 'submissions');
       return [];
+    }
+  }
+
+  async getAllAssessedSubmissions(): Promise<Submission[]> {
+    try {
+      const q = query(
+        collection(db, 'submissions'),
+        where('status', '==', 'assessed'),
+        orderBy('submittedAt', 'desc'),
+        fsLimit(200)
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ ...d.data(), id: d.id } as Submission));
+    } catch (error) {
+      handleFirestoreError(error, OperationType.LIST, 'assessed_submissions');
+      return [];
+    }
+  }
+
+  async processAssessmentRewards(submissionId: string, score: number): Promise<void> {
+    try {
+      const subSnap = await getDoc(doc(db, 'submissions', submissionId));
+      if (!subSnap.exists()) return;
+      const sub = subSnap.data() as Submission;
+      
+      const assignmentSnap = await getDoc(doc(db, 'assignments', sub.assignmentId));
+      if (!assignmentSnap.exists()) return;
+      const assignment = assignmentSnap.data() as Assignment;
+
+      const batch = writeBatch(db);
+      const now = Date.now();
+      
+      // Calculate reward based on score
+      const rewardMultiplier = score / 100;
+      const baseReward = assignment.xpReward || 50;
+      const finalXp = Math.floor(baseReward * rewardMultiplier);
+      const finalCoins = Math.floor((assignment.bonusReward || 100) * rewardMultiplier);
+
+      // Update user
+      const userRef = doc(db, 'users', sub.studentId);
+      batch.update(userRef, {
+        coins: increment(finalCoins),
+        xp: increment(finalXp),
+        gradedCount: increment(1),
+        updatedAt: now
+      });
+
+      // Update enrollment
+      const enrollmentsSnap = await getDocs(query(
+        collection(db, 'enrollments'), 
+        where('assignmentId', '==', sub.assignmentId),
+        where('studentId', '==', sub.studentId)
+      ));
+
+      if (!enrollmentsSnap.empty) {
+        batch.update(enrollmentsSnap.docs[0].ref, {
+          status: 'graded',
+          grade: score,
+          rewardEarned: finalCoins,
+          updatedAt: now
+        });
+      }
+
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `rewards/${submissionId}`);
     }
   }
 
@@ -487,11 +672,16 @@ export class FirebaseService implements IDatabaseService {
       orderBy('createdAt', 'desc'), 
       fsLimit(50)
     );
-    return onSnapshot(q, (snapshot) => {
+    const cleanup = this.TRACK_LISTENER('notifications');
+    const unsub = onSnapshot(q, (snapshot) => {
       callback(snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Notification)));
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'notifications');
     });
+    return () => {
+      unsub();
+      cleanup();
+    };
   }
 
   subscribeToNewNotifications(userId: string, callback: (notification: Notification) => void): () => void {
@@ -502,7 +692,8 @@ export class FirebaseService implements IDatabaseService {
       orderBy('createdAt', 'desc'), 
       fsLimit(10)
     );
-    return onSnapshot(q, (snapshot) => {
+    const cleanup = this.TRACK_LISTENER('notifications/new');
+    const unsub = onSnapshot(q, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === 'added') {
           callback({ ...change.doc.data(), id: change.doc.id } as Notification);
@@ -511,6 +702,10 @@ export class FirebaseService implements IDatabaseService {
     }, (error) => {
       handleFirestoreError(error, OperationType.GET, 'notifications');
     });
+    return () => {
+      unsub();
+      cleanup();
+    };
   }
 
   async getInviteCode(code: string): Promise<InviteCode | null> {
@@ -560,7 +755,8 @@ export class FirebaseService implements IDatabaseService {
   }
 
   subscribeToUser(userId: string, callback: (user: User | null) => void): () => void {
-    return onSnapshot(doc(db, 'users', userId), (snap) => {
+    const cleanup = this.TRACK_LISTENER(`users/${userId}`);
+    const unsub = onSnapshot(doc(db, 'users', userId), (snap) => {
       if (snap.exists()) {
         callback({ ...snap.data(), id: snap.id } as User);
       } else {
@@ -570,28 +766,42 @@ export class FirebaseService implements IDatabaseService {
       handleFirestoreError(error, OperationType.GET, `users/${userId}`);
       callback(null);
     });
+    return () => {
+      unsub();
+      cleanup();
+    };
   }
 
   subscribeToStudents(callback: (users: User[]) => void): () => void {
     const q = query(collection(db, 'users'), where('role', '==', 'student'));
-    return onSnapshot(q, (snapshot) => {
+    const cleanup = this.TRACK_LISTENER('users/students');
+    const unsub = onSnapshot(q, (snapshot) => {
       const users = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as User));
       callback(users);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'users');
       callback([]);
     });
+    return () => {
+      unsub();
+      cleanup();
+    };
   }
 
   subscribeToAssessedSubmissions(callback: (submissions: Submission[]) => void): () => void {
     const q = query(collection(db, 'submissions'), where('status', '==', 'assessed'));
-    return onSnapshot(q, (snapshot) => {
+    const cleanup = this.TRACK_LISTENER('submissions/assessed');
+    const unsub = onSnapshot(q, (snapshot) => {
       const submissions = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as Submission));
       callback(submissions);
     }, (error) => {
       handleFirestoreError(error, OperationType.LIST, 'submissions');
       callback([]);
     });
+    return () => {
+      unsub();
+      cleanup();
+    };
   }
 
   async getRechargeRequests(status?: string): Promise<RechargeRequest[]> {
@@ -1526,6 +1736,7 @@ export class FirebaseService implements IDatabaseService {
 
   async spendCoins(userId: string, amount: number, type: TransactionType, message: string): Promise<void> {
     try {
+      if (amount <= 0) throw new Error("Invalid spend amount");
       const now = Date.now();
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
@@ -1562,6 +1773,7 @@ export class FirebaseService implements IDatabaseService {
 
   async transferCoins(senderId: string, receiverId: string, amount: number): Promise<void> {
     try {
+      if (amount <= 0) throw new Error("Invalid transfer amount");
       const now = Date.now();
       const batch = writeBatch(db);
       
@@ -1674,6 +1886,7 @@ export class FirebaseService implements IDatabaseService {
 
   async convertDiamondsToCoins(userId: string, diamondsAmount: number): Promise<void> {
     try {
+      if (diamondsAmount <= 0) throw new Error("Invalid conversion amount");
       const now = Date.now();
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
@@ -1866,17 +2079,6 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
-  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {
-    try {
-      await updateDoc(doc(db, 'users', userId), {
-        presence,
-        lastSeen: Date.now()
-      });
-    } catch (error) {
-       // Suppress presence errors to avoid UI noise
-    }
-  }
-
   async generateLumoraId(userId: string): Promise<string> {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
     const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
@@ -1890,5 +2092,92 @@ export class FirebaseService implements IDatabaseService {
     
     await updateDoc(doc(db, 'users', userId), { luminaId: lid });
     return lid;
+  }
+
+  async processUserSweep(userId: string): Promise<{ coinsDeducted: number, diamondsDeducted: number }> {
+    try {
+      const now = Date.now();
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
+      if (!userSnap.exists()) return { coinsDeducted: 0, diamondsDeducted: 0 };
+      const user = userSnap.data() as User;
+
+      // Throttle: 6 hours
+      const SIX_HOURS = 6 * 60 * 60 * 1000;
+      if (user.lastMissedSweep && (now - user.lastMissedSweep) < SIX_HOURS) {
+        return { coinsDeducted: 0, diamondsDeducted: 0 };
+      }
+
+      const [allAssignments, userEnrollments] = await Promise.all([
+        this.getAllAssignments(),
+        this.getEnrollmentsByStudent(userId)
+      ]);
+
+      const batch = writeBatch(db);
+      let totalCoinsPenalty = 0;
+      let totalDiamondsPenalty = 0;
+      let opCount = 0;
+
+      const relevantAssignments = allAssignments.filter(a => {
+        if (a.isGlobal) return true;
+        return a.allowedStudents?.includes(userId) || (user.email && a.allowedStudents?.includes(user.email.toLowerCase()));
+      });
+
+      for (const a of relevantAssignments) {
+        const enr = userEnrollments.find(e => e.assignmentId === a.id);
+        if (enr && (enr.status === 'submitted' || enr.status === 'graded')) continue;
+
+        const deadline = enr?.graceDeadline || a.dueDate;
+        if (now <= deadline) continue;
+
+        if (!enr && a.isBonus) continue; 
+        if (enr && enr.status === 'missed') continue;
+
+        let penalty = a.penaltyFee || 0;
+        if (enr?.isDoubleDown) penalty *= 2;
+        const finalPenalty = Math.min(penalty, 100);
+        const diamondsPenalty = Math.floor((a.xpReward || 50) * 0.5);
+
+        totalCoinsPenalty += finalPenalty;
+        totalDiamondsPenalty += diamondsPenalty;
+
+        const enrId = enr?.id || `enr_miss_${now}_${userId}_${a.id}`;
+        if (!enr) {
+          batch.set(doc(db, 'enrollments', enrId), {
+            id: enrId, assignmentId: a.id, studentId: userId, enrolledAt: now, status: 'missed', rewardEarned: -finalPenalty, updatedAt: now
+          });
+        } else {
+          batch.update(doc(db, 'enrollments', enr.id), { status: 'missed', rewardEarned: -finalPenalty, updatedAt: now });
+        }
+        opCount++;
+
+        const txId = `tx_miss_${now}_${userId}_${a.id}`;
+        batch.set(doc(db, 'transactions', txId), {
+          id: txId, senderId: userId, receiverId: 'SYSTEM', amount: finalPenalty, type: 'assignment_penalty', status: 'completed', timestamp: now, message: `Missed: ${a.title}`
+        });
+        opCount++;
+        
+        if (opCount > 450) {
+           break; 
+        }
+      }
+
+      if (opCount > 0 || totalCoinsPenalty > 0) {
+        batch.update(userRef, {
+          coins: increment(-Math.min(totalCoinsPenalty, user.coins || 0)),
+          diamonds: increment(-totalDiamondsPenalty),
+          lastMissedSweep: now,
+          updatedAt: now
+        });
+        await batch.commit();
+      } else {
+        await updateDoc(userRef, { lastMissedSweep: now, updatedAt: now });
+      }
+
+      return { coinsDeducted: totalCoinsPenalty, diamondsDeducted: totalDiamondsPenalty };
+    } catch (e) {
+      handleFirestoreError(e, OperationType.WRITE, 'user_sweep');
+      return { coinsDeducted: 0, diamondsDeducted: 0 };
+    }
   }
 }

@@ -95,69 +95,69 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
   };
 
   return (
-    <div className="bg-bg-surface border border-brand-gold/20 rounded-[2.5rem] overflow-hidden relative group">
-      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
+    <div className="card-premium overflow-hidden relative group">
+      <div className="absolute top-0 right-0 w-48 h-48 bg-brand-gold/5 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
       
-      <div className="p-8 relative z-10">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-          <div className="flex items-center gap-5">
-            <div className="w-14 h-14 bg-brand-gold text-bg-main rounded-2xl flex items-center justify-center shadow-xl shadow-brand-gold/20 relative">
-              <Brain size={30} />
+      <div className="p-5 md:p-8 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20 shadow-sm relative">
+              <Brain size={24} />
               {isUnlocked && (
-                <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-4 w-4 bg-cyan-500 border-2 border-bg-main"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-cyan-500 border border-navy-950"></span>
                 </span>
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-2xl font-black text-text-primary tracking-tight">The Oracle</h2>
+                <h2 className="text-xl font-display font-bold text-text-primary tracking-tight">The Oracle</h2>
                 {isDiamond && (
-                  <span className="text-[9px] font-black uppercase bg-cyan-500 text-white px-1.5 py-0.5 rounded flex items-center gap-1">
-                    <Gem size={8} /> Diamond Status
+                  <span className="text-[10px] font-bold bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-500/20 flex items-center gap-1 uppercase tracking-wider">
+                    Priority
                   </span>
                 )}
               </div>
-              <p className="text-sm font-medium text-text-secondary">AI-Powered High-Stakes Learning Roadmap</p>
+              <p className="text-xs font-medium text-text-secondary">AI Strategic Advisor • Strategic Roadmap</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => setShowUnlockInfo(!showUnlockInfo)}
               className="p-2 text-text-secondary hover:text-brand-gold transition-colors"
               title="Oracle Information"
             >
-              <Info size={20} />
+              <Info size={18} />
             </button>
             {!isUnlocked ? (
                <button
                 onClick={handleUnlock}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all shadow-lg shadow-emerald-500/20 flex items-center gap-2"
+                className="bg-brand-gold text-navy-950 px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all hover:translate-y-[-1px] active:translate-y-[0px] shadow-sm flex items-center gap-2"
                >
-                 <Lock size={16} /> Unlock Oracle (5,000)
+                 <Lock size={14} /> Unlock Access
                </button>
             ) : (
               <button
                 onClick={fetchRoadmap}
                 disabled={analyzing}
                 className={cn(
-                  "flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all",
+                  "flex items-center gap-2 px-5 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all",
                   analyzing 
-                    ? "bg-brand-gold/20 text-brand-gold cursor-not-allowed" 
-                    : "bg-brand-gold text-bg-main hover:scale-105 shadow-lg shadow-brand-gold/20"
+                    ? "bg-navy-800 text-brand-gold/50 cursor-not-allowed border border-navy-700" 
+                    : "bg-navy-800 border border-brand-gold/30 text-brand-gold hover:bg-navy-700 shadow-sm"
                 )}
               >
                 {analyzing ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Channeling...
+                    <Loader2 size={14} className="animate-spin" />
+                    Channeling
                   </>
                 ) : (
                   <>
-                    <Gem size={16} />
-                    {roadmap ? "Refresh Roadmap (1)" : "Consult Oracle (1)"}
+                    <Zap size={14} />
+                    {roadmap ? "Update Intelligence" : "Consult Oracle"}
                   </>
                 )}
               </button>
@@ -173,26 +173,18 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden mb-6"
             >
-              <div className="bg-bg-main border border-border-main rounded-3xl p-6 text-sm text-text-secondary space-y-3">
-                <p className="font-bold text-text-primary uppercase tracking-widest text-[10px]">Why consult The Oracle?</p>
-                <ul className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-gold">◈</span>
-                    <span><strong>High-Stakes Analysis</strong>: Gemini 2.0 scans your total grade history (only graded missions).</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-gold">◈</span>
-                    <span><strong>Risk Mitigation</strong>: Identifies exact topics that might cost you coins in future penalties.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-gold">◈</span>
-                    <span><strong>Probabilistic Predictions</strong>: Get a calculated grade trajectory for the next 48 hours.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-brand-gold">◈</span>
-                    <span><strong>Diamond Benefits</strong>: Users with 100+ Diamonds get priority access and badge status.</span>
-                  </li>
-                </ul>
+              <div className="bg-navy-800/50 border border-navy-700 rounded-xl p-5 text-xs text-text-secondary space-y-3">
+                <p className="font-bold text-text-primary uppercase tracking-widest text-[10px]">Strategic Analysis Capabilities</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-start gap-2">
+                    <div className="mt-0.5 text-brand-gold"><Compass size={12} /></div>
+                    <span><strong className="text-text-primary">Performance Audit</strong>: Deep scan of historical grades to identify persistent weak points.</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <div className="mt-0.5 text-brand-gold"><Shield size={12} /></div>
+                    <span><strong className="text-text-primary">Loss Mitigation</strong>: Strategic advice intended to minimize missed assignments and tax.</span>
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
@@ -203,34 +195,27 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
             <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               className="text-center py-12 px-6 bg-[#1A2B48]/10 border border-dashed border-[#D4AF37]/30 rounded-3xl"
+               className="text-center py-10 px-6 bg-navy-800/30 border border-dashed border-navy-700 rounded-2xl"
             >
-               <div className="w-16 h-16 bg-bg-main mx-auto rounded-full flex items-center justify-center mb-4 text-[#D4AF37]/40 border border-[#D4AF37]/20 shadow-inner">
-                  <Lock size={32} />
+               <div className="w-12 h-12 bg-navy-950 mx-auto rounded-full flex items-center justify-center mb-4 text-brand-gold/30 border border-navy-700">
+                  <Lock size={20} />
                </div>
-               <h3 className="text-xl font-black text-text-primary mb-2 uppercase tracking-tight">The Oracle is Sealed</h3>
-               <p className="text-sm text-text-secondary max-w-sm mx-auto mb-6 font-medium leading-relaxed">
-                 Accessing high-tier AI strategy requires a high-stakes commitment. 
-                 The Oracle analyzes your fails to prevent future coin deductions. 
-                 Reach <span className="text-cyan-500 font-bold">Diamond Status</span> (100+ 💎) or pay a one-time tribute to access the roadmap.
+               <h3 className="text-lg font-bold text-text-primary mb-2 tracking-tight">Intelligence Access Restricted</h3>
+               <p className="text-xs text-text-secondary max-w-sm mx-auto mb-6 font-medium leading-relaxed">
+                 Accessing high-tier strategic analysis requires a neural link commitment. Reach <span className="text-brand-gold font-bold">Level 10</span> or unlock via Diamond status.
                </p>
-               <div className="flex justify-center flex-wrap gap-4 text-[9px] font-black uppercase tracking-widest text-text-secondary/50">
-                  <div className="flex items-center gap-1.5"><Shield size={12} className="text-brand-gold" /> Identity Verification</div>
-                  <div className="flex items-center gap-1.5"><Cpu size={12} className="text-indigo-400" /> Neural Linkage</div>
-                  <div className="flex items-center gap-1.5"><Zap size={12} className="text-cyan-400" /> Real-time Sync</div>
-               </div>
             </motion.div>
           ) : roadmap ? (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-6"
+              className="space-y-5"
             >
-              <div className="bg-[#1A2B48]/40 border border-white/5 rounded-3xl p-6 md:p-8">
-                <div className="flex items-center gap-2 mb-6">
-                  <Compass className="text-brand-gold w-5 h-5" />
-                  <span className="text-[10px] font-black uppercase text-brand-gold tracking-widest">Your Strategy for academic dominance</span>
+              <div className="bg-navy-800/40 border border-navy-700 rounded-2xl p-6 md:p-8 relative">
+                <div className="flex items-center gap-2 mb-6 text-brand-gold">
+                  <Compass size={16} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Personal Action Plan</span>
                 </div>
                 <div className="markdown-body prose prose-invert prose-sm max-w-none text-text-secondary leading-relaxed">
                   <ReactMarkdown>{roadmap}</ReactMarkdown>
@@ -238,22 +223,22 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start gap-4 p-5 bg-white/5 rounded-2xl border border-white/5">
-                   <div className="p-2 bg-indigo-500/20 text-indigo-400 rounded-lg">
-                      <Target size={20} />
+                <div className="flex items-start gap-4 p-4 bg-navy-900 border border-navy-700 rounded-xl">
+                   <div className="p-2 bg-brand-gold/10 text-brand-gold rounded-lg">
+                      <Target size={18} />
                    </div>
                    <div>
-                      <h4 className="text-xs font-black text-white uppercase mb-1">Focus Areas</h4>
-                      <p className="text-[10px] text-white/50 leading-relaxed italic">The Oracle identifies your highest ROI study topics based on past fails.</p>
+                      <h4 className="text-[11px] font-bold text-text-primary uppercase tracking-wider mb-0.5">High-Yield Priorities</h4>
+                      <p className="text-[10px] text-text-secondary leading-relaxed italic">The Oracle identifies study topics that maximize coin security.</p>
                    </div>
                 </div>
-                <div className="flex items-start gap-4 p-5 bg-white/5 rounded-2xl border border-white/5">
-                   <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg">
-                      <Sparkles size={20} />
+                <div className="flex items-start gap-4 p-4 bg-navy-900 border border-navy-700 rounded-xl">
+                   <div className="p-2 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                      <Sparkles size={18} />
                    </div>
                    <div>
-                      <h4 className="text-xs font-black text-white uppercase mb-1">Grade Prediction</h4>
-                      <p className="text-[10px] text-white/50 leading-relaxed italic">Probabilistic outcomes for upcoming assessments provided by Gemini.</p>
+                      <h4 className="text-[11px] font-bold text-text-primary uppercase tracking-wider mb-0.5">Performance Forecast</h4>
+                      <p className="text-[10px] text-text-secondary leading-relaxed italic">Probabilistic outcomes for upcoming assessments.</p>
                    </div>
                 </div>
               </div>
@@ -262,27 +247,27 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
             <motion.div 
                initial={{ opacity: 0 }}
                animate={{ opacity: 1 }}
-               className="text-center py-12 px-6 bg-white/5 border border-dashed border-white/10 rounded-3xl"
+               className="text-center py-10 px-6 bg-navy-800/30 border border-dashed border-navy-700 rounded-2xl"
             >
-               <div className="w-16 h-16 bg-white/5 mx-auto rounded-full flex items-center justify-center mb-4 text-white/20">
-                  <BookMarked size={32} />
+               <div className="w-12 h-12 bg-navy-950 mx-auto rounded-full flex items-center justify-center mb-4 text-brand-gold/20">
+                  <BookMarked size={24} />
                </div>
-               <h3 className="text-lg font-bold text-white mb-2">Sealed Wisdom</h3>
-               <p className="text-sm text-text-secondary max-w-md mx-auto mb-6">
-                 Your academic performance data is ready for analysis. 
-                 The Oracle will generate a custom roadmap to eliminate your weak points and maximize your ROI.
+               <h3 className="text-lg font-bold text-text-primary mb-2">Awaiting Intelligence Consultation</h3>
+               <p className="text-xs text-text-secondary max-w-md mx-auto mb-6">
+                 No active roadmap found. Consult the Oracle to analyze your academic history and generate a strategic performance plan.
                </p>
-               <div className="flex justify-center items-center gap-3 text-[10px] font-black uppercase tracking-widest text-brand-gold/60">
-                  <span>Analyze History</span>
-                  <ChevronRight size={12} />
-                  <span>Topic Priority</span>
-                  <ChevronRight size={12} />
-                  <span>Grade Target</span>
+               <div className="flex justify-center items-center gap-4 text-[9px] font-bold uppercase tracking-wider text-text-secondary/50">
+                  <span>Analyze Hub</span>
+                  <ChevronRight size={10} />
+                  <span>Topic Audit</span>
+                  <ChevronRight size={10} />
+                  <span>Final Directives</span>
                </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </div>
+
   );
 };

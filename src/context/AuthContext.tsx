@@ -44,14 +44,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         // Listen to real-time changes via dbService
         unsubscribeSnapshot = dbService.subscribeToUser(fUser.uid, (data) => {
           if (data) {
-            // Force superadmin for hardcoded email if not already set
-            if ((fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') && data.role !== 'superadmin') {
-              dbService.updateUser(fUser.uid, { role: 'superadmin' });
+            const updates: Partial<User> = {};
+            const isAdminEmail = fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || 
+                               fUser.email?.toLowerCase() === 'luvkus8@gmail' || 
+                               fUser.email?.toLowerCase() === 'luvkush8@gmail.com';
+
+            if (isAdminEmail && data.role !== 'superadmin') {
+              updates.role = 'superadmin';
             }
             
-            // Generate Lumora ID if missing
             if (!data.luminaId) {
-              dbService.generateLumoraId(fUser.uid);
+              const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+              const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
+              const randomNum = Math.floor(1000 + Math.random() * 9000);
+              updates.luminaId = `LMN-${randomChar}${randomNum}`;
+            }
+
+            if (Object.keys(updates).length > 0) {
+              const updatedKeys = Object.keys(updates);
+              // Only call initialize if necessary
+              const finalUpdates: Partial<User> = {};
+              updatedKeys.forEach(k => {
+                const key = k as keyof User;
+                if (updates[key] !== data[key]) {
+                   (finalUpdates as any)[key] = updates[key];
+                }
+              });
+
+              if (Object.keys(finalUpdates).length > 0) {
+                dbService.initializeUser(fUser.uid, finalUpdates);
+              }
             }
 
             setUser(data);

@@ -56,8 +56,7 @@ service cloud.firestore {
         isSignedIn() && (
           (request.auth.uid == userId && (
             (incoming().diff(existing()).affectedKeys().hasOnly(['name', 'updatedAt', 'avatar', 'bannerColor', 'theme', 'luminaId', 'presence', 'lastSeen', 'bio', 'academicRoadmap', 'followingIds', 'syndicateId', 'followerIds'])) ||
-            (incoming().diff(existing()).affectedKeys().hasAny(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'lastCollectionTime', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'updatedAt']) && 
-             !incoming().diff(existing()).affectedKeys().hasAny(['role', 'email', 'createdAt']))
+            (incoming().diff(existing()).affectedKeys().hasOnly(['streak', 'lastActive', 'coins', 'diamonds', 'taxWallet', 'xp', 'inventory', 'lastRewardClaimed', 'lastCollectionTime', 'xpBoosterUntil', 'totalScore', 'gradedCount', 'lastMissedSweep', 'achievements', 'badgesClaimed', 'dailyDiamonds', 'weeklyDiamonds', 'lastResetDay', 'lastResetWeek', 'lifetimeDiamonds', 'vipExp', 'vipLevel', 'level', 'updatedAt']))
           )) ||
           (request.auth.uid != userId && incoming().diff(existing()).affectedKeys().hasOnly(['followerIds', 'updatedAt']))
         )
@@ -110,7 +109,7 @@ service cloud.firestore {
       allow list: if isAtLeastAdmin() || (isSignedIn() && (resource.data.studentId == request.auth.uid || resource.data.status == 'assessed'));
       allow create: if isSignedIn() && incoming().studentId == request.auth.uid && isValidId(submissionId);
       allow update: if isAtLeastAdmin() || (
-          existing().studentId == request.auth.uid && existing().status in ['pending', 'assessed'] && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'attachments', 'updatedAt', 'aiScore', 'aiFeedback', 'status'])
+          existing().studentId == request.auth.uid && existing().status in ['pending', 'assessed'] && incoming().diff(existing()).affectedKeys().hasOnly(['content', 'attachments', 'updatedAt', 'status'])
       );
       allow delete: if isSignedIn() && (existing().studentId == request.auth.uid || isAtLeastAdmin());
     }
@@ -120,7 +119,8 @@ service cloud.firestore {
       allow list: if isAtLeastAdmin() || (isSignedIn() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid));
       allow create: if isAtLeastAdmin() || (
         isSignedIn() && isValidId(transactionId) && 
-        (incoming().senderId == request.auth.uid || (incoming().senderId == 'SYSTEM' && incoming().receiverId == request.auth.uid))
+        incoming().senderId == request.auth.uid &&
+        incoming().amount > 0
       );
       allow update: if isAtLeastAdmin();
       allow delete: if isAtLeastAdmin();
@@ -147,8 +147,6 @@ service cloud.firestore {
       allow update: if isSuperAdmin();
     }
 
-    match /test/connection {
-      allow read: if true;
-    }
+
   }
 }

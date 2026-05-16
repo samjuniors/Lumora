@@ -20,22 +20,24 @@ export const ScoreChart = ({ userId }: ScoreChartProps) => {
     if (!targetId) return;
     const fetchScores = async () => {
       try {
-        const allStudentSubmissions = await dbService.getSubmissionsByStudent(targetId);
+        const [allStudentSubmissions, allAssignments] = await Promise.all([
+          dbService.getSubmissionsByStudent(targetId),
+          dbService.getAllAssignments()
+        ]);
         
         const subs = allStudentSubmissions
           .filter(s => s.status === 'assessed')
           .sort((a, b) => a.submittedAt - b.submittedAt)
           .slice(-10);
         
-        const chartData = [];
-        for (const s of subs) {
-           const assignment = await dbService.getAssignment(s.assignmentId);
+        const chartData = subs.map(s => {
+           const assignment = allAssignments.find(a => a.id === s.assignmentId);
            const assignmentTitle = assignment?.title || 'Task';
-           chartData.push({
+           return {
              name: assignmentTitle.length > 15 ? assignmentTitle.substring(0, 15) + '...' : assignmentTitle,
              score: s.aiScore,
-           });
-        }
+           };
+        });
         setData(chartData);
       } catch (err: any) {
         handleFirestoreError(err, OperationType.GET, 'score-chart/data');

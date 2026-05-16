@@ -16,12 +16,12 @@ export const usePresence = (userId: string | undefined) => {
     // Initial heartbeat
     updateStatus('online');
     
-    // Heartbeat every 2 minutes while active
+    // Heartbeat every 20 minutes while active (Emergency Quota Fix)
     let heartbeatInterval = setInterval(() => {
        if (currentStatus === 'online') {
           dbService.updatePresence(userId, 'online').catch(console.warn);
        }
-    }, 2 * 60 * 1000);
+    }, 20 * 60 * 1000);
 
     const handleVisibilityChange = () => {
       if (document.hidden) {

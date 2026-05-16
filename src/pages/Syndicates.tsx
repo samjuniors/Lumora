@@ -152,153 +152,153 @@ export const Syndicates = () => {
         <div className="max-w-6xl mx-auto px-4 py-8 space-y-12">
             {/* Header */}
             <div className="text-center space-y-4">
-                <div className="inline-flex items-center gap-2 px-4 py-2 bg-brand-gold/10 text-brand-gold rounded-full text-[10px] font-black uppercase tracking-widest border border-brand-gold/20">
+                <div className="inline-flex items-center gap-2 px-4 py-2 bg-navy-900 border border-brand-gold/20 text-brand-gold rounded-full text-[10px] font-bold uppercase tracking-[0.2em] shadow-soft">
                     <Shield size={12} />
-                    Lumora Global Network
+                    Established Operatives
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tighter">The Syndicates</h1>
-                <p className="text-text-secondary font-medium max-w-xl mx-auto italic text-sm">
-                  Collaborate to dominate. Syndicates pool academic performance to conquer global leaderboards and unlock exclusive dividends.
+                <h1 className="text-4xl md:text-5xl font-display font-bold text-text-primary tracking-tight">The Syndicates</h1>
+                <p className="text-text-secondary font-medium max-w-xl mx-auto italic text-sm opacity-80">
+                  Global networks of elite students pooling intelligence and capital to achieve academic dominance.
                 </p>
             </div>
 
             {mySyndicate ? (
                 <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-[#1A2B48] border border-brand-gold/30 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden"
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-navy-950 border border-brand-gold/30 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden shadow-glow-gold"
                 >
-                    <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+                    <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                     
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div className="lg:col-span-2 space-y-8">
+                        <div className="lg:col-span-2 space-y-10">
                             <div className="flex items-center gap-6">
-                                <div className="w-20 h-20 bg-brand-gold text-bg-main rounded-3xl flex items-center justify-center text-4xl font-black shadow-2xl shadow-brand-gold/20">
+                                <div className="w-20 h-20 bg-brand-gold text-navy-950 rounded-[2rem] flex items-center justify-center text-4xl font-display font-bold shadow-soft">
                                    {mySyndicate.tag}
                                 </div>
-                                <div>
-                                   <div className="flex items-center gap-3 mb-1">
-                                      <h2 className="text-3xl font-black tracking-tight">{mySyndicate.name}</h2>
-                                      <span className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-black uppercase tracking-widest text-brand-gold border border-white/10">Level {mySyndicate.level}</span>
+                                <div className="min-w-0">
+                                   <div className="flex items-center gap-4 mb-2 flex-wrap">
+                                      <h2 className="text-3xl md:text-4xl font-display font-bold tracking-tight truncate">{mySyndicate.name}</h2>
+                                      <span className="px-3 py-1 bg-brand-gold/10 rounded-lg text-[10px] font-bold uppercase tracking-widest text-brand-gold border border-brand-gold/20">Phase {mySyndicate.level}</span>
                                    </div>
-                                   <p className="text-white/60 font-medium italic">{mySyndicate.description}</p>
+                                   <p className="text-text-secondary font-medium italic opacity-80 line-clamp-2">{mySyndicate.description}</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Members</p>
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                                <div className="p-4 bg-navy-900 border border-navy-800 rounded-2xl shadow-soft">
+                                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Personnel</p>
                                    <div className="flex items-center gap-2">
-                                      <Users className="text-brand-gold w-4 h-4" />
-                                      <span className="text-lg font-black">{mySyndicate.memberIds.length} / 20</span>
+                                      <Users size={18} className="text-brand-gold/50" />
+                                      <span className="text-lg font-bold tabular-nums text-white">{mySyndicate.memberIds.length}<span className="text-xs text-text-secondary ml-1">/ 20</span></span>
                                    </div>
                                 </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Global Score</p>
+                                <div className="p-4 bg-navy-900 border border-navy-800 rounded-2xl shadow-soft">
+                                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Impact</p>
                                    <div className="flex items-center gap-2">
-                                      <TrendingUp className="text-emerald-400 w-4 h-4" />
-                                      <span className="text-lg font-black">{mySyndicate.totalScore.toLocaleString()}</span>
+                                      <TrendingUp size={18} className="text-success/50" />
+                                      <span className="text-lg font-bold tabular-nums text-success">{mySyndicate.totalScore.toLocaleString()}</span>
                                    </div>
                                 </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Staked Fund</p>
-                                   <div className="flex items-center gap-2">
-                                      <Zap className="text-cyan-400 w-4 h-4" />
-                                      <span className="text-lg font-black">🪙 {mySyndicate.coinsStaked}</span>
-                                   </div>
-                                </div>
-                                <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                                   <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Your Status</p>
+                                <div className="p-4 bg-navy-900 border border-navy-800 rounded-2xl shadow-soft">
+                                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Asset Pool</p>
                                    <div className="flex items-center gap-2 text-brand-gold">
-                                      <Trophy className="w-4 h-4" />
-                                      <span className="text-sm font-black uppercase tracking-widest">{mySyndicate.leaderId === user.id ? 'Overlord' : 'Operative'}</span>
+                                      <Zap size={18} className="opacity-50" />
+                                      <span className="text-lg font-bold tabular-nums">🪙 {mySyndicate.coinsStaked}</span>
+                                   </div>
+                                </div>
+                                <div className="p-4 bg-navy-900 border border-navy-800 rounded-2xl shadow-soft">
+                                   <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Authority</p>
+                                   <div className="flex items-center gap-2 text-brand-gold">
+                                      <Trophy size={18} className="opacity-50" />
+                                      <span className="text-[11px] font-bold uppercase tracking-widest truncate">{mySyndicate.leaderId === user.id ? 'Overlord' : 'Operative'}</span>
                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="bg-white/5 rounded-[2rem] p-6 border border-white/10 space-y-6">
-                           <h3 className="text-lg font-black flex items-center gap-2">
-                              <Target className="text-brand-gold w-5 h-5" />
-                              Syndicate Missions
-                           </h3>
+                        <div className="bg-navy-900 border border-navy-800 rounded-[2.5rem] p-6 space-y-8 shadow-soft">
+                           <div className="flex items-center justify-between">
+                             <h3 className="text-lg font-display font-bold flex items-center gap-2">
+                                <Target className="text-brand-gold" size={20} /> Targets
+                             </h3>
+                             <button className="text-[10px] font-bold text-brand-gold uppercase tracking-widest hover:text-white transition">View All</button>
+                           </div>
+
                            <div className="space-y-3">
-                              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 flex items-center justify-between group">
-                                 <div>
-                                    <p className="text-xs font-black uppercase tracking-tight text-white/80">Group Quiz Night</p>
-                                    <p className="text-[10px] text-white/40">Collective A+ = 200 Coins Dividend</p>
+                              <div className="p-4 bg-navy-950 border border-navy-800 rounded-2xl flex items-center justify-between group transition-all hover:border-brand-gold/30">
+                                 <div className="min-w-0">
+                                    <p className="text-xs font-bold uppercase tracking-tight text-white mb-1 truncate">Syndicate Rally</p>
+                                    <p className="text-[10px] text-text-secondary font-medium italic">Collective A+ = Dividend</p>
                                  </div>
-                                 <Plus className="text-white/20 group-hover:text-brand-gold transition-colors" />
+                                 <Plus className="text-text-secondary group-hover:text-brand-gold transition-colors shrink-0" size={16} />
                               </div>
-                              <div className="p-4 bg-white/5 rounded-2xl border border-white/5 opacity-50 flex items-center justify-between cursor-not-allowed">
+                              <div className="p-4 bg-navy-950/50 border border-navy-800 rounded-2xl opacity-40 flex items-center justify-between cursor-not-allowed">
                                  <div>
-                                    <p className="text-xs font-black uppercase tracking-tight text-white/80">Tournament entry</p>
-                                    <p className="text-[10px] text-white/40">Unlocks at Syndicate Level 5</p>
+                                    <p className="text-xs font-bold uppercase tracking-tight text-white mb-1">War Zone Entry</p>
+                                    <p className="text-[10px] text-text-secondary">Unlocks at Phase 5</p>
                                  </div>
                                  <Lock size={14} />
                               </div>
                            </div>
-                           <button className="w-full bg-white/10 hover:bg-white/20 py-4 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all">
-                              Clan Chat (Encrypted)
+                           <button className="w-full bg-brand-gold text-navy-950 py-3.5 rounded-xl font-bold text-[10px] uppercase tracking-[0.2em] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-glow-gold">
+                               Sync encrypted chat
                            </button>
                         </div>
                     </div>
                 </motion.div>
             ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                   <div className="bg-bg-surface border border-border-main rounded-[2.5rem] p-10 flex flex-col items-center justify-center text-center space-y-6">
-                      <div className="w-20 h-20 bg-brand-gold text-bg-main rounded-[2rem] flex items-center justify-center shadow-xl shadow-brand-gold/10">
+                   <div className="card-premium p-10 flex flex-col items-center justify-center text-center space-y-6 bg-navy-900/50">
+                      <div className="w-20 h-20 bg-brand-gold text-navy-950 rounded-[2rem] flex items-center justify-center shadow-glow-gold">
                          <Plus size={40} />
                       </div>
                       <div>
-                         <h3 className="text-2xl font-black text-text-primary tracking-tight">Establish a Syndicate</h3>
-                         <p className="text-text-secondary text-sm font-medium mt-2">Become a Leader. Drive your team to global dominance.</p>
+                         <h3 className="text-2xl font-display font-bold text-text-primary tracking-tight">Charter A Syndicate</h3>
+                         <p className="text-text-secondary text-sm font-medium mt-2 max-w-sm italic opacity-80 leading-relaxed">Establish your own fleet. Exercise absolute authority and manage collective assets.</p>
                       </div>
-                      <div className="flex items-center gap-4 text-xs font-black uppercase tracking-widest">
-                         <span className="text-brand-gold">🪙 500 Coins</span>
-                         <span className="text-text-secondary/20">|</span>
-                         <span className="text-cyan-500">💎 10 Diamonds</span>
+                      <div className="flex items-center gap-6 py-2">
+                         <span className="text-brand-gold font-bold text-[11px] uppercase tracking-widest flex items-center gap-1.5"><Zap size={14} /> 500 Coins</span>
+                         <span className="text-cyan-400 font-bold text-[11px] uppercase tracking-widest flex items-center gap-1.5"><Sparkles size={14} /> 10 Diamonds</span>
                       </div>
                       <button 
                         onClick={() => setShowCreateModal(true)}
-                        className="bg-brand-gold text-bg-main px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-brand-gold/20"
+                        className="bg-brand-gold text-navy-950 px-10 py-4 rounded-xl font-bold text-[11px] uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-glow-gold"
                       >
-                         Secure The Charter
+                         Claim Leadership
                       </button>
                    </div>
 
                    <div className="space-y-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-text-secondary flex items-center gap-2 ml-2">
-                         <Search size={14} />
-                         Join an Operation
+                      <h3 className="text-[10px] font-bold uppercase tracking-widest text-text-secondary flex items-center gap-2 ml-2 opacity-50">
+                         <Search size={14} /> Available Operations
                       </h3>
                       <div className="space-y-3">
                          {syndicates.length === 0 ? (
-                            <div className="text-center py-12 bg-white/5 border border-dashed rounded-3xl">
-                               <p className="text-sm text-text-secondary italic">No active Syndicates found on the network.</p>
+                            <div className="py-20 flex flex-col items-center justify-center text-center px-8 bg-navy-900/50 rounded-[2.5rem] border border-dashed border-navy-800">
+                               <Users2 size={40} className="text-text-secondary/20 mb-4" />
+                               <p className="text-sm font-medium text-text-secondary italic">No active Syndicates detected on the global network.</p>
                             </div>
                          ) : (
                             syndicates.map(s => (
                                 <motion.div 
                                     key={s.id}
                                     whileHover={{ x: 4 }}
-                                    className="bg-bg-surface border border-border-main p-6 rounded-3xl flex items-center justify-between group transition-all hover:border-brand-gold/30 hover:shadow-xl"
+                                    className="card-premium p-6 flex items-center justify-between group transition-all hover:bg-navy-900 cursor-pointer"
+                                    onClick={() => handleJoin(s)}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 bg-bg-main border border-border-main rounded-xl flex items-center justify-center text-xl font-black text-brand-gold group-hover:bg-brand-gold group-hover:text-bg-main transition-all">
+                                        <div className="w-12 h-12 bg-navy-800 border border-navy-700 rounded-xl flex items-center justify-center text-xl font-display font-bold text-brand-gold group-hover:bg-brand-gold group-hover:text-navy-950 group-hover:border-transparent transition-all shadow-soft">
                                            {s.tag}
                                         </div>
                                         <div>
-                                            <h4 className="font-black text-text-primary group-hover:text-brand-gold transition-colors">{s.name}</h4>
-                                            <p className="text-[10px] font-black uppercase tracking-widest text-text-secondary">{s.memberIds.length} Members • Level {s.level}</p>
+                                            <h4 className="font-bold text-text-primary tracking-tight group-hover:text-brand-gold transition-colors">{s.name}</h4>
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-text-secondary opacity-60">Phase {s.level} • {s.memberIds.length} Personnel</p>
                                         </div>
                                     </div>
-                                    <button 
-                                        onClick={() => handleJoin(s)}
-                                        className="p-3 bg-bg-main border border-border-main rounded-xl hover:bg-brand-gold hover:text-bg-main transition-all"
-                                    >
+                                    <div className="p-2 text-text-secondary group-hover:text-brand-gold transition-colors">
                                         <ChevronRight size={20} />
-                                    </button>
+                                    </div>
                                 </motion.div>
                             ))
                          )}

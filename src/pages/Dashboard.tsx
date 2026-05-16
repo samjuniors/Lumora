@@ -9,6 +9,7 @@ import {
   BookOpen,
   Trophy,
   Gem,
+  Coins,
   Sparkles,
   Send,
   Plus,
@@ -21,7 +22,9 @@ import {
   ArrowUpRight,
   Target,
   Search,
-  Compass
+  Compass,
+  ShoppingBag,
+  Settings
 } from "lucide-react";
 import { AssignmentGroupCard } from "../components/AssignmentGroupCard";
 import { CompletedMissionsStack } from "../components/CompletedMissionsStack";
@@ -80,274 +83,74 @@ export const Dashboard = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    const checkStreak = async () => {
-      const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-      const year = nowIST.getFullYear();
-      const month = String(nowIST.getMonth() + 1).padStart(2, '0');
-      const day = String(nowIST.getDate()).padStart(2, '0');
-      const today = `${year}-${month}-${day}`;
-      
-      // If we already know the user is active today from local memory or DB, skip
-      if (user.lastActive === today || streakChecked.current) {
-        return;
-      }
-      
-      streakChecked.current = true; // immediately mark as checked to stop loops
+    const performSyncTasks = async () => {
+       // Throttled sweep - Extra safety check to prevent re-triggered effects
+       if (sweepPerformed.current) return;
+       sweepPerformed.current = true;
 
-      let newStreak = user.streak || 0;
-      let diffDays = 0;
-      let missingPenaltyCoins = 0;
+       try {
+         const { coinsDeducted } = await dbService.processUserSweep(user.id);
+         if (coinsDeducted > 0) {
+           toast.error(`Automated penalty applied for missed deadlines: -${coinsDeducted} coins`, { 
+             id: 'sweep-penalty',
+             style: { background: '#0f172a', color: '#fff', border: '1px solid #ef4444' }
+           });
+         }
+       } catch (e) {
+         console.warn("Sweep failed", e);
+       }
 
-      if (user.lastActive) {
-        const lastDate = new Date(user.lastActive);
-        const todayDate = new Date(today);
-        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
-        diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+       // Streak check (once per session)
+       if (streakChecked.current) return;
+       streakChecked.current = true;
 
-        if (diffDays === 1) {
-          newStreak += 1;
-        } else if (diffDays > 1) {
-          const missedDays = diffDays - 1;
-          // Check for streak freeze
-          if (user.inventory?.includes('streak_freeze')) {
-            const newInventory = [...user.inventory];
-            const index = newInventory.indexOf('streak_freeze');
-            newInventory.splice(index, 1);
+       const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+       const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+       
+       if (user.lastActive !== today) {
+         let newStreak = user.streak || 0;
+         if (user.lastActive) {
+            const lastDate = new Date(user.lastActive);
+            const todayDate = new Date(today);
+            const diffDays = Math.ceil(Math.abs(todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
             
-            dbService.updateUser(user.id, {
-              inventory: newInventory
-            }).catch(console.warn);
-            console.log("Streak Freeze used!");
-          } else {
+            if (diffDays === 1) newStreak += 1;
+            else if (diffDays > 1) newStreak = 1;
+         } else {
             newStreak = 1;
-            let currentPen = 20;
-            for (let i = 0; i < missedDays; i++) {
-              missingPenaltyCoins += Math.floor(currentPen);
-              currentPen *= 1.5;
-            }
-          }
-        }
-      } else {
-        newStreak = 1;
-      }
-
-      if (missingPenaltyCoins > 0) {
-        // Fire and forget penalties to prevent loops
-        dbService.createTransaction({
-            senderId: user.id,
-            receiverId: "SYSTEM",
-            amount: missingPenaltyCoins,
-            type: "penalty",
-            status: 'completed',
-            timestamp: Date.now()
-        }).catch(console.warn);
-        
-        dbService.updateUser(user.id, {
-            coins: Math.max(0, (user.coins || 0) - missingPenaltyCoins),
-            streak: newStreak,
-            lastActive: today,
-        }).catch(console.warn);
-
-        updateResources({ coins: Math.max(0, (user.coins || 0) - missingPenaltyCoins) });
-        toast.error(`You lost ${missingPenaltyCoins} coins for breaking your login streak!`, { icon: '💸' });
-      } else {
-        dbService.updateUser(user.id, {
-          streak: newStreak,
-          lastActive: today
-        }).catch(console.warn);
-      }
-    };
-
-    checkStreak();
-    
-    // Check at intervals in case they leave tab open past midnight
-    const interval = setInterval(checkStreak, 60000); 
-    return () => clearInterval(interval);
-  }, [user?.id]); // ONLY depend on user ID. Never depend on state that gets updated in the hook.
-
-
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const processMissedAssignments = async () => {
-      if (user.role !== "student") return;
-      
-      // Throttle: once every 6 hours
-      const SIX_HOURS = 6 * 60 * 60 * 1000;
-      const now = Date.now();
-      
-      // Use both DB state and local storage as fail-safe against quota looping
-      const localLastSweep = localStorage.getItem(`last_sweep_${user.id}`);
-      const lastSweepTime = Math.max(user.lastMissedSweep || 0, localLastSweep ? parseInt(localLastSweep) : 0);
-      
-      if (lastSweepTime && (now - lastSweepTime) < SIX_HOURS) {
-        return;
-      }
-
-      if (sweepPerformed.current) return;
-      sweepPerformed.current = true;
-      
-      // Set aggressively to prevent quota death loops if DB writes start throwing
-      localStorage.setItem(`last_sweep_${user.id}`, now.toString());
-
-      try {
-        // 1. Fetch relevant assignments
-        const allRelevantAssignments = (await dbService.getAllAssignments()).filter(a => {
-            if (a.isGlobal === true) return true;
-            if (a.isGlobal === false) {
-                return a.allowedStudents?.includes(user.id) || (user.email && a.allowedStudents?.includes(user.email.toLowerCase())) || false;
-            }
-            if (a.isGlobal === undefined) {
-               if (!a.allowedStudents || a.allowedStudents.length === 0) return true;
-               return a.allowedStudents.includes(user.id) || (user.email && a.allowedStudents.includes(user.email.toLowerCase()));
-            }
-            return false;
-        });
-
-        // 2. Fetch existing enrollments
-        const userEnrollments = await dbService.getEnrollmentsByStudent(user.id);
-
-        let newBalance = user.coins;
-        const now = Date.now();
-        let balanceChanged = false;
-
-        let totalCoinsPenalty = 0;
-        let totalDiamondsPenalty = 0;
-
-        for (const assignment of allRelevantAssignments) {
-          const existingEnr = userEnrollments.find(e => e.assignmentId === assignment.id);
-          
-          if (existingEnr && (existingEnr.status === "submitted" || existingEnr.status === "graded")) continue;
-
-          const activeDeadline = (existingEnr && existingEnr.graceDeadline) ? existingEnr.graceDeadline : assignment.dueDate;
-          if (now <= activeDeadline) continue;
-
-          const isRetest = !!(existingEnr && existingEnr.graceDeadline);
-          const isBonus = !!assignment.isBonus;
-          const isRecurring = isRetest || isBonus;
-
-          if (!isRecurring && existingEnr && existingEnr.status === "missed") continue;
-
-          const daysSinceDeadline = Math.floor((now - activeDeadline) / (24 * 60 * 60 * 1000));
-          const targetMissIndex = daysSinceDeadline + 1;
-
-          const appliedMissIndex = (existingEnr as any)?.lastPenaltyIndexApplied || 0;
-          if (targetMissIndex <= appliedMissIndex) continue;
-          
-          let sweepCoinsPenalty = 0;
-          let sweepDiamondsPenalty = 0;
-
-          for (let i = appliedMissIndex + 1; i <= targetMissIndex; i++) {
-              if (isRetest) {
-                  sweepCoinsPenalty += 25 * Math.pow(1.25, i - 1);
-                  sweepDiamondsPenalty += 50; 
-              } else if (isBonus) {
-                  sweepCoinsPenalty += assignment.penaltyFee || 0;
-                  sweepDiamondsPenalty += Math.floor((assignment.xpReward || 100) * 0.5);
-              } else {
-                  if (i === 1) {
-                      sweepCoinsPenalty += assignment.penaltyFee || 0;
-                      sweepDiamondsPenalty += Math.floor((assignment.xpReward || 50) * 0.5);
-                  }
-              }
-          }
-          
-          sweepCoinsPenalty = Math.floor(sweepCoinsPenalty);
-          
-          const enrollmentUpdate = {
-              status: "missed",
-              rewardEarned: -(existingEnr?.rewardEarned ? Math.abs(existingEnr.rewardEarned) + sweepCoinsPenalty : sweepCoinsPenalty),
-              lastPenaltyIndexApplied: targetMissIndex,
-              updatedAt: now
-          };
-
-          if (!existingEnr) {
-            await dbService.createEnrollment({
-              assignmentId: assignment.id,
-              studentId: user.id,
-              enrolledAt: now,
-              ...enrollmentUpdate
-            } as any);
-          } else {
-            await dbService.updateEnrollment(existingEnr.id, enrollmentUpdate as any);
-          }
-
-          if (sweepCoinsPenalty > 0) {
-            newBalance -= sweepCoinsPenalty;
-            totalCoinsPenalty += sweepCoinsPenalty;
-            balanceChanged = true;
-            totalDiamondsPenalty += sweepDiamondsPenalty;
-
-            await dbService.createTransaction({
-              senderId: user.id,
-              receiverId: "SYSTEM",
-              amount: sweepCoinsPenalty,
-              type: "assignment_penalty",
-              status: 'completed',
-              timestamp: now,
-              // Note: Transactions don't have message field in current schema but we can add it or ignore
-            });
-          }
-        }
-
-        // Apply all user updates
-        const userUpdate: any = {
-          lastMissedSweep: now
-        };
-
-        if (balanceChanged) {
-          userUpdate.coins = (user.coins || 0) - totalCoinsPenalty;
-          userUpdate.diamonds = (user.diamonds || 0) - totalDiamondsPenalty; 
-        }
-
-        await dbService.updateUser(user.id, userUpdate);
-
-        if (balanceChanged) {
-          updateResources({ coins: newBalance });
-        }
-      } catch (error: any) {
-        console.error("Missed assignments processing error:", error);
-      }
+         }
+         
+         dbService.updateUser(user.id, { streak: newStreak, lastActive: today }).catch(console.warn);
+       }
     };
 
     const fetchAssignments = async () => {
       try {
-        let allAssignments = await dbService.getAllAssignments();
+        const [allAssignments, enrollments] = await Promise.all([
+          dbService.getAllAssignments(),
+          dbService.getEnrollmentsByStudent(user.id)
+        ]);
 
-        if (user?.role === "student") {
-          // Filter out assignments not meant for this student
-          allAssignments = allAssignments.filter(a => {
-            if (a.isGlobal === true) return true;
-            if (a.isGlobal === false) {
-               return a.allowedStudents?.includes(user.id) || (user.email && a.allowedStudents?.includes(user.email.toLowerCase())) || false;
-            }
-            if (a.isGlobal === undefined) {
-               if (!a.allowedStudents || a.allowedStudents.length === 0) return true;
-               return a.allowedStudents.includes(user.id) || (user.email && a.allowedStudents.includes(user.email.toLowerCase()));
-            }
-            return false;
-          });
+        // Optimized filtering
+        const filtered = allAssignments.filter(a => {
+          if (a.isGlobal) return true;
+          return a.allowedStudents?.includes(user.id) || (user.email && a.allowedStudents?.includes(user.email.toLowerCase()));
+        });
 
-          const enrollments = await dbService.getEnrollmentsByStudent(user.id);
-          setStudentEnrollments(enrollments);
-          cachedEnrollments = enrollments;
-        }
-        setAssignments(allAssignments);
-        cachedAssignments = allAssignments;
+        setAssignments(filtered);
+        setStudentEnrollments(enrollments);
+        cachedAssignments = filtered;
+        cachedEnrollments = enrollments;
+        setIsLoading(false);
       } catch (err) {
         console.error('Fetch assignments error:', err);
+        setIsLoading(false);
       }
     };
 
-    const loadData = async () => {
-      if (assignments.length === 0) setIsLoading(true);
-      await fetchAssignments();
-      setIsLoading(false);
-      // Process missed assignments in background
-      processMissedAssignments().catch(err => console.error("Background sweep failed:", err));
-    }
-    loadData();
-  }, [user?.id, user?.role, user?.email]);
+    fetchAssignments();
+    performSyncTasks();
+  }, [user?.id]);
 
   const groupedAssignments = useMemo(() => {
     const groups: Record<string, Assignment[]> = {};
@@ -407,81 +210,96 @@ export const Dashboard = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-6xl mx-auto px-4 space-y-6 md:space-y-8 pb-8"
+      className="max-w-7xl mx-auto space-y-8 pb-32 px-4"
     >
-      {/* Live Ticker Marquee */}
-      <div className="bg-[#1A2B48]/40 border-y border-white/5 py-3 -mx-4 px-4 overflow-hidden relative">
-        <div className="flex items-center gap-8 whitespace-nowrap animate-marquee">
-          {platformEvents.map((event) => (
-             <div key={event.id} className="flex items-center gap-2">
-                <span className="text-lg">{event.icon}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
-                  {event.text}
-                </span>
-                <div className="w-1 h-1 rounded-full bg-brand-gold/40 mx-4" />
+      {/* Premium Minimal Header */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4">
+        <div className="lg:col-span-8 flex flex-col justify-between space-y-6">
+          <div className="space-y-1">
+             <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-text-primary">
+                The Lumina <span className="text-brand-gold">Terminal</span>
+             </h1>
+             <p className="text-text-secondary font-medium md:text-lg">Elite academic performance monitoring and mission control.</p>
+          </div>
+          
+          <div className="flex flex-wrap gap-3">
+             <div className="bg-navy-900 border border-navy-700/50 rounded-xl px-5 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                   <Flame size={18} />
+                </div>
+                <div>
+                   <div className="text-[10px] uppercase tracking-widest font-black text-text-muted">Daily Streak</div>
+                   <div className="text-xl font-black text-text-primary">{user?.streak || 0} Days</div>
+                </div>
              </div>
-          ))}
-          {/* Duplicate for seamless loop */}
-          {platformEvents.map((event) => (
-             <div key={`dup-${event.id}`} className="flex items-center gap-2">
-                <span className="text-lg">{event.icon}</span>
-                <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
-                  {event.text}
-                </span>
-                <div className="w-1 h-1 rounded-full bg-brand-gold/40 mx-4" />
+             <div className="bg-navy-900 border border-navy-700/50 rounded-xl px-5 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold">
+                   <Coins size={18} />
+                </div>
+                <div>
+                   <div className="text-[10px] uppercase tracking-widest font-black text-text-muted">Lumina Coins</div>
+                   <div className="text-xl font-black text-text-primary">{user?.coins?.toLocaleString() || 0}</div>
+                </div>
              </div>
-          ))}
+          </div>
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="lg:col-span-4 rounded-2xl p-6 bg-navy-900 border border-navy-700/50 flex flex-col justify-between relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+             <Gem size={120} />
+          </div>
+          <div className="relative z-10">
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Available Diamonds</span>
+              <Gem className="text-cyan-400" size={20} />
+            </div>
+            <div className="text-5xl font-display font-bold text-text-primary tracking-tighter mb-1">
+              {user?.diamonds || 0}
+            </div>
+            <div className="text-[10px] text-text-secondary font-medium flex items-center gap-1.5">
+              Ranked #{user?.rank || '--'} global <ArrowUpRight size={10} />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 pt-6 mt-6 border-t border-navy-700/50 relative z-10">
+            <Link to="/assignments?filter=active" className="p-4 bg-navy-800 border border-navy-700/50 rounded-xl hover:border-navy-600 transition-colors group">
+              <div className="text-[9px] font-black text-text-muted uppercase tracking-wider mb-1">Active</div>
+              <div className="text-xl font-black text-brand-gold">{studentEnrollments.filter((e) => e.status === "active").length}</div>
+            </Link>
+            <Link to="/assignments?filter=completed" className="p-4 bg-navy-800 border border-navy-700/50 rounded-xl hover:border-navy-600 transition-colors group">
+              <div className="text-[9px] font-black text-text-muted uppercase tracking-wider mb-1">Done</div>
+              <div className="text-xl font-black text-success">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</div>
+            </Link>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Risk Alert Banner */}
-      {potentialLoss > 0 && (
-          <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              className="bg-rose-500/10 border border-rose-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative group"
-          >
-              <div className="absolute inset-0 bg-rose-500/5 animate-pulse pointer-events-none" />
-              <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-rose-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-rose-500/20 shrink-0">
-                      <AlertTriangle size={24} />
+      {(potentialLoss > 0 || missedCount > 3) && (
+        <div className="flex flex-col gap-3">
+          {potentialLoss > 0 && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center justify-between">
+               <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-500 text-white rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20">
+                     <AlertTriangle size={20} />
                   </div>
                   <div>
-                      <h3 className="text-lg font-black text-rose-600 uppercase tracking-tight">Bankruptcy Warning</h3>
-                      <p className="text-sm font-medium text-rose-500/80">You have {activeMissions.length} active missions with <span className="font-black underline decoration-rose-500/30">-{potentialLoss} Coins</span> at risk if you fail the deadlines.</p>
+                    <h3 className="text-xs font-black text-red-500 uppercase tracking-widest">Risk Exposure</h3>
+                    <p className="text-sm font-medium text-text-primary">
+                       Potential loss of <span className="font-bold text-red-500">{potentialLoss} Coins</span> due to pending deadlines.
+                    </p>
                   </div>
-              </div>
-              <Link 
-                  to="/assignments?filter=active"
-                  className="bg-rose-500 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-rose-600 transition-all shadow-lg shadow-rose-500/20 relative z-10 whitespace-nowrap"
-              >
-                  Secure My Stakes
-              </Link>
-          </motion.div>
-      )}
-
-      {missedCount > 3 && (
-          <motion.div 
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              className="bg-orange-500/10 border border-orange-500/20 rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-4 overflow-hidden relative"
-          >
-              <div className="flex items-center gap-4 relative z-10">
-                  <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20 shrink-0">
-                      <ZapOff size={24} />
-                  </div>
-                  <div>
-                      <h3 className="text-lg font-black text-orange-600 uppercase tracking-tight">Academic Probation</h3>
-                      <p className="text-sm font-medium text-orange-500/80">You've missed {missedCount} missions recently. Your XP gains are now reduced by 20% until you clear 2 missions.</p>
-                  </div>
-              </div>
-              <div className="text-[10px] font-black text-orange-500 uppercase tracking-widest bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20">
-                  SYSTEM PENALTY ACTIVE
-              </div>
-          </motion.div>
+               </div>
+               <Link to="/assignments?filter=active" className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest">Secure Now</Link>
+            </div>
+          )}
+        </div>
       )}
 
       {/* The Oracle AI Strategic Advisor */}
@@ -489,308 +307,64 @@ export const Dashboard = () => {
         submissions={studentEnrollments.filter(e => e.status === 'graded')} 
       />
 
-      {/* Hero Section */}
-      <motion.div
-        initial={{ y: 10, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-        className="relative overflow-hidden rounded-3xl p-8 md:p-12 bg-bg-surface border border-border-main shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-8"
-      >
-        <div className="relative z-10 max-w-2xl w-full">
-          <motion.div
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap items-center gap-3 mb-6"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-border-main rounded-md text-xs font-semibold uppercase tracking-wider text-text-secondary bg-bg-main/50 text-brand-gold">
-              Level {currentLevel} • {user ? getPerformanceBadge(calculatePerformanceScore(user)).title : "Student"}
-            </div>
-            {user && (getVIPLevel(user).level > 0 || user.vipLevel > 0) && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-amber-500/20 rounded-md text-xs font-semibold uppercase tracking-wider text-amber-500 bg-amber-500/10">
-                VIP {getVIPLevel(user).level || user.vipLevel}
-              </div>
-            )}
-            {(user?.streak ?? 0) > 0 && (
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 border border-orange-500/20 rounded-md text-xs font-semibold uppercase tracking-wider text-orange-500 bg-orange-500/10">
-                <Flame className="w-3.5 h-3.5" /> {user?.streak} Day Streak
-              </div>
-            )}
-          </motion.div>
-          <motion.h1
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="text-4xl md:text-5xl font-bold mb-3 tracking-tight text-text-primary uppercase flex items-center gap-4"
-          >
-            Welcome, {user?.name.split(" ")[0]}
-            {isLoading && assignments.length === 0 && <span className="w-5 h-5 border-[3px] border-amber-500 border-t-transparent rounded-full animate-spin opacity-70" />}
-          </motion.h1>
-          <motion.p
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="text-text-secondary text-lg font-medium leading-relaxed max-w-lg"
-          >
-            Track your progress, complete assignments, and level up your skills.
-          </motion.p>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+          <div className="flex items-center justify-between pb-3 border-b border-navy-700/50">
+            <h2 className="text-xl font-display font-bold text-text-primary">Operational Campaigns</h2>
+            <Link to="/assignments" className="text-xs font-bold text-brand-gold hover:opacity-80 transition-opacity">View All</Link>
+          </div>
 
-          {/* Quick Stats Bars Inline */}
-          {user && (
-             <motion.div
-              initial={{ y: 10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.45 }}
-              className="mt-8 flex flex-col md:flex-row gap-6 max-w-md md:max-w-xl"
-             >
-                <div className="flex-1 space-y-2">
-                  <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-text-secondary">
-                    <span>Level {currentLevel} XP</span>
-                    <span className="text-text-primary">{xpCurrent} / {xpMax}</span>
-                  </div>
-                  <div className="w-full h-1 bg-border-main rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-brand-gold rounded-full transition-all duration-1000 ease-out"
-                      style={{ width: `${xpProgress}%` }}
-                    />
-                  </div>
-                  <div className="text-[10px] text-text-secondary italic">
-                    {nextRewardLevel > currentLevel ? `Next Legendary Reward at Level ${nextRewardLevel}` : "You've reached max level rewards!"}
-                  </div>
-                </div>
-
-               {getVIPLevel(user).level > 0 && (
-               <div className="flex-1 space-y-2">
-                 <div className="flex justify-between items-center text-xs font-semibold uppercase tracking-wider text-amber-500">
-                   <span>VIP Progress</span>
-                   <span className="text-amber-400">{getVIPLevel(user).xp} / {getVIPLevel(user).nextLevelXP}</span>
-                 </div>
-                 <div className="w-full h-1 bg-amber-500/20 rounded-full overflow-hidden">
-                   <div
-                     className="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out"
-                     style={{ width: `${getVIPLevel(user).progress}%` }}
-                   />
-                 </div>
+          <div className="space-y-4">
+            {groupedAssignments.length === 0 ? (
+               <div className="p-12 text-center bg-navy-900 rounded-2xl border border-navy-700/50">
+                  <p className="text-text-secondary font-medium">No active missions found for your clearance level.</p>
                </div>
-               )}
-             </motion.div>
-          )}
-
-          <motion.div
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-10"
-          >
-            <Link
-              to="/assignments"
-              className="inline-flex items-center gap-2 bg-text-primary text-bg-main hover:bg-text-secondary px-6 py-3 rounded-md font-bold text-sm transition-all focus:ring-2 focus:ring-brand-gold focus:outline-none"
-            >
-              View Assignments <ArrowRight className="w-4 h-4" />
-            </Link>
-          </motion.div>
-        </div>
-
-        {/* Minimal Stats Card on Right */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.4 }}
-          className="relative z-10 w-full md:w-80 shrink-0 flex flex-col p-6 md:p-8 bg-bg-main border border-border-main rounded-2xl"
-        >
-          <div className="flex items-center justify-between mb-8">
-             <span className="text-text-secondary text-xs font-semibold uppercase tracking-widest">Diamonds</span>
-             <Gem className="w-5 h-5 text-cyan-400" strokeWidth={2} />
-          </div>
-          <div className="text-5xl md:text-6xl font-black text-text-primary tracking-tighter mb-8">
-            {user?.diamonds || 0}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-6 border-t border-border-main">
-            <Link to="/assignments?filter=active" className="group">
-               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary mb-1 group-hover:text-text-primary transition-colors">Active</div>
-               <div className="text-xl font-bold text-brand-gold">{studentEnrollments.filter((e) => e.status === "active").length}</div>
-            </Link>
-            <Link to="/assignments?filter=completed" className="group">
-               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary mb-1 group-hover:text-text-primary transition-colors">Done</div>
-               <div className="text-xl font-bold text-emerald-500">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</div>
-            </Link>
-            <Link to="/assignments?filter=missed" className="group mt-2">
-               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary mb-1 group-hover:text-text-primary transition-colors">Missed</div>
-               <div className="text-xl font-bold text-rose-500">{studentEnrollments.filter((e) => e.status === "missed").length}</div>
-            </Link>
-            <Link to="/assignments?filter=retest" className="group mt-2">
-               <div className="text-[10px] font-semibold uppercase tracking-widest text-text-secondary mb-1 group-hover:text-text-primary transition-colors">Retest</div>
-               <div className="text-xl font-bold text-amber-500">{studentEnrollments.filter((e) => e.status === "active" && e.graceDeadline && e.graceDeadline > Date.now()).length}</div>
-            </Link>
-          </div>
-        </motion.div>
-      </motion.div>
-
-      <div className="mb-8">
-        <ResourceCollector />
-      </div>
-
-      {/* Active Buffs / Timed Effects */}
-      {(user?.taxHavenUntil || user?.doubleDownShieldUntil || user?.xpBoosterUntil) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          {user.taxHavenUntil && user.taxHavenUntil > Date.now() && (
-            <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden group">
-              <div className="absolute inset-0 bg-indigo-500/5 animate-pulse" />
-              <div className="w-10 h-10 bg-indigo-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 relative z-10">
-                <Send size={20} />
-              </div>
-              <div className="flex-1 relative z-10">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Tax Haven Active</p>
-                <p className="text-sm font-bold text-indigo-600">Reduced 20% platform tax</p>
-              </div>
-            </div>
-          )}
-          {user.doubleDownShieldUntil && user.doubleDownShieldUntil > Date.now() && (
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-amber-500/5 animate-pulse" />
-              <div className="w-10 h-10 bg-amber-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-amber-500/20 relative z-10">
-                <Target size={20} />
-              </div>
-              <div className="flex-1 relative z-10">
-                <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">D-Down Shield Active</p>
-                <p className="text-sm font-bold text-amber-700">50% Penalty Protection</p>
-              </div>
-            </div>
-          )}
-          {user.xpBoosterUntil && user.xpBoosterUntil > Date.now() && (
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-2xl p-4 flex items-center gap-4 relative overflow-hidden">
-              <div className="absolute inset-0 bg-purple-500/5 animate-pulse" />
-              <div className="w-10 h-10 bg-purple-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20 relative z-10">
-                <Plus size={20} />
-              </div>
-              <div className="flex-1 relative z-10">
-                <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Neural Link Upgrade</p>
-                <p className="text-sm font-bold text-purple-600">Passive 1.5x XP Multiplier</p>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-        {/* Recent Assignments section */}
-        <div className="md:col-span-2 space-y-6 md:space-y-8">
-          <div className="flex justify-between items-end px-1 md:px-2 border-b border-border-main pb-3 md:pb-4">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-black text-text-primary flex items-center gap-2 tracking-tight">
-                Active Campaigns
-              </h2>
-            </div>
-            <Link
-              to="/assignments"
-              className="text-xs md:text-sm text-text-primary font-bold hover:text-black transition flex items-center gap-1 bg-border-main/50 hover:bg-border-main px-3 py-1.5 md:px-4 md:py-2 rounded-lg md:rounded-xl"
-            >
-              All <ArrowRight className="w-3 h-3 md:w-4 md:h-4" />
-            </Link>
-          </div>
-
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="space-y-4 md:space-y-6"
-          >
-            {groupedAssignments.map((group) => (
-              <motion.div variants={itemVariants} key={group.name}>
-                <AssignmentGroupCard
-                  group={group}
-                  enrollments={studentEnrollments}
-                  userRole={user?.role}
-                />
-              </motion.div>
+            ) : groupedAssignments.map((group) => (
+              <AssignmentGroupCard
+                key={group.name}
+                group={group}
+                enrollments={studentEnrollments}
+                userRole={user?.role}
+              />
             ))}
-            {groupedAssignments.length === 0 && (
-              <motion.div
-                variants={itemVariants}
-                className="p-12 text-center border-2 border-dashed border-border-main/60 rounded-3xl text-text-secondary/80 font-medium bg-bg-surface flex flex-col items-center justify-center"
-              >
-                <div className="w-20 h-20 bg-bg-main rounded-full flex items-center justify-center mb-4">
-                  <Sparkles className="w-10 h-10 text-text-secondary/60" />
-                </div>
-                <h3 className="text-xl font-black text-text-primary mb-2">
-                  You're All Caught Up!
-                </h3>
-                <p className="text-text-secondary max-w-sm text-sm">
-                  No active campaigns right now. Take a break or check back
-                  later for new missions.
-                </p>
-              </motion.div>
-            )}
-          </motion.div>
-
-          <div className="pt-8">
-            <CompletedMissionsStack />
           </div>
+
+          <CompletedMissionsStack />
         </div>
 
-        {/* Side panel */}
-        <div className="space-y-6">
-          <div className="flex justify-between items-end px-1 md:px-2 border-b border-border-main pb-3 md:pb-4">
-              <h2 className="text-2xl md:text-3xl font-bold text-text-primary flex items-center gap-2 tracking-tight">
-                Quick Actions
-              </h2>
+        <div className="lg:col-span-4 space-y-8">
+          <div className="space-y-3">
+             <div className="flex items-center justify-between pb-3 border-b border-navy-700/50">
+                <h2 className="text-xl font-display font-bold text-text-primary">Access Control</h2>
+             </div>
+             
+             <div className="grid grid-cols-2 gap-3">
+               {[
+                 { to: "/wallet", icon: Trophy, title: "Vault" },
+                 { to: "/leaderboard", icon: Crown, title: "Hall of Fame" },
+                 { to: "/shop", icon: ShoppingBag, title: "Shop" },
+                 { to: "/profile", icon: Settings, title: "Settings" },
+               ].map((action, idx) => (
+                 <Link
+                   key={idx}
+                   to={action.to}
+                   className="flex flex-col items-start p-5 bg-navy-900 border border-navy-700/50 rounded-2xl hover:bg-navy-800 transition-all group overflow-hidden relative"
+                 >
+                   <div className="absolute -right-2 -bottom-2 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity">
+                      <action.icon size={80} />
+                   </div>
+                   <div className="p-2.5 bg-navy-800 border border-navy-700/50 rounded-xl group-hover:border-navy-600 text-text-secondary group-hover:text-cyan-400 transition-all mb-4">
+                     <action.icon size={20} />
+                   </div>
+                   <span className="text-xs font-bold text-text-primary uppercase tracking-widest">{action.title}</span>
+                 </Link>
+               ))}
+             </div>
           </div>
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-2 gap-3 md:gap-4"
-          >
-            {[
-              {
-                to: "/wallet",
-                icon: Trophy,
-                title: "Recharge",
-                locked: false
-              },
-              {
-                to: "/wallet",
-                icon: Send,
-                title: "Transfer",
-                locked: user && getVIPLevel(user).level < 1 && getUserLevelAndXP(user).currentLevel < 5 ? "Lvl 5" : false
-              },
-              {
-                to: "/leaderboard",
-                icon: Crown,
-                title: "Ranks",
-                locked: false
-              },
-              {
-                to: "/scorecard",
-                icon: BookOpen,
-                title: "Stats",
-                locked: false
-              },
-            ].map((action, idx) => (
-              <motion.div variants={itemVariants} key={idx}>
-                <Link
-                  to={action.to}
-                  className={cn(
-                    "group rounded-2xl p-4 bg-bg-surface border border-border-main hover:border-text-secondary/50 transition-all flex flex-col items-center justify-center text-center h-28 relative overflow-hidden",
-                    action.locked && "opacity-60 grayscale"
-                  )}
-                >
-                  <action.icon className="w-6 h-6 mb-3 text-text-secondary group-hover:text-text-primary transition-colors" strokeWidth={1.5} />
-                  <span className="block font-bold text-text-primary text-sm tracking-tight relative z-10">
-                      {action.title}
-                  </span>
-                  {action.locked && (
-                     <div className="absolute inset-0 bg-bg-main/80 backdrop-blur-[2px] flex items-center justify-center flex-col gap-1 z-20">
-                         <Lock className="w-4 h-4 text-text-secondary" />
-                         <span className="text-[9px] font-black uppercase text-text-secondary tracking-widest">{action.locked}</span>
-                     </div>
-                  )}
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
+          <div className="pt-4">
+             <ResourceCollector />
+          </div>
         </div>
       </div>
     </motion.div>

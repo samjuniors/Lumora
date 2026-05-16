@@ -73,8 +73,6 @@ export const AIPet = () => {
     }
   }, [messages, isOpen]);
 
-  if (!isStudent) return null;
-
   const handleOpen = () => {
     playSound('popOpen');
     setCurrentTip(null);
@@ -172,6 +170,8 @@ export const AIPet = () => {
       playSound('notification');
     }
   };
+
+  if (!isStudent) return null;
 
   return (
     <>

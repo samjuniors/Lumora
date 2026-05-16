@@ -23,34 +23,41 @@ export const Navbar = () => {
       <Link 
         to={to} 
         className={cn(
-          "flex items-center gap-2 px-4 py-2 my-1.5 rounded-full text-sm font-bold transition-all relative group",
+          "flex items-center gap-2.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all group relative",
           isActive 
-            ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" 
+            ? "text-brand-gold bg-brand-gold/5" 
             : highlighted 
-              ? "text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20 ring-1 ring-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] inset-shadow-sm" 
+              ? "text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20" 
               : "text-text-secondary hover:text-white hover:bg-white/5"
         )}
       >
-        <Icon className={cn("h-4 w-4 relative z-10 transition-transform group-hover:-translate-y-0.5 duration-300", isActive ? "text-brand-gold" : highlighted ? "text-brand-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse" : "opacity-70")} />
-        <span className="relative z-10">{children}</span>
+        <Icon className={cn("h-4 w-4 transition-transform group-hover:-translate-y-0.5", isActive ? "text-brand-gold" : "opacity-70")} />
+        <span>{children}</span>
+        {isActive && (
+          <motion.div 
+            layoutId="nav-active"
+            className="absolute inset-0 border-b-2 border-brand-gold/50 rounded-lg pointer-events-none"
+            initial={false}
+          />
+        )}
       </Link>
     );
   };
 
   return (
     <>
-      <nav className="bg-[#0A0F1A]/85 backdrop-blur-xl fixed top-0 w-full z-[120] border-b border-white/10 transition-all">
-        <div className="container mx-auto px-4 lg:px-8 max-w-[1400px]">
+      <nav className="glass-dark fixed top-0 w-full z-[120] transition-all">
+        <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
           <div className="flex h-16 items-center justify-between">
             {/* Left: Logo */}
-            <div className="flex-1 flex justify-start pl-2 lg:ml-[35px] lg:mr-[48px] lg:max-w-[251px]">
-              <Link to="/dashboard" className="inline-flex items-center group transition-transform hover:opacity-90 active:scale-95">
-                <Logo className="w-32 md:w-40 lg:w-48 h-auto text-white ml-1" />
+            <div className="flex-shrink-0">
+              <Link to="/dashboard" className="flex items-center group transition-transform active:scale-95">
+                <Logo className="w-32 lg:w-40 h-auto text-white" />
               </Link>
             </div>
 
             {/* Center: Navigation Links */}
-            <div className="hidden lg:flex items-center justify-center space-x-1 px-3 py-1.5 bg-white/5 border border-white/5 rounded-full shadow-inner backdrop-blur-md lg:mr-[70px]">
+            <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
               {(user.role === 'admin' || user.role === 'superadmin') ? (
                 <>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
@@ -71,40 +78,36 @@ export const Navbar = () => {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex-1 flex items-center justify-end gap-3 sm:gap-4 pr-2 lg:mr-[50px] -ml-[11px] mr-[50px]">
+            <div className="flex items-center gap-3">
                 <button 
                   onClick={() => setShowInvite(true)}
-                  className="hidden lg:flex items-center gap-2 bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full hover:bg-brand-gold/20 transition-colors border border-brand-gold/20 font-bold text-xs ring-1 ring-brand-gold/10 shadow-sm"
+                  className="hidden lg:flex items-center gap-2 bg-brand-gold text-navy-950 px-4 py-1.5 rounded-lg hover:bg-brand-gold-hover transition-colors font-bold text-xs"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Share2 className="h-3.5 w-3.5" />
                   <span>Invite</span>
                 </button>
                 
-                <div className="flex items-center gap-3 border-l border-white/10 pl-3 sm:pl-4 ml-1">
+                <div className="flex items-center gap-2 sm:gap-3 border-l border-white/10 pl-3 sm:pl-4">
                   {(user.role === 'admin' || user.role === 'superadmin') && (
-                    <div className="hidden sm:flex items-center gap-2">
-                      <Link to="/admin?tab=invites" className="flex w-9 h-9 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 transition-colors rounded-full" title="Invites">
+                    <div className="hidden sm:flex items-center gap-1">
+                      <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-lg" title="Invites">
                         <UserPlus className="h-4 w-4" />
                       </Link>
-                      <Link to="/admin?tab=settings" className="flex w-9 h-9 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 transition-colors rounded-full" title="System Settings">
+                      <Link to="/admin?tab=settings" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-lg" title="System Settings">
                         <Settings className="h-4 w-4" />
                       </Link>
                     </div>
                   )}
-                  <Link to="/leaderboard?tab=diamonds" className="flex w-9 h-9 items-center justify-center text-brand-gold hover:bg-brand-gold/10 transition-colors rounded-full bg-brand-gold/5 border border-brand-gold/10 group" title="Hall of Fame">
-                    <Trophy className="h-4 w-4 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-110" />
+                  <Link to="/leaderboard?tab=diamonds" className="flex w-8 h-8 items-center justify-center text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-lg group" title="Hall of Fame">
+                    <Trophy className="h-4 w-4 transition-transform group-hover:scale-110" />
                   </Link>
-                  <div className="flex items-center">
-                    <NotificationDropdown />
-                  </div>
-                  <Link to="/profile" className="ml-2 w-9 h-9 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform ring-2 ring-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] shrink-0" title="Profile">
+                  <NotificationDropdown />
+                  <Link to="/profile" className="ml-1 w-8 h-8 rounded-full border-2 border-brand-gold overflow-hidden hover:scale-105 active:scale-95 transition-transform shadow-glow-gold">
                     {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
-                      <img src={user.avatar} key={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                    ) : user.avatar ? (
-                      <span className="text-sm font-bold">{user.avatar}</span>
+                      <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-black text-xs uppercase">
-                        {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      <div className="w-full h-full flex items-center justify-center bg-brand-gold text-navy-950 font-bold text-xs">
+                        {user.name?.charAt(0) || 'U'}
                       </div>
                     )}
                   </Link>
@@ -114,25 +117,22 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <div className={cn(
-        "fixed bottom-0 left-0 right-0 z-[999] px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-2 md:hidden",
-        "transition-all duration-300"
-      )}>
-        <div className="bg-[#0A0F1A]/95 backdrop-blur-xl border border-white/10 rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center justify-between w-full h-[72px] px-2 relative">
+      {/* Mobile Bottom Navigation - Compact premium app style */}
+      <div className="fixed bottom-0 left-0 right-0 z-[120] md:hidden px-4 pb-6">
+        <div className="glass-dark rounded-2xl shadow-2xl flex items-center justify-around h-16 w-full max-w-md mx-auto px-2 border-white/10 relative">
           {(user.role === 'admin' || user.role === 'superadmin') ? (
             <>
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} isDanger />
+              <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=recharges" icon={Wallet} label="Economy" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=reviews" icon={Zap} label="Pending" currentPath={location.pathname} />
+              <MobileNavLink to="/admin?tab=reviews" icon={Zap} label="Queue" currentPath={location.pathname} />
             </>
           ) : (
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Home" currentPath={location.pathname} />
-              <MobileNavLink to="/assignments" icon={Calendar} label="Mission" currentPath={location.pathname} />
-              <MobileNavLink to="/syndicates" icon={Shield} label="Network" currentPath={location.pathname} isCenterFloating />
+              <MobileNavLink to="/assignments" icon={Calendar} label="Missions" currentPath={location.pathname} />
+              <MobileNavLink to="/syndicates" icon={Shield} label="Syndicate" currentPath={location.pathname} isCenter />
               <MobileNavLink to="/badges" icon={Award} label="Awards" currentPath={location.pathname} />
               <MobileNavLink to="/shop" icon={ShoppingBag} label="Shop" currentPath={location.pathname} />
             </>
@@ -145,76 +145,36 @@ export const Navbar = () => {
   );
 };
 
-const MobileNavLink = ({ to, icon: Icon, label, currentPath, isDanger, shadowColor, isCenterFloating, highlighted }: { to: string, icon: any, label: string, currentPath: string, isDanger?: boolean, shadowColor?: string, isCenterFloating?: boolean, highlighted?: boolean }) => {
+const MobileNavLink = ({ to, icon: Icon, label, currentPath, isCenter }: { to: string, icon: any, label: string, currentPath: string, isCenter?: boolean }) => {
   const location = useLocation();
   const [targetPath, targetSearch] = to.split('?');
   const isActive = 
     (currentPath === targetPath && (!targetSearch || location.search.includes(targetSearch))) ||
     (to === '/dashboard' && (currentPath === '/' || currentPath === ''));
   
-  if (isCenterFloating) {
-    return (
-      <Link
-        to={to}
-        className="relative flex flex-col items-center justify-center transition-all duration-300 z-20 mx-1"
-      >
-        <div className={cn(
-          "flex items-center justify-center rounded-full shadow-lg p-3.5 sm:p-4 border transition-all duration-300 -translate-y-6 md:-translate-y-8",
-          isActive
-            ? "bg-brand-gold border-brand-gold shadow-[0_12px_30px_rgba(212,175,55,0.5)] scale-110"
-            : highlighted
-              ? "bg-gradient-to-br from-brand-gold/90 to-amber-500 border-brand-gold/30 shadow-[0_0_20px_rgba(212,175,55,0.4)] hover:scale-105 animate-pulse-glow"
-              : isDanger
-                ? "bg-rose-500 border-rose-500 shadow-[0_12px_30px_rgba(225,29,72,0.5)]"
-                : "bg-[#0A0F1A] border-white/10 shadow-black/10 hover:scale-105"
-        )}>
-          <Icon className={cn("h-6 w-6 sm:h-7 sm:w-7", isActive || isDanger || highlighted ? "text-white" : "text-[#4A5D7A]")} strokeWidth={isActive || highlighted ? 3 : 2.5} />
-        </div>
-        <span 
-          className={cn(
-            "absolute bottom-0 text-[10px] font-black uppercase tracking-widest transition-all duration-300",
-            isActive || isDanger || highlighted ? "text-brand-gold translate-y-0 text-shadow-sm shadow-black" : "text-text-secondary opacity-40 translate-y-1"
-          )}
-        >
-          {label}
-        </span>
-      </Link>
-    );
-  }
-
   return (
     <Link 
       to={to} 
       className={cn(
-        "relative flex flex-col items-center justify-center transition-all duration-300 h-full flex-1 group",
-        isActive 
-          ? (isDanger ? "text-rose-600" : "text-brand-gold") 
-          : "text-text-secondary hover:text-brand-slate"
+        "flex flex-col items-center justify-center flex-1 transition-all relative py-1",
+        isActive ? "text-brand-gold" : "text-text-secondary"
       )}
     >
-      <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pt-1">
-        <div className={cn(
-          "p-2 rounded-2xl transition-all duration-300",
-          isActive ? "bg-brand-gold/10" : "group-hover:bg-bg-main"
-        )}>
-          <Icon 
-            className={cn(
-              "h-5 w-5 transition-all duration-300", 
-              isActive ? "scale-110" : "scale-100"
-            )} 
-            strokeWidth={isActive ? 2.5 : 2} 
-          />
-        </div>
-        
-        <span 
-          className={cn(
-            "text-[9px] font-black tracking-widest uppercase mt-0.5 transition-all duration-300",
-            isActive ? "opacity-100" : "opacity-0 translate-y-1"
-          )}
-        >
-          {label}
-        </span>
+      {isCenter && (
+        <div className="absolute -top-4 w-12 h-1 bg-brand-gold rounded-full opacity-50 blur-sm md:hidden" />
+      )}
+      <div className={cn(
+        "p-1.5 rounded-lg transition-all",
+        isActive ? "bg-brand-gold/10" : ""
+      )}>
+        <Icon className={cn("h-5 w-5", isActive ? "stroke-[2.5]" : "stroke-[2]")} />
       </div>
+      <span className={cn(
+        "text-[10px] font-bold tracking-tight transition-all",
+        isActive ? "opacity-100" : "opacity-60"
+      )}>
+        {label}
+      </span>
     </Link>
   );
 };
