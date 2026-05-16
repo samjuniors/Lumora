@@ -85,6 +85,8 @@ export const Login = () => {
     } catch (err: any) {
       if (err.code === 'auth/operation-not-allowed') {
         setErrorMsg('Authentication provider not enabled. Please enable "Email/Password" and "Google" in your Firebase Console Settings.');
+      } else if (err.code === 'auth/email-already-in-use') {
+        setErrorMsg('This email is already in use. Please log in instead.');
       } else {
         setErrorMsg(err.message || 'Authentication failed');
       }
