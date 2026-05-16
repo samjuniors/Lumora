@@ -304,7 +304,7 @@ const AppRoutes = () => {
         }}
       />
       <Navbar />
-      <main className="flex-grow w-full relative pb-[calc(136px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(120px+env(safe-area-inset-top))] md:pt-[calc(192px+env(safe-area-inset-top))] overflow-x-hidden">
+      <main className="flex-grow w-full relative pb-[calc(136px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(72px+env(safe-area-inset-top))] md:pt-[calc(88px+env(safe-area-inset-top))] overflow-x-hidden">
         <div className="container mx-auto px-4 py-4 md:py-8 min-h-full">
           <AnimatedRoutes />
           <DailyRewardModal />

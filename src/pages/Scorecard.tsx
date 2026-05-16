@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { dbService } from '../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { Assignment, Submission, User } from '../types';
-import { ArrowLeft, Award, BookOpen, Target, Activity, LayoutGrid, ChevronDown, ChevronUp, Clock, AlertTriangle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Award, BookOpen, Target, Activity, LayoutGrid, ChevronDown, ChevronUp, Clock, AlertTriangle, CheckCircle, Trophy } from 'lucide-react';
 import { cn, getShortId } from '../lib/utils';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'motion/react';
@@ -102,6 +102,7 @@ export const Scorecard = () => {
   const navigate = useNavigate();
   
   const [targetStudent, setTargetStudent] = useState<User | null>(null);
+  const [globalRank, setGlobalRank] = useState<number | null>(null);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,6 +137,12 @@ export const Scorecard = () => {
 
         const studentSubmissions = await dbService.getSubmissionsByStudent(viewingUserId);
         setSubmissions(studentSubmissions);
+
+        // Calculate Rank based on lifetime diamonds (standard Hall of Fame metric)
+        const allStudents = await dbService.getUsersByRole('student');
+        const sorted = allStudents.sort((a, b) => (b.lifetimeDiamonds || 0) - (a.lifetimeDiamonds || 0));
+        const rank = sorted.findIndex(s => s.id === viewingUserId) + 1;
+        setGlobalRank(rank > 0 ? rank : null);
         
       } catch (err: any) {
         handleFirestoreError(err, OperationType.GET, 'scorecard/data');
@@ -263,7 +270,7 @@ export const Scorecard = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="max-w-6xl mx-auto px-4 pb-24 space-y-6 md:space-y-8 pt-4 md:pt-0"
+      className="max-w-6xl mx-auto px-4 pb-8 space-y-6 md:space-y-8 pt-4 md:pt-0"
     >
       <button onClick={() => navigate(user?.role === 'student' ? '/profile' : '/admin')} className="flex items-center gap-2 text-text-secondary hover:text-text-primary transition font-bold bg-bg-surface border border-border-main hover:bg-bg-main w-fit px-4 py-2.5 rounded-xl shadow-sm group">
          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back
@@ -293,7 +300,14 @@ export const Scorecard = () => {
           <div className="flex-1 mt-2 md:mt-4 text-center md:text-left">
             <div className="inline-block px-3 py-1 bg-border-main text-text-secondary rounded-lg text-xs font-black uppercase tracking-widest mb-3 border border-border-main">Official Transcript</div>
             <h1 className="text-3xl md:text-4xl font-black text-text-primary mb-2 line-clamp-1">{targetStudent.name}</h1>
-            <p className="text-sm text-text-secondary font-medium">Student ID: {getShortId(targetStudent.id)}</p>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <p className="text-sm text-text-secondary font-medium">Student ID: {getShortId(targetStudent.id)}</p>
+              {globalRank && (
+                <div className="flex items-center gap-1.5 bg-brand-gold/10 text-brand-gold px-2.5 py-1 rounded-lg border border-brand-gold/20 text-[10px] font-black uppercase tracking-tighter">
+                  <Trophy className="w-3.5 h-3.5" /> Global Rank #{globalRank}
+                </div>
+              )}
+            </div>
           </div>
           
           <div className="shrink-0 bg-gradient-to-br from-[#0A1128] to-indigo-950 text-bg-main p-6 w-full md:w-56 rounded-2xl md:rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.15)] border border-indigo-500/20 flex flex-col items-center justify-center relative overflow-hidden group">

@@ -36,11 +36,22 @@ import {
   getPerformanceBadge,
 } from "../lib/performance";
 
+let cachedAssignments: Assignment[] | null = null;
+let cachedEnrollments: Enrollment[] | null = null;
+let lastUserId: string | null = null;
+
 export const Dashboard = () => {
   const { user, updateResources } = useAuth();
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  
+  if (user && lastUserId !== user.id) {
+    cachedAssignments = null;
+    cachedEnrollments = null;
+    lastUserId = user.id;
+  }
+
+  const [assignments, setAssignments] = useState<Assignment[]>(cachedAssignments || []);
+  const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>(cachedEnrollments || []);
+  const [isLoading, setIsLoading] = useState(!cachedAssignments);
 
   const levelData = getUserLevelAndXP(user);
   const { currentLevel, xpCurrent, xpMax, xpProgress, nextRewardLevel } = levelData;
@@ -164,12 +175,21 @@ export const Dashboard = () => {
       
       // Throttle: once every 6 hours
       const SIX_HOURS = 6 * 60 * 60 * 1000;
-      if (user.lastMissedSweep && (Date.now() - user.lastMissedSweep) < SIX_HOURS) {
+      const now = Date.now();
+      
+      // Use both DB state and local storage as fail-safe against quota looping
+      const localLastSweep = localStorage.getItem(`last_sweep_${user.id}`);
+      const lastSweepTime = Math.max(user.lastMissedSweep || 0, localLastSweep ? parseInt(localLastSweep) : 0);
+      
+      if (lastSweepTime && (now - lastSweepTime) < SIX_HOURS) {
         return;
       }
 
       if (sweepPerformed.current) return;
       sweepPerformed.current = true;
+      
+      // Set aggressively to prevent quota death loops if DB writes start throwing
+      localStorage.setItem(`last_sweep_${user.id}`, now.toString());
 
       try {
         // 1. Fetch relevant assignments
@@ -311,22 +331,24 @@ export const Dashboard = () => {
 
           const enrollments = await dbService.getEnrollmentsByStudent(user.id);
           setStudentEnrollments(enrollments);
+          cachedEnrollments = enrollments;
         }
         setAssignments(allAssignments);
+        cachedAssignments = allAssignments;
       } catch (err) {
         console.error('Fetch assignments error:', err);
       }
     };
 
     const loadData = async () => {
-      setIsLoading(true);
+      if (assignments.length === 0) setIsLoading(true);
       await fetchAssignments();
       setIsLoading(false);
       // Process missed assignments in background
       processMissedAssignments().catch(err => console.error("Background sweep failed:", err));
     }
     loadData();
-  }, [user?.id, user?.role, user?.lastMissedSweep, user?.coins, user?.xp, user?.email, updateResources]);
+  }, [user?.id, user?.role, user?.email]);
 
   const groupedAssignments = useMemo(() => {
     const groups: Record<string, Assignment[]> = {};

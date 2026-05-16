@@ -87,8 +87,8 @@ export const NotificationDropdown = () => {
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-            "w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 flex items-center justify-center transition-all duration-300 rounded-xl relative",
-            unreadCount > 0 ? "bg-brand-gold-hover text-bg-main shadow-lg shadow-indigo-200" : "bg-bg-main text-text-secondary hover:text-brand-gold hover:bg-brand-gold-secondary-hover"
+            "w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center transition-all duration-300 rounded-full relative group shadow-sm",
+            unreadCount > 0 ? "bg-brand-gold text-[#0A0F1A] shadow-lg shadow-brand-gold/20 ring-2 ring-brand-gold" : "bg-transparent text-text-secondary hover:text-white hover:bg-white/10"
         )}
         title="Notifications"
       >
@@ -97,7 +97,7 @@ export const NotificationDropdown = () => {
            transition={unreadCount > 0 ? { repeat: Infinity, duration: 1.5, repeatDelay: 3, ease: 'easeInOut' } : {}}
            style={{ originX: 0.5, originY: 0 }}
         >
-            <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
+            <Bell className="h-4 w-4 sm:h-[18px] sm:w-[18px]" />
         </motion.div>
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-[20px] sm:min-w-[24px] sm:h-[24px] bg-rose-500 text-bg-main text-[12px] sm:text-[14px] font-black flex items-center justify-center rounded-full border-2 border-white px-1">

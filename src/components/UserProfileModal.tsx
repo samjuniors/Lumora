@@ -26,22 +26,26 @@ export const UserProfileModal = ({
   const { currentLevel } = getUserLevelAndXP(profileUser);
   const perfScore = calculatePerformanceScore(profileUser);
   const badge = getPerformanceBadge(perfScore);
-  const [isFollowing, setIsFollowing] = useState(
-    currentUser?.followingIds?.includes(profileUser.id) || false
-  );
+  const isFollowing = currentUser?.followingIds?.includes(profileUser.id) || false;
+  const [loading, setLoading] = useState(false);
 
   const isFriend = currentUser?.id === profileUser.id || 
-                  currentUser?.followingIds?.includes(profileUser.id) || 
+                  isFollowing || 
                   currentUser?.followerIds?.includes(profileUser.id);
 
   const handleFollowToggle = async () => {
-    if (!currentUser) return;
-    if (isFollowing) {
-      await dbService.unfollowUser(currentUser.id, profileUser.id);
-      setIsFollowing(false);
-    } else {
-      await dbService.followUser(currentUser.id, profileUser.id);
-      setIsFollowing(true);
+    if (loading || !currentUser) return;
+    setLoading(true);
+    try {
+      if (isFollowing) {
+        await dbService.unfollowUser(currentUser.id, profileUser.id);
+      } else {
+        await dbService.followUser(currentUser.id, profileUser.id);
+      }
+    } catch (error) {
+      console.error("Follow error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -124,14 +128,18 @@ export const UserProfileModal = ({
               <div className="flex gap-2 w-full mb-6">
                 <button 
                   onClick={handleFollowToggle}
+                  disabled={loading}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all border-2",
+                    loading ? "opacity-50 cursor-not-allowed" : "",
                     isFollowing 
                       ? "bg-bg-surface border-border-main text-text-secondary hover:text-red-500 hover:border-red-200" 
                       : "bg-[#1A2B48] border-[#1A2B48] text-[#D4AF37] hover:bg-[#0A1128]"
                   )}
                 >
-                  {isFollowing ? (
+                  {loading ? (
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  ) : isFollowing ? (
                     <><UserCheck className="w-4 h-4" /> Following</>
                   ) : (
                     <><UserPlus className="w-4 h-4" /> Follow</>

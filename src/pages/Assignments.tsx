@@ -144,12 +144,23 @@ const MissionCard = ({ assignment, user, getAssignmentStatus, onEdit }: { assign
   );
 };
 
+let cachedAllAssignments: Assignment[] | null = null;
+let cachedAllEnrollments: Enrollment[] | null = null;
+let lastAssignmentsUserId: string | null = null;
+
 export const Assignments = () => {
   const { user } = useAuth();
+  
+  if (user && lastAssignmentsUserId !== user.id) {
+     cachedAllAssignments = null;
+     cachedAllEnrollments = null;
+     lastAssignmentsUserId = user.id;
+  }
+
   const navigate = useNavigate();
   const location = useLocation();
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>([]);
+  const [assignments, setAssignments] = useState<Assignment[]>(cachedAllAssignments || []);
+  const [studentEnrollments, setStudentEnrollments] = useState<Enrollment[]>(cachedAllEnrollments || []);
   const [showModal, setShowModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
@@ -174,13 +185,13 @@ export const Assignments = () => {
 
   useEffect(() => {
     fetchAssignments();
-  }, [user]);
+  }, [user?.id, user?.role, user?.email]);
 
   const [sortBy, setSortBy] = useState<string>('campaign');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!cachedAllAssignments);
 
   const fetchAssignments = async () => {
-    setIsLoading(true);
+    if (assignments.length === 0 && !cachedAllAssignments) setIsLoading(true);
     try {
       let allAssignments = await dbService.getAllAssignments();
       
@@ -203,9 +214,11 @@ export const Assignments = () => {
 
         const enrollments = await dbService.getEnrollmentsByStudent(user.id);
         setStudentEnrollments(enrollments);
+        cachedAllEnrollments = enrollments;
       }
       
       setAssignments(allAssignments);
+      cachedAllAssignments = allAssignments;
     } catch (error: any) {
       handleFirestoreError(error, OperationType.LIST, 'assignments');
     } finally {
@@ -330,7 +343,7 @@ export const Assignments = () => {
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: -10 }}
         transition={{ duration: 0.3 }}
-        className="max-w-6xl mx-auto px-4 space-y-4 md:space-y-8 pb-20"
+        className="max-w-6xl mx-auto px-4 space-y-4 md:space-y-8 pb-8"
       >
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-4 md:mb-8 gap-4 md:gap-6 border-b border-border-main pb-4 md:pb-6">
         <div>

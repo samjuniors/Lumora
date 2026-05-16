@@ -9,7 +9,7 @@ export const Badges = () => {
     const [activeTab, setActiveTab] = useState<'badges' | 'achievements'>('badges');
 
     return (
-        <div className="max-w-6xl mx-auto w-full space-y-6 pb-24">
+        <div className="max-w-6xl mx-auto w-full space-y-6 pb-8">
             <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

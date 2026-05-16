@@ -18,24 +18,20 @@ export const Navbar = () => {
 
   const NavLink = ({ to, icon: Icon, children, highlighted }: { to: string, icon: any, children: React.ReactNode, highlighted?: boolean }) => {
     const [targetPath, targetSearch] = to.split('?');
-    const isCurrentSearchEmpty = !location.search || location.search === '?';
-    const isActive = location.pathname === targetPath && 
-      (targetSearch 
-        ? location.search.includes(targetSearch) 
-        : (isCurrentSearchEmpty || (targetPath === '/admin' && location.search.includes('tab=overview'))));
+    const isActive = location.pathname === targetPath && (!targetSearch || location.search.includes(targetSearch));
     return (
       <Link 
         to={to} 
         className={cn(
-          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all relative overflow-hidden group",
+          "flex items-center gap-2 px-4 py-2 my-1.5 rounded-full text-sm font-bold transition-all relative group",
           isActive 
-            ? "bg-brand-gold/10 text-brand-gold" 
+            ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" 
             : highlighted 
-              ? "text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20 border border-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] shadow-inner" 
-              : "text-text-secondary hover:text-text-primary hover:bg-bg-main"
+              ? "text-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20 ring-1 ring-brand-gold/30 shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] inset-shadow-sm" 
+              : "text-text-secondary hover:text-white hover:bg-white/5"
         )}
       >
-        <Icon className={cn("h-6 w-6 relative z-10", isActive ? "text-brand-gold" : highlighted ? "text-brand-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse" : "opacity-70")} />
+        <Icon className={cn("h-4 w-4 relative z-10 transition-transform group-hover:-translate-y-0.5 duration-300", isActive ? "text-brand-gold" : highlighted ? "text-brand-gold drop-shadow-[0_0_8px_rgba(212,175,55,0.8)] animate-pulse" : "opacity-70")} />
         <span className="relative z-10">{children}</span>
       </Link>
     );
@@ -43,16 +39,18 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="bg-[#0A0F1A]/95 backdrop-blur-xl fixed top-0 w-full z-[120] border-b border-white/10 pt-[env(safe-area-inset-top)] transition-all">
-        <div className="container mx-auto px-6 sm:px-10 max-w-5xl">
-          <div className="flex h-20 md:h-36 justify-between items-center">
-            <div className="flex-1 flex justify-start">
-              <Link to="/dashboard" className="inline-flex items-center group transition-all hover:scale-105 active:scale-95">
-                <Logo className="w-42 sm:w-54 md:w-72 lg:w-[420px] h-auto text-white drop-shadow-[0_16px_80px_rgba(255,255,255,0.35)] min-w-[165px]" />
+      <nav className="bg-[#0A0F1A]/85 backdrop-blur-xl fixed top-0 w-full z-[120] border-b border-white/10 transition-all">
+        <div className="container mx-auto px-4 lg:px-8 max-w-[1400px]">
+          <div className="flex h-16 items-center justify-between">
+            {/* Left: Logo */}
+            <div className="flex-1 flex justify-start pl-2 lg:ml-[35px] lg:mr-[48px] lg:max-w-[251px]">
+              <Link to="/dashboard" className="inline-flex items-center group transition-transform hover:opacity-90 active:scale-95">
+                <Logo className="w-32 md:w-40 lg:w-48 h-auto text-white ml-1" />
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center space-x-1 lg:space-x-2 mr-auto">
+            {/* Center: Navigation Links */}
+            <div className="hidden lg:flex items-center justify-center space-x-1 px-3 py-1.5 bg-white/5 border border-white/5 rounded-full shadow-inner backdrop-blur-md lg:mr-[70px]">
               {(user.role === 'admin' || user.role === 'superadmin') ? (
                 <>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
@@ -65,54 +63,53 @@ export const Navbar = () => {
                 <>
                   <NavLink to="/dashboard" icon={BookOpen}>Home</NavLink>
                   <NavLink to="/assignments" icon={Calendar}>Mission</NavLink>
-                  <NavLink to="/syndicates" icon={Shield} highlighted>Network</NavLink>
+                  <NavLink to="/syndicates" icon={Shield}>Network</NavLink>
                   <NavLink to="/badges" icon={Award}>Awards</NavLink>
                   <NavLink to="/shop" icon={ShoppingBag}>Shop</NavLink>
                 </>
               )}
             </div>
 
-              <div className="flex items-center gap-1 sm:gap-2 md:gap-4 shrink-0 flex-wrap justify-end">
+            {/* Right: Actions */}
+            <div className="flex-1 flex items-center justify-end gap-3 sm:gap-4 pr-2 lg:mr-[41px]">
                 <button 
                   onClick={() => setShowInvite(true)}
-                  className="hidden lg:flex items-center gap-2 bg-brand-gold/10 text-brand-gold px-3.5 py-1.5 rounded-xl hover:bg-brand-gold/20 transition-all border border-brand-gold/20 font-bold text-xs"
+                  className="hidden lg:flex items-center gap-2 bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full hover:bg-brand-gold/20 transition-colors border border-brand-gold/20 font-bold text-xs ring-1 ring-brand-gold/10 shadow-sm"
                 >
-                  <Share2 className="h-5 w-5" />
+                  <Share2 className="h-4 w-4" />
                   <span>Invite</span>
                 </button>
                 
-                <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4 pl-1 sm:pl-4 shrink-0">
+                <div className="flex items-center gap-3 border-l border-white/10 pl-3 sm:pl-4 ml-1">
                   {(user.role === 'admin' || user.role === 'superadmin') && (
-                    <div className="flex items-center gap-1 sm:gap-2">
-                      <Link to="/admin?tab=invites" className="flex w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 items-center justify-center bg-bg-main/50 text-text-secondary hover:text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30" title="Invites">
-                        <UserPlus className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <div className="hidden sm:flex items-center gap-2">
+                      <Link to="/admin?tab=invites" className="flex w-9 h-9 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 transition-colors rounded-full" title="Invites">
+                        <UserPlus className="h-4 w-4" />
                       </Link>
-                      <Link to="/admin?tab=settings" className="flex w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 items-center justify-center bg-bg-main/50 text-text-secondary hover:text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30" title="System Settings">
-                        <Settings className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <Link to="/admin?tab=settings" className="flex w-9 h-9 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 transition-colors rounded-full" title="System Settings">
+                        <Settings className="h-4 w-4" />
                       </Link>
                     </div>
                   )}
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Link to="/leaderboard?tab=diamonds" className="flex w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 items-center justify-center bg-bg-main text-brand-gold hover:bg-brand-gold/10 transition-all rounded-xl border border-border-main/30 group" title="Hall of Fame">
-              <Trophy className="h-5 w-5 sm:h-5 sm:w-5 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-110" />
-            </Link>
-            <div className="relative pr-3 sm:pr-4 border-r border-white/10 flex items-center">
-              <NotificationDropdown />
-            </div>
-            <Link to="/profile" className="w-10 h-10 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-110 active:scale-95 transition-all ring-[2.5px] ring-[#D4AF37] ring-offset-[2px] ring-offset-[#0A0F1A] shadow-[0_0_20px_rgba(212,175,55,0.25)]" title="Profile">
-                      {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
-                        <img src={user.avatar} key={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : user.avatar ? (
-                        <span className="text-lg sm:text-lg md:text-xl">{user.avatar}</span>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-bold text-xs sm:text-sm uppercase">
-                          {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
-                        </div>
-                      )}
-                    </Link>
+                  <Link to="/leaderboard?tab=diamonds" className="flex w-9 h-9 items-center justify-center text-brand-gold hover:bg-brand-gold/10 transition-colors rounded-full bg-brand-gold/5 border border-brand-gold/10 group" title="Hall of Fame">
+                    <Trophy className="h-4 w-4 drop-shadow-[0_0_8px_rgba(212,175,55,0.4)] transition-transform group-hover:scale-110" />
+                  </Link>
+                  <div className="flex items-center">
+                    <NotificationDropdown />
                   </div>
+                  <Link to="/profile" className="ml-2 w-9 h-9 rounded-full bg-[#1A2B48] flex items-center justify-center overflow-hidden hover:scale-105 active:scale-95 transition-transform ring-2 ring-[#D4AF37] shadow-[0_0_15px_rgba(212,175,55,0.15)] shrink-0" title="Profile">
+                    {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
+                      <img src={user.avatar} key={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    ) : user.avatar ? (
+                      <span className="text-sm font-bold">{user.avatar}</span>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-brand-gold/10 text-brand-gold font-black text-xs uppercase">
+                        {user.name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                      </div>
+                    )}
+                  </Link>
                 </div>
-              </div>
+            </div>
           </div>
         </div>
       </nav>
@@ -122,7 +119,7 @@ export const Navbar = () => {
         "fixed bottom-0 left-0 right-0 z-[999] px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-2 md:hidden",
         "transition-all duration-300"
       )}>
-        <div className="bg-[#0A0F1A]/95 backdrop-blur-xl border border-white/10 rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center justify-between w-full h-18 px-2 relative">
+        <div className="bg-[#0A0F1A]/95 backdrop-blur-xl border border-white/10 rounded-[28px] shadow-[0_12px_40px_rgba(0,0,0,0.5)] flex items-center justify-between w-full h-[72px] px-2 relative">
           {(user.role === 'admin' || user.role === 'superadmin') ? (
             <>
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
@@ -151,14 +148,9 @@ export const Navbar = () => {
 const MobileNavLink = ({ to, icon: Icon, label, currentPath, isDanger, shadowColor, isCenterFloating, highlighted }: { to: string, icon: any, label: string, currentPath: string, isDanger?: boolean, shadowColor?: string, isCenterFloating?: boolean, highlighted?: boolean }) => {
   const location = useLocation();
   const [targetPath, targetSearch] = to.split('?');
-  const isCurrentSearchEmpty = !location.search || location.search === '?';
-  const isPathActive = currentPath === targetPath && 
-    (targetSearch 
-      ? location.search.includes(targetSearch) 
-      : (isCurrentSearchEmpty || (targetPath === '/admin' && location.search.includes('tab=overview'))));
-      
-  const isActive = isPathActive || 
-                  (to === '/dashboard' && (currentPath === '/' || currentPath === ''));
+  const isActive = 
+    (currentPath === targetPath && (!targetSearch || location.search.includes(targetSearch))) ||
+    (to === '/dashboard' && (currentPath === '/' || currentPath === ''));
   
   if (isCenterFloating) {
     return (
