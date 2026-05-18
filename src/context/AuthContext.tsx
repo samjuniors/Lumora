@@ -157,9 +157,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (data) {
           if (isSuperAdmin({ ...data, email: activeSessionUser.email || data.email }) && data.role !== 'superadmin') {
             userService.updateUser(activeSessionUser.uid, { role: 'superadmin' });
+            data.role = 'superadmin';
           }
+          
           setUser(data);
           setLoading(false);
+
+          // Background SQL synchronization (Non-blocking migration step)
+          fetch('/api/sync/user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              uid: data.id,
+              email: data.email,
+              name: data.name,
+              role: data.role
+            })
+          }).catch(e => console.warn("Pg Sync Failed:", e));
+
         } else {
           // Guard to prevent concurrent profile creations from rapid re-renders
           if ((window as any)._isInitializingProfile) return;
@@ -195,6 +210,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               };
 
               await userService.createUser(activeSessionUser.uid, newUser);
+
+              // Background SQL synchronization (Non-blocking migration step)
+              fetch('/api/sync/user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  uid: activeSessionUser.uid,
+                  email: activeSessionUser.email,
+                  name: newUser.name,
+                  role: newUser.role
+                })
+              }).catch(e => console.warn("Pg Sync Failed:", e));
+
             } finally {
               (window as any)._isInitializingProfile = false;
             }

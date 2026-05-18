@@ -186,4 +186,49 @@ To prepare the application without breaking its ongoing Firestore functionality:
 2. **Remove Array Mutations on Client:** Patterns utilizing `arrayUnion` or `arrayRemove` (like in following/unfollowing) will become simpler update relationships (`connect`/`disconnect` in Prisma). Avoid adding new complex Array logics inside Firestore.
 3. **Transition to SWR (Stale-While-Revalidate):** Begin gradually changing less-critical real-time components (e.g. Leaderboards, Past Missions) from `subscribe` models to a standard `fetch` + `polling` mechanism that simulates real-time without open WebSockets.
 
+---
+
+## 8. High-Risk Transactional Workflows (Prisma Mapping Guide)
+
+Certain operations in this system require absolute transactional consistency (ACID) to prevent economy dupes or race conditions. When migrating to Prisma, these must explicitly utilize `Prisma.$transaction`.
+
+### 1. The Economy / Wallets (`transferCoins`)
+- **Current Pattern:** Firebase `writeBatch` modifying sender balance, receiver balance, and inserting a `transaction` ledger record.
+- **SQL / Prisma Future:** 
+  ```ts
+  prisma.$transaction(async (tx) => {
+    const sender = await tx.user.update({
+      where: { id: senderId, coins: { gte: amount } }, // Optimistic locking guard
+      data: { coins: { decrement: amount } }
+    });
+    if (!sender) throw new Error("Insufficient funds");
+    
+    await tx.user.update({
+      where: { id: receiverId },
+      data: { coins: { increment: amount } }
+    });
+    
+    await tx.transaction.create({ data: { senderId, receiverId, amount, type: 'transfer' }});
+  })
+  ```
+  *(Note the use of compound conditions `coins: { gte: amount }` natively supported in Postgres to prevent double-spend during race conditions without relying strictly on Isolation Levels).*
+
+### 2. Assignment Submissions (`submitAssignment`)
+- **Current Pattern:** Modifying `enrollments` table, adding to `submissions` table, charging entry fees occasionally from `users`.
+- **SQL / Prisma Future:** This flow connects a User, an Assignment, an Enrollment, and a Submission. `Prisma.$transaction` will allow inserting the submission while synchronously flipping the enrollment status from "active" to "submitted". 
+
+### 3. Grading & Rewards (`gradeSubmission`)
+- **Current Pattern:** Modifies `submissions`, `enrollments`, `users` (reward dispensing), and sends a notification using `writeBatch`.
+- **SQL / Prisma Future:** Relies on sequential updates within `prisma.$transaction`. Rewards must calculate the "Tax" system reliably in memory, then update the balance atomically.
+
+### 4. Syndicate Operations (`joinSyndicate` / `leaveSyndicate`)
+- **Current Pattern:** Array mutations (`arrayUnion`) on the syndicate's `memberIds` list.
+- **SQL / Prisma Future:** Simple relational update connecting/disconnecting the foreign key.
+  ```ts
+  await prisma.user.update({
+    where: { id: userId },
+    data: { syndicate: { connect: { id: syndicateId } } } // or disconnect
+  });
+  ```
+
 *Do NOT migrate the actual data yet, the Firestore environment must still be treated as primary until abstract layers are fully decoupled from SDK listener types.*

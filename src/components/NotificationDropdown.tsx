@@ -8,11 +8,14 @@ import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Notification } from '../types';
+import { useNotifications } from '../hooks/queries/useNotifications';
 
 export const NotificationDropdown = () => {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  
+  const { data: notifications = [], refetch } = useNotifications();
+  
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -25,22 +28,13 @@ export const NotificationDropdown = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const unsubscribe = dbService.subscribeToNotifications(user.id, (data) => {
-      setNotifications(data);
-    });
-
-    return () => unsubscribe();
-  }, [user?.id]);
-
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAllRead = async () => {
     if (!user || notifications.length === 0) return;
     try {
       await dbService.markAllNotificationsRead(user.id);
+      refetch();
       toast.success('All marked as read');
     } catch (err) {
       console.error(err);
@@ -54,7 +48,7 @@ export const NotificationDropdown = () => {
     
     try {
       await dbService.clearAllNotifications(user.id);
-      setNotifications([]);
+      refetch();
       toast.success('All notifications cleared');
     } catch (err) {
       console.error(err);
@@ -66,6 +60,7 @@ export const NotificationDropdown = () => {
     e.stopPropagation();
     try {
       await dbService.deleteNotification(id);
+      refetch();
     } catch (err) {
       console.error(err);
     }
@@ -75,6 +70,7 @@ export const NotificationDropdown = () => {
     e.stopPropagation();
     try {
       await dbService.markNotificationRead(id);
+      refetch();
     } catch (err) {
       console.error(err);
     }

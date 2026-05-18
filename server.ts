@@ -5,6 +5,11 @@ import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
 import webpush from "web-push";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { PrismaClient } from "@prisma/client";
+
+// Global Prisma Client for server operations
+const prisma = new PrismaClient();
+
 
 // VAPID keys for push notifications lazily
 let vapidConfigured = false;
@@ -93,6 +98,39 @@ async function startServer() {
     } catch (err) {
         console.error("Error sending push:", err);
         res.status(500).json({ error: "Failed to send" });
+    }
+  });
+
+  // Migration & Sync Routes (SQL Readiness)
+  app.post("/api/sync/user", async (req, res) => {
+    try {
+      const { uid, email, name, role } = req.body;
+      if (!uid || !email) {
+        return res.status(400).json({ error: "Missing required sync fields" });
+      }
+      
+      // Upsert the user into PostgreSQL safely. 
+      // This allows continuous identity synchronization without disrupting Firestore's primacy.
+      const postgresUser = await prisma.user.upsert({
+        where: { id: uid },
+        update: {
+          email,
+          name: name || '',
+          role: role as any || 'student'
+        },
+        create: {
+          id: uid,
+          email,
+          name: name || '',
+          role: role as any || 'student'
+        }
+      });
+      
+      res.json({ success: true, user: postgresUser });
+    } catch (err: any) {
+      console.error("[Pg Sync] Error:", err.message);
+      // We don't want sync errors to break the user experience yet while Firestore is primary
+      res.status(200).json({ success: false, error: err.message });
     }
   });
 
