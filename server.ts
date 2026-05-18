@@ -112,12 +112,14 @@ async function startServer() {
   app.get("/api/users/:uid", async (req, res) => {
     try {
       const { uid } = req.params;
+      console.log(`[User API] Lookup request for uid: "${uid}"`);
       const user = await prisma.user.findUnique({
         where: { id: uid }
       });
       if (user) {
         res.json(user);
       } else {
+        console.warn(`[User API] User not found in SQL: "${uid}"`);
         res.status(404).json({ error: "User not found in SQL" });
       }
     } catch (err: any) {
@@ -257,16 +259,22 @@ async function startServer() {
   app.post("/api/sync/user", async (req, res) => {
     try {
       const { uid, email, name, role, coins, diamonds, xp, level, streak } = req.body;
-      if (!uid || !email) {
-        return res.status(400).json({ error: "Missing required sync fields" });
+      console.log(`[Pg Sync] Attempting sync for userId: "${uid}", email: "${email}"`, req.body);
+      
+      if (!uid) {
+        console.error("[Pg Sync] FAILED: Missing uid");
+        return res.status(400).json({ error: "Missing required sync field: uid" });
       }
+
+      // Ensure we have an email, even if it's a placeholder if Clerk fails to provide one
+      const finalizedEmail = email || `${uid}@placeholder.com`;
       
       // Upsert the user into PostgreSQL safely. 
       // This allows continuous identity synchronization without disrupting Firestore's primacy.
       const postgresUser = await prisma.user.upsert({
         where: { id: uid },
         update: {
-          email,
+          email: finalizedEmail,
           name: name || '',
           role: role as any || 'student',
           ...(coins !== undefined && { coins }),
@@ -277,7 +285,7 @@ async function startServer() {
         },
         create: {
           id: uid,
-          email,
+          email: finalizedEmail,
           name: name || '',
           role: role as any || 'student',
           coins: coins ?? 0,
@@ -288,6 +296,7 @@ async function startServer() {
         }
       });
       
+      console.log(`[Pg Sync] SUCCESS for userId: "${uid}"`);
       res.json({ success: true, user: postgresUser });
     } catch (err: any) {
       console.error("[Pg Sync] Error:", err.message);
@@ -1123,10 +1132,18 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
   app.post("/api/claim/daily", async (req, res) => {
     try {
       const { userId } = req.body;
-      if (!userId) return res.status(400).json({ error: "Missing userId" });
+      console.log(`[Claim API] Daily reward request for userId: "${userId}"`);
+      if (!userId) {
+        console.warn("[Claim API] Missing userId in daily claim request body:", req.body);
+        return res.status(400).json({ error: "Missing userId" });
+      }
       
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user) {
+        console.warn(`[Claim API] User not found in SQL for daily claim: "${userId}".`);
+        return res.status(404).json({ error: "User profile not found in high-stakes database. Your profile might still be syncing - please wait or refresh." });
+      }
+      // ... (rest of the logic)
 
       const now = new Date();
       const lastClaim = user.lastRewardClaimedAt;
@@ -1205,8 +1222,12 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
   app.post("/api/claim/resource", async (req, res) => {
     try {
       const { userId } = req.body;
+      console.log(`[Claim API] Resource collection request for userId: "${userId}"`);
       const user = await prisma.user.findUnique({ where: { id: userId } });
-      if (!user) return res.status(404).json({ error: "User not found" });
+      if (!user) {
+        console.warn(`[Claim API] User not found in SQL for resource collection: "${userId}"`);
+        return res.status(404).json({ error: "User profile not found in high-stakes database. Your profile might still be syncing - please wait or refresh." });
+      }
 
       const now = new Date();
       const lastCollect = user.lastCollectionAt;

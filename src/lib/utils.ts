@@ -79,6 +79,8 @@ export function getUserLevelAndXP(user: any) {
     xpCurrent: xpInCurrent, 
     xpMax, 
     xpProgress, 
+    levelProgress: xpProgress,
+    nextLevelXP: xpMax,
     achievementsSummary, 
     totalXP,
     nextRewardLevel: level % 10 === 0 ? level + 10 : Math.ceil(level / 10) * 10

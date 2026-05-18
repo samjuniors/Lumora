@@ -6,11 +6,13 @@ import { Gem, Coins, Pickaxe, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { playNotificationSound } from '../lib/audio';
+import { ConfirmModal } from './ui/ConfirmModal';
 
-export const ResourceCollector = () => {
+export const ResourceCollector = React.memo(() => {
   const { user, updateResources } = useAuth();
   const [loading, setLoading] = useState(false);
   const [collected, setCollected] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
   // Calculate collection state based on last reward timing
   const [timeLeft, setTimeLeft] = useState<string>('');
@@ -97,13 +99,11 @@ export const ResourceCollector = () => {
       return;
     }
 
-    if (!window.confirm(`Spend ${resetCost} Diamonds to reset the collector immediately?`)) return;
-
     setLoading(true);
     try {
       await walletService.resetCollector(user.id);
       
-      updateResources({ diamonds: (user.diamonds || 0) - resetCost });
+      updateResources({ diamonds: (user.diamonds || 0) - 3 });
       toast.success("Collector Reset! Ready to mine.");
       
       if (isMounted.current) setLoading(false);
@@ -150,16 +150,18 @@ export const ResourceCollector = () => {
                 className={cn(
                   "flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2",
                   canCollect 
-                    ? "bg-brand-gold text-navy-950 hover:translate-y-[-1px] active:translate-y-[0px] shadow-sm" 
+                    ? "bg-brand-gold text-white border border-brand-gold/30 hover:bg-brand-gold/80 hover:translate-y-[-1px] active:translate-y-[0px] shadow-sm" 
                     : "bg-navy-800 text-text-secondary/50 cursor-not-allowed border border-navy-700"
                 )}
               >
-                {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Limited'}
+                <span className="text-white">
+                  {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Locked'}
+                </span>
               </button>
 
               {!canCollect && (
                 <button
-                  onClick={handleFastReset}
+                  onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
                   className="px-4 py-2 rounded-lg bg-navy-800 text-cyan-400 border border-cyan-500/10 font-bold text-xs hover:bg-navy-700 transition-all flex items-center justify-center gap-2 group/reset"
                 >
@@ -171,7 +173,16 @@ export const ResourceCollector = () => {
           )}
         </AnimatePresence>
       </div>
-    </div>
 
+      <ConfirmModal 
+        isOpen={showResetConfirm}
+        onClose={() => setShowResetConfirm(false)}
+        onConfirm={handleFastReset}
+        title="Reset Collector"
+        message="Spend 3 Diamonds to reset the collector immediately? This will bypass the 12-hour recovery period."
+        confirmText="Reset Now"
+        variant="warning"
+      />
+    </div>
   );
-};
+});

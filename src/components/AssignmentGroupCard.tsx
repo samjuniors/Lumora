@@ -16,7 +16,7 @@ interface AssignmentGroupCardProps {
   onEdit?: (a: Assignment) => void;
 }
 
-export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group, enrollments, isStudent, userId, onEdit }) => {
+export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = React.memo(({ group, enrollments, isStudent, userId, onEdit }) => {
   const navigate = useNavigate();
   const now = Date.now();
   
@@ -229,6 +229,6 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
       </div>
     </Card>
   );
-};
+});
 
 

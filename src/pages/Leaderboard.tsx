@@ -9,6 +9,7 @@ import { calculatePerformanceScore, getPerformanceBadge } from '../lib/performan
 import { motion, AnimatePresence } from 'motion/react';
 
 import { Link, useSearchParams } from 'react-router-dom';
+import { useLeaderboardData } from '../hooks/queries/useLeaderboard';
 import { ListSkeleton } from '../components/Skeletons';
 import { UserProfileModal } from '../components/UserProfileModal';
 import { PresenceDot } from '../components/PresenceDot';
@@ -42,9 +43,11 @@ const itemVariants = {
   show: { opacity: 1, x: 0, transition: { duration: 0.2, ease: "easeOut" as const } }
 };
 
-const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[], type: 'diamonds' | 'grades', setSelectedUser: (user: any) => void, timeframe: 'daily' | 'weekly' | 'overall' }) => {
+const Podium = React.memo(({ leaders, type, setSelectedUser, timeframe, timing }: { leaders: any[], type: 'diamonds' | 'grades', setSelectedUser: (user: any) => void, timeframe: 'daily' | 'weekly' | 'overall', timing: { today: string, thisWeek: string } }) => {
     if (leaders.length === 0) return null;
     const top3 = [leaders[1], leaders[0], leaders[2]]; // 2nd, 1st, 3rd
+
+    const { today, thisWeek } = timing;
 
     return (
       <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 md:gap-8 pt-12 pb-16 px-2 sm:px-4 relative items-center md:items-end">
@@ -127,46 +130,40 @@ const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[],
         })}
       </div>
     );
-  };
+  });
 
-export const Leaderboard = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
+export const Leaderboard = React.memo(() => {
+  const { data, isLoading, isPending } = useLeaderboardData();
+  const users = data?.users || [];
+  const submissions = data?.submissions || [];
+  
   const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = (searchParams.get('tab') as 'diamonds' | 'grades') || 'diamonds';
   const timeframe = (searchParams.get('time') as 'daily' | 'weekly' | 'overall') || 'overall';
 
-  const setActiveTab = (tab: string) => {
-    setSearchParams({ tab, time: timeframe });
-  };
-  
-  const setTimeframe = (time: string) => {
-    setSearchParams({ tab: activeTab, time });
-  };
-  const [selectedUser, setSelectedUser] = useState<(User & { averageGrade?: number, gradedCount?: number }) | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const [updatedUsers, updatedSubmissions] = await Promise.all([
-          userService.getAllUsers(), // Already cached in service now
-          submissionService.getAllAssessedSubmissions()
-        ]);
-        
-        setUsers(updatedUsers.filter(u => u.role === 'student'));
-        setSubmissions(updatedSubmissions);
-      } catch(err) {
-        handleFirestoreError(err, OperationType.LIST, 'leaderboard_data');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchData();
+  // Current system timing (once per memo cycle)
+  const timing = useMemo(() => {
+    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+    const d = new Date(nowIST);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+    const yearStart = new Date(d.getFullYear(),0,1);
+    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+    const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+    return { today, thisWeek };
   }, []);
+
+  const setActiveTab = React.useCallback((tab: string) => {
+    setSearchParams({ tab, time: timeframe });
+  }, [timeframe, setSearchParams]);
+  
+  const setTimeframe = React.useCallback((time: string) => {
+    setSearchParams({ tab: activeTab, time });
+  }, [activeTab, setSearchParams]);
+
+  const [selectedUser, setSelectedUser] = useState<(User & { averageGrade?: number, gradedCount?: number }) | null>(null);
 
   const calculatedUsers = useMemo(() => {
     return users.map(u => {
@@ -186,26 +183,15 @@ export const Leaderboard = () => {
   }, [users, submissions]);
 
   const coinLeaders = useMemo(() => {
-    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
-    
-    // Simple ISO week calculation
-    const d = new Date(nowIST);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-    const yearStart = new Date(d.getFullYear(),0,1);
-    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    const thisWeek = `${d.getFullYear()}-W${weekNo}`;
-
     return [...calculatedUsers].sort((a, b) => {
       // 1. Diamonds (Primary, based on timeframe)
       let aVal = 0, bVal = 0;
       if (timeframe === 'daily') {
-        aVal = a.lastResetDay === today ? (a.dailyDiamonds || 0) : 0;
-        bVal = b.lastResetDay === today ? (b.dailyDiamonds || 0) : 0;
+        aVal = a.lastResetDay === timing.today ? (a.dailyDiamonds || 0) : 0;
+        bVal = b.lastResetDay === timing.today ? (b.dailyDiamonds || 0) : 0;
       } else if (timeframe === 'weekly') {
-        aVal = a.lastResetWeek === thisWeek ? (a.weeklyDiamonds || 0) : 0;
-        bVal = b.lastResetWeek === thisWeek ? (b.weeklyDiamonds || 0) : 0;
+        aVal = a.lastResetWeek === timing.thisWeek ? (a.weeklyDiamonds || 0) : 0;
+        bVal = b.lastResetWeek === timing.thisWeek ? (b.weeklyDiamonds || 0) : 0;
       } else {
         aVal = a.lifetimeDiamonds || a.diamonds || 0;
         bVal = b.lifetimeDiamonds || b.diamonds || 0;
@@ -229,13 +215,13 @@ export const Leaderboard = () => {
       
       return 0;
     });
-  }, [users]);
+  }, [calculatedUsers, timeframe, timing]);
 
   const gradeLeaders = useMemo(() => {
     return [...calculatedUsers].sort((a, b) => b.averageGrade - a.averageGrade || b.gradedCount - a.gradedCount);
   }, [calculatedUsers]);
 
-  if (loading) {
+  if (isLoading && users.length === 0) {
      return <div className="max-w-6xl mx-auto"><ListSkeleton /></div>;
   }
 
@@ -245,7 +231,7 @@ export const Leaderboard = () => {
 
   const renderList = (leadersList: any[], type: 'diamonds' | 'grades') => (
     <div className="space-y-4 lg:space-y-6 relative mt-10">
-      <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} timeframe={timeframe} />
+      <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} timeframe={timeframe} timing={timing} />
       
       <motion.div 
         variants={containerVariants}
@@ -503,17 +489,8 @@ export const Leaderboard = () => {
                       {activeTab === 'diamonds' ? (
                         <span className="flex items-center gap-3">
                           {(() => {
-                             const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-                             const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
-                             const d = new Date(nowIST);
-                             d.setHours(0,0,0,0);
-                             d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-                             const yearStart = new Date(d.getFullYear(),0,1);
-                             const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-                             const thisWeek = `${d.getFullYear()}-W${weekNo}`;
-                             
-                             if (timeframe === 'daily') return me.lastResetDay === today ? (me.dailyDiamonds || 0) : 0;
-                             if (timeframe === 'weekly') return me.lastResetWeek === thisWeek ? (me.weeklyDiamonds || 0) : 0;
+                             if (timeframe === 'daily') return me.lastResetDay === timing.today ? (me.dailyDiamonds || 0) : 0;
+                             if (timeframe === 'weekly') return me.lastResetWeek === timing.thisWeek ? (me.weeklyDiamonds || 0) : 0;
                              return me.lifetimeDiamonds || me.diamonds || 0;
                           })()} <Gem className="w-5 h-5 text-cyan-400" />
                         </span>
@@ -537,5 +514,5 @@ export const Leaderboard = () => {
       </AnimatePresence>
     </div>
   );
-};
+});
 

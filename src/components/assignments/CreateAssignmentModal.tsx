@@ -304,7 +304,8 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                     message: `A new mission "${title}" has been launched. Check it out!`,
                     type: 'info',
                     read: false,
-                    createdAt: Date.now()
+                    createdAt: Date.now(),
+                    metadata: { url: '/assignments' }
                 });
             });
             Promise.all(notificationPromises).catch(e => console.error("Batch notification failed:", e));

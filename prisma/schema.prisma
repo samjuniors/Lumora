@@ -24,7 +24,7 @@ model User {
   name             String
   role             Role     @default(student)
   coins            Int      @default(0)
-  diamonds         Int      @default(0)
+  diamonds         Int      @default(10) // Small starting bonus
   
   // Profile metadata
   avatar           String?
@@ -39,6 +39,11 @@ model User {
   rank             Int?
   streak           Int      @default(0)
   
+  // AI Pet Stats
+  petFullness      Int      @default(100)
+  petHappiness     Int      @default(100)
+  petLastFed       DateTime @default(now())
+
   // Cooldowns
   lastRewardClaimedAt DateTime?
   lastCollectionAt     DateTime?
@@ -67,6 +72,7 @@ model Notification {
   message          String   @db.Text
   type             String
   read             Boolean  @default(false)
+  metadata         Json?    // For navigation payload like { url: '/assignments/123' }
   createdAt        DateTime @default(now())
   
   @@index([userId])

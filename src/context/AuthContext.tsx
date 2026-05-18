@@ -25,7 +25,15 @@ interface AuthContextType {
   signUpWithEmail: (email: string, pass: string) => Promise<void>;
   verifyInviteCode: (code: string) => Promise<void>;
   logOut: () => Promise<void>;
-  updateResources: (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => void;
+  updateResources: (resources: Partial<{ 
+    coins: number; 
+    diamonds: number; 
+    xp: number; 
+    level: number;
+    petFullness: number;
+    petHappiness: number;
+    petLastFed: string | number | Date;
+  }>) => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
@@ -56,7 +64,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isStudent: isStudent(user)
   }), [user]);
 
-  const updateResources = (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => {
+  const updateResources = (resources: Partial<{ 
+    coins: number; 
+    diamonds: number; 
+    xp: number; 
+    level: number;
+    petFullness: number;
+    petHappiness: number;
+    petLastFed: string | number | Date;
+  }>) => {
     if (user) {
       setUser({ ...user, ...resources });
     }

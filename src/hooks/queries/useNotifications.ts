@@ -14,6 +14,7 @@ export function useNotifications() {
       return notificationService.getUserNotifications(user.id);
     },
     enabled: !!user?.id,
-    refetchInterval: 30000, // Poll every 30 seconds
+    placeholderData: (prev) => prev,
+    refetchInterval: 60000, // Poll every minute instead of 30s
   });
 }

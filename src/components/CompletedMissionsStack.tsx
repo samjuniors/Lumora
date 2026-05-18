@@ -14,7 +14,7 @@ interface CompletedMission {
   assignment: Assignment;
 }
 
-export const CompletedMissionsStack = () => {
+export const CompletedMissionsStack = React.memo(() => {
   const { user } = useAuth();
   const [missions, setMissions] = useState<CompletedMission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -171,6 +171,5 @@ export const CompletedMissionsStack = () => {
         )}
       </AnimatePresence>
     </div>
-
   );
-};
+});

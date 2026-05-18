@@ -91,7 +91,12 @@ export const DailyRewardModal = () => {
       
     } catch (e: any) {
       console.error(e);
-      toast.error(e.message || "Failed to claim reward.");
+      if (e.message?.includes("User profile not found")) {
+        toast.error("Database connection lost! Re-syncing profile...", { icon: "🔄" });
+        window.location.reload(); 
+      } else {
+        toast.error(e.message || "Failed to claim reward.");
+      }
     } finally {
       setIsClaiming(false);
     }
@@ -136,11 +141,11 @@ export const DailyRewardModal = () => {
                 <button
                   onClick={handleClaim}
                   disabled={isClaiming}
-                  className="w-full py-5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center gap-2 group"
+                  className="w-full py-5 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-white font-black rounded-3xl transition-all active:scale-95 shadow-xl shadow-black/10 flex items-center justify-center gap-2 group"
                 >
                   {isClaiming ? 'Opening Box...' : (
                     <>
-                      Unlock Rewards <Sparkles className="w-5 h-5 group-hover:animate-pulse" />
+                      Unlock Rewards <Sparkles className="w-5 h-5 group-hover:animate-pulse text-white" />
                     </>
                   )}
                 </button>
@@ -174,7 +179,7 @@ export const DailyRewardModal = () => {
                 
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-full py-4 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-2xl shadow-lg shadow-black/10 active:scale-95"
+                  className="w-full py-4 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-white font-black rounded-2xl shadow-lg shadow-black/10 active:scale-95"
                 >
                   Perfect!
                 </button>

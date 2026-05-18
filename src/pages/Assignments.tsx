@@ -183,6 +183,8 @@ export const Assignments = () => {
             ) : viewMode === 'calendar' ? (
                 <AssignmentCalendar 
                     assignments={assignments} 
+                    enrollments={studentEnrollments}
+                    isStudent={isStudent}
                     onViewMission={(id) => navigate(`/assignments/${id}`)} 
                 />
             ) : (

@@ -39,7 +39,8 @@ export const useMaintenance = (user: User | null) => {
             message: "Ready for today's research missions?",
             type: 'info',
             read: false,
-            createdAt: Date.now()
+            createdAt: Date.now(),
+            metadata: { url: '/assignments' }
           });
         }
       } catch (err) {

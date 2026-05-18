@@ -6,11 +6,13 @@ import { adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { InviteCode, Role } from '../../types';
 import { cn } from '../../lib/utils';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export const InviteCodesManager = () => {
     const { user, isSuperAdmin } = useAuth();
     const [codes, setCodes] = useState<InviteCode[]>([]);
     const [loading, setLoading] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState<InviteCode | null>(null);
     
     const [newRole, setNewRole] = useState<Role>('student');
     const [newCodeName, setNewCodeName] = useState('');
@@ -62,13 +64,15 @@ export const InviteCodesManager = () => {
     };
 
     const handleDelete = async (code: InviteCode) => {
-        if (!confirm(`Delete code ${code.code}?`)) return;
         try {
             await adminService.deleteInviteCode(code.code);
             await fetchCodes();
+            toast.success("Token burned!");
         } catch(err) {
             console.error(err);
             toast.error("Failed to delete code");
+        } finally {
+            setShowDeleteConfirm(null);
         }
     };
 
@@ -181,7 +185,7 @@ export const InviteCodesManager = () => {
                                     </td>
                                     <td className="px-8 py-5 whitespace-nowrap text-right text-sm font-medium">
                                         {!code.used && (
-                                            <button onClick={() => handleDelete(code)} className="text-text-secondary/60 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-500/10 transition-all active:scale-90">
+                                            <button onClick={() => setShowDeleteConfirm(code)} className="text-text-secondary/60 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-500/10 transition-all active:scale-90">
                                                 <Trash2 className="w-4 h-4"/>
                                             </button>
                                         )}
@@ -222,7 +226,7 @@ export const InviteCodesManager = () => {
                                     </div>
                                 </div>
                                 {!code.used && (
-                                    <button onClick={() => handleDelete(code)} className="p-2 text-rose-400 active:bg-rose-500/10 rounded-xl">
+                                    <button onClick={() => setShowDeleteConfirm(code)} className="p-2 text-rose-400 active:bg-rose-500/10 rounded-xl">
                                         <Trash2 size={16} />
                                     </button>
                                 )}
@@ -234,6 +238,16 @@ export const InviteCodesManager = () => {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal 
+                isOpen={!!showDeleteConfirm}
+                onClose={() => setShowDeleteConfirm(null)}
+                onConfirm={() => showDeleteConfirm && handleDelete(showDeleteConfirm)}
+                title="Burn Entry Token"
+                message={`Are you sure you want to permanently delete the invite token "${showDeleteConfirm?.code}"? New students will no longer be able to use it.`}
+                confirmText="Burn Token"
+                variant="danger"
+            />
         </div>
     );
 };

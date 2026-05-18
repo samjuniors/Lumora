@@ -12,6 +12,7 @@ export function useProfile() {
       return userService.getUser(user.id);
     },
     enabled: !!user?.id,
-    refetchInterval: 15000, // Frequent polling for wallet updates
+    placeholderData: (prev) => prev,
+    refetchInterval: 60000, // Poll every minute for updates
   });
 }

@@ -9,6 +9,7 @@ import { motion } from 'motion/react';
 import { CreateAssignmentModal } from '../assignments/CreateAssignmentModal';
 import { EditAssignmentModal } from '../assignments/EditAssignmentModal';
 import { notifyStudentOfDeadline } from '../../services/notificationService';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 export const AssignmentsManager = () => {
     const { user } = useAuth();
@@ -22,24 +23,38 @@ export const AssignmentsManager = () => {
     const [isSweeping, setIsSweeping] = useState(false);
     const [showRetestAssignmentId, setShowRetestAssignmentId] = useState<string | null>(null);
 
+    // Confirmation UI State
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        variant?: 'danger' | 'warning' | 'primary';
+    } | null>(null);
+
     useEffect(() => {
         fetchData();
     }, []);
 
     const runGlobalPenaltySweep = async () => {
-        if (!confirm("CRITICAL: This will sweep all students for missed assignments and apply penalty fees. Are you sure?")) return;
-        
-        setIsSweeping(true);
-        try {
-            const { penalizedCount } = await adminService.runPenaltySweep();
-            toast.success(`Sweep complete! Applied penalties to entries.`);
-            await fetchData();
-        } catch (err) {
-            console.error("Penalty sweep failed:", err);
-            toast.error("Penalty sweep failed");
-        } finally {
-            setIsSweeping(false);
-        }
+        setConfirmAction({
+            title: 'CRITICAL: Global Sweep',
+            message: 'This will sweep all students for missed assignments and apply penalty fees. This action is irreversible and affects the entire system economy.',
+            variant: 'danger',
+            onConfirm: async () => {
+                setIsSweeping(true);
+                try {
+                    await adminService.runPenaltySweep();
+                    toast.success(`Sweep complete! Applied penalties to entries.`);
+                    await fetchData();
+                } catch (err) {
+                    console.error("Penalty sweep failed:", err);
+                    toast.error("Penalty sweep failed");
+                } finally {
+                    setIsSweeping(false);
+                    setConfirmAction(null);
+                }
+            }
+        });
     }
 
     const fetchData = async () => {
@@ -64,14 +79,22 @@ export const AssignmentsManager = () => {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure? This will delete the mission for ALL students.")) return;
-        try {
-            await assignmentService.deleteAssignment(id);
-            toast.success("Mission deleted");
-            await fetchData();
-        } catch(err) {
-            toast.error("Failed to delete mission");
-        }
+        setConfirmAction({
+            title: 'Delete Mission',
+            message: 'Are you sure? This will delete the mission for ALL students. Submissions will be orphaned.',
+            variant: 'danger',
+            onConfirm: async () => {
+                try {
+                    await assignmentService.deleteAssignment(id);
+                    toast.success("Mission deleted");
+                    await fetchData();
+                } catch(err) {
+                    toast.error("Failed to delete mission");
+                } finally {
+                    setConfirmAction(null);
+                }
+            }
+        });
     }
 
     return (
@@ -156,19 +179,26 @@ export const AssignmentsManager = () => {
                                     </td>
                                     <td className="px-8 py-5 whitespace-nowrap text-right space-x-2">
                                         <button 
-                                          onClick={async () => {
-                                            if (!confirm("Apply penalties to ALL students who missed this specific mission?")) return;
-                                            setLoading(true);
-                                            try {
-                                                const { penalizedCount } = await adminService.runPenaltySweep(a.id);
-                                                toast.success(`Applied penalties to ${penalizedCount} students`);
-                                                await fetchData();
-                                            } catch (err) {
-                                                console.error(err);
-                                                toast.error("Process failed");
-                                            } finally {
-                                                setLoading(false);
-                                            }
+                                          onClick={() => {
+                                            setConfirmAction({
+                                                title: 'Targeted Penalty',
+                                                message: 'Apply penalties to ALL students who missed this specific mission?',
+                                                variant: 'warning',
+                                                onConfirm: async () => {
+                                                    setLoading(true);
+                                                    try {
+                                                        const { penalizedCount } = await adminService.runPenaltySweep(a.id);
+                                                        toast.success(`Applied penalties to ${penalizedCount} students`);
+                                                        await fetchData();
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                        toast.error("Process failed");
+                                                    } finally {
+                                                        setLoading(false);
+                                                        setConfirmAction(null);
+                                                    }
+                                                }
+                                            });
                                           }}
                                           className="p-2 text-text-secondary/60 hover:text-rose-600 hover:bg-rose-500/10 rounded-xl transition-all"
                                           title="Penalize All Missed"
@@ -191,18 +221,25 @@ export const AssignmentsManager = () => {
                                               return;
                                             }
 
-                                            if (!confirm(`Send deadline reminder emails to ${missingStudents.length} students?`)) return;
-
-                                            try {
-                                              const emailPromises = missingStudents.map(s => {
-                                                if (!s.email) return Promise.resolve();
-                                                return notifyStudentOfDeadline(s.email, s.name, a.title, a.dueDate);
-                                              });
-                                              await Promise.all(emailPromises);
-                                              toast.success("Reminders queued successfully!");
-                                            } catch (e) {
-                                              toast.error("Failed to queue reminders");
-                                            }
+                                            setConfirmAction({
+                                                title: 'Blast Reminders',
+                                                message: `Send deadline reminder emails to ${missingStudents.length} students?`,
+                                                variant: 'primary',
+                                                onConfirm: async () => {
+                                                    try {
+                                                      const emailPromises = missingStudents.map(s => {
+                                                        if (!s.email) return Promise.resolve();
+                                                        return notifyStudentOfDeadline(s.email, s.name, a.title, a.dueDate);
+                                                      });
+                                                      await Promise.all(emailPromises);
+                                                      toast.success("Reminders queued successfully!");
+                                                    } catch (e) {
+                                                      toast.error("Failed to queue reminders");
+                                                    } finally {
+                                                        setConfirmAction(null);
+                                                    }
+                                                }
+                                            });
                                           }}
                                           className="p-2 text-text-secondary/60 hover:text-amber-500 hover:bg-brand-gold/10 rounded-xl transition-all"
                                           title="Send Email Reminder"
@@ -358,6 +395,15 @@ export const AssignmentsManager = () => {
                     </motion.div>
                 </motion.div>
             )}
+
+            <ConfirmModal 
+                isOpen={!!confirmAction}
+                onClose={() => setConfirmAction(null)}
+                onConfirm={confirmAction?.onConfirm || (() => {})}
+                title={confirmAction?.title || ''}
+                message={confirmAction?.message || ''}
+                variant={confirmAction?.variant}
+            />
         </div>
     );
 }

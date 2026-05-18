@@ -8,13 +8,13 @@ import { ShareModal } from './ShareModal';
 import { Logo } from './Logo';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const Navbar = () => {
+export const Navbar = React.memo(() => {
   const { user, logOut, isAdmin } = useAuth();
   const location = useLocation();
   const [showInvite, setShowInvite] = React.useState(false);
 
   if (!user) return null;
-  const { currentLevel } = getUserLevelAndXP(user);
+  const currentLevel = React.useMemo(() => getUserLevelAndXP(user).currentLevel, [user]);
 
   const NavLink = ({ to, icon: Icon, children, highlighted, title }: { to: string, icon: any, children: React.ReactNode, highlighted?: boolean, title?: string }) => {
     const [targetPath, targetSearch] = to.split('?');
@@ -145,9 +145,9 @@ export const Navbar = () => {
       <ShareModal isOpen={showInvite} onClose={() => setShowInvite(false)} />
     </>
   );
-};
+});
 
-const MobileNavLink = ({ to, icon: Icon, label, currentPath, isCenter }: { to: string, icon: any, label: string, currentPath: string, isCenter?: boolean }) => {
+const MobileNavLink = React.memo(({ to, icon: Icon, label, currentPath, isCenter }: { to: string, icon: any, label: string, currentPath: string, isCenter?: boolean }) => {
   const location = useLocation();
   const [targetPath, targetSearch] = to.split('?');
   const isActive = 
@@ -179,4 +179,4 @@ const MobileNavLink = ({ to, icon: Icon, label, currentPath, isCenter }: { to: s
       </span>
     </Link>
   );
-};
+});

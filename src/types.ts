@@ -18,6 +18,9 @@ export interface User {
   theme?: string;
   streak?: number;
   lastActive?: string;
+  petFullness?: number;
+  petHappiness?: number;
+  petLastFed?: string | number | Date;
   lastRewardClaimedAt?: string | number | Date;
   lastCollectionAt?: string | number | Date;
   lastMissedSweep?: number;
@@ -194,6 +197,10 @@ export interface Notification {
   message: string;
   type: 'success' | 'alert' | 'info' | 'message';
   read: boolean;
+  metadata?: {
+    url?: string;
+    [key: string]: any;
+  };
   createdAt: number;
 }
 

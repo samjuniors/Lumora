@@ -23,6 +23,7 @@ export function useAssignments() {
        }
     },
     staleTime: 60000,
+    placeholderData: (prev) => prev,
     retry: 1
   });
 }
@@ -39,6 +40,7 @@ export function useAssignment(id: string) {
       }
     },
     enabled: !!id,
+    placeholderData: (prev) => prev,
     retry: 1
   });
 }
@@ -55,6 +57,7 @@ export function useStudentEnrollments(userId: string | undefined) {
       }
     },
     enabled: !!userId,
+    placeholderData: (prev) => prev,
     retry: 1
   });
 }
@@ -71,6 +74,7 @@ export function useStudentSubmissions(studentId: string | undefined) {
     queryKey: submissionKeys.byStudent(studentId || ''),
     queryFn: () => submissionService.getSubmissionsByStudent(studentId!),
     enabled: !!studentId,
+    placeholderData: (prev) => prev,
   });
 }
 

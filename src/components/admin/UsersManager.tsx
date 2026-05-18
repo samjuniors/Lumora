@@ -29,6 +29,7 @@ import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
 import TransactionAuditModal from './TransactionAuditModal';
 import AdminActionModal from './AdminActionModal';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 const UserActionsBottomSheet = ({ 
     u, 
@@ -124,11 +125,7 @@ const UserActionsBottomSheet = ({
                                 {(['student', 'admin', 'superadmin'] as Role[]).map(role => (
                                     <button
                                         key={role}
-                                        onClick={() => {
-                                            if (window.confirm(`Are you sure you want to change this user's role to ${role}?`)) {
-                                                onRoleChange(role);
-                                            }
-                                        }}
+                                        onClick={() => onRoleChange(role)}
                                         className={cn(
                                             "flex-1 py-3 rounded-xl text-[10px] font-black uppercase transition-all tracking-tighter",
                                             u.role === role 
@@ -376,6 +373,14 @@ export const UsersManager = () => {
     const [selectedUserForActions, setSelectedUserForActions] = useState<User | null>(null);
     const [auditingUser, setAuditingUser] = useState<User | null>(null);
 
+    // Confirmation State
+    const [confirmAction, setConfirmAction] = useState<{
+        title: string;
+        message: string;
+        onConfirm: () => void;
+        variant?: 'danger' | 'warning' | 'primary';
+    } | null>(null);
+
     useEffect(() => { fetchUsers(); }, []);
 
     const fetchUsers = async () => {
@@ -404,31 +409,38 @@ export const UsersManager = () => {
     };
 
     const repairNegativeBalances = async () => {
-        if (!window.confirm("This will reset all negative coin balances to 0 across the entire system. Continue?")) return;
-        setLoading(true);
-        try {
-            const all = await userService.getAllUsers();
-            const negatives = all.filter(u => (u.coins || 0) < 0);
-            
-            if (negatives.length === 0) {
-                toast.success("No negative balances found!");
-                return;
+        setConfirmAction({
+            title: 'System Repair',
+            message: 'This will reset all negative coin balances to 0 across the entire system. This is a disruptive action intended only for correction.',
+            variant: 'warning',
+            onConfirm: async () => {
+                setLoading(true);
+                try {
+                    const all = await userService.getAllUsers();
+                    const negatives = all.filter(u => (u.coins || 0) < 0);
+                    
+                    if (negatives.length === 0) {
+                        toast.success("No negative balances found!");
+                        return;
+                    }
+                    
+                    let count = 0;
+                    for (const u of negatives) {
+                        await userService.updateUser(u.id, { coins: 0 });
+                        count++;
+                    }
+                    
+                    toast.success(`SYSTEM REPAIR COMPLETE: Reset ${count} negative balances to 0.`);
+                    await fetchUsers();
+                } catch (err) {
+                    console.error("Repair failure:", err);
+                    toast.error("System repair failed");
+                } finally {
+                    setLoading(false);
+                    setConfirmAction(null);
+                }
             }
-            
-            let count = 0;
-            for (const u of negatives) {
-                await userService.updateUser(u.id, { coins: 0 });
-                count++;
-            }
-            
-            toast.success(`SYSTEM REPAIR COMPLETE: Reset ${count} negative balances to 0.`);
-            await fetchUsers();
-        } catch (err) {
-            console.error("Repair failure:", err);
-            toast.error("System repair failed");
-        } finally {
-            setLoading(false);
-        }
+        });
     };
 
     const handleRoleChange = async (userId: string, newRole: Role) => {
@@ -438,20 +450,29 @@ export const UsersManager = () => {
             return;
         }
 
-        const previousUsers = [...users];
-        setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
-        
-        try {
-            await userService.updateUser(userId, {
-                role: newRole,
-                updatedAt: Date.now()
-            });
-            toast.success("Role updated");
-        } catch(err: any) {
-            console.error("Failed role change:", err);
-            toast.error("Role update failed");
-            setUsers(previousUsers); 
-        }
+        setConfirmAction({
+            title: 'Change Entitlement',
+            message: `Are you sure you want to change this user's role to ${newRole}? This impacts their access level.`,
+            variant: 'warning',
+            onConfirm: async () => {
+                const previousUsers = [...users];
+                setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+                
+                try {
+                    await userService.updateUser(userId, {
+                        role: newRole,
+                        updatedAt: Date.now()
+                    });
+                    toast.success("Role updated");
+                } catch(err: any) {
+                    console.error("Failed role change:", err);
+                    toast.error("Role update failed");
+                    setUsers(previousUsers); 
+                } finally {
+                    setConfirmAction(null);
+                }
+            }
+        });
     }
 
     const filteredUsers = users.filter(u => {
@@ -664,6 +685,15 @@ export const UsersManager = () => {
                     currentUser={currentUser}
                 />
             )}
+
+            <ConfirmModal 
+                isOpen={!!confirmAction}
+                onClose={() => setConfirmAction(null)}
+                onConfirm={confirmAction?.onConfirm || (() => {})}
+                title={confirmAction?.title || ''}
+                message={confirmAction?.message || ''}
+                variant={confirmAction?.variant}
+            />
 
             {auditingUser && (
                 <TransactionAuditModal 

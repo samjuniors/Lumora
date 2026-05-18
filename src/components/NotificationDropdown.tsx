@@ -1,18 +1,21 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { notificationService } from '../services/dbProvider';
-import { Bell, Check, Trash2, Info, CheckCircle, AlertCircle, X } from 'lucide-react';
+import { Bell, Check, Trash2, Info, CheckCircle, AlertCircle, X, ExternalLink } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { cn } from '../lib/utils';
 import { motion, AnimatePresence } from 'motion/react';
 import { Notification } from '../types';
 import { useNotifications } from '../hooks/queries/useNotifications';
+import { ConfirmModal } from './ui/ConfirmModal';
 
-export const NotificationDropdown = () => {
+export const NotificationDropdown = React.memo(() => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   
   const { data: notifications = [], refetch } = useNotifications();
   
@@ -44,7 +47,6 @@ export const NotificationDropdown = () => {
 
   const clearAll = async () => {
     if (!user || notifications.length === 0) return;
-    if (!window.confirm('Clear all notifications? This cannot be undone.')) return;
     
     try {
       await notificationService.clearAllNotifications(user.id);
@@ -53,6 +55,47 @@ export const NotificationDropdown = () => {
     } catch (err) {
       console.error(err);
       toast.error('Failed to clear notifications');
+    }
+  };
+
+  const handleNotificationClick = async (notif: Notification) => {
+    // Mark as read if it's unread
+    if (!notif.read) {
+      try {
+        await notificationService.markNotificationRead(notif.id);
+        refetch();
+      } catch (err) {
+        console.error("Failed to mark notification as read", err);
+      }
+    }
+
+    // Close dropdown
+    setIsOpen(false);
+
+    // Navigate to URL if specified in metadata
+    if (notif.metadata?.url) {
+      navigate(notif.metadata.url);
+      return;
+    }
+
+    // Smart identification based on content/type
+    const lowerTitle = notif.title.toLowerCase();
+    const lowerMessage = notif.message.toLowerCase();
+
+    if (lowerTitle.includes('mission') || lowerMessage.includes('assignment') || lowerMessage.includes('task')) {
+      navigate('/assignments');
+    } else if (lowerTitle.includes('syndicate') || lowerMessage.includes('syndicate') || lowerMessage.includes('network')) {
+      navigate('/syndicates');
+    } else if (lowerTitle.includes('wallet') || lowerTitle.includes('coins') || lowerTitle.includes('diamonds') || lowerTitle.includes('credits')) {
+      navigate('/wallet');
+    } else if (lowerTitle.includes('rank') || lowerTitle.includes('leaderboard') || lowerTitle.includes('ranking')) {
+      navigate('/leaderboard');
+    } else if (lowerTitle.includes('badge') || lowerTitle.includes('award') || lowerMessage.includes('achievement')) {
+      navigate('/badges');
+    } else if (lowerTitle.includes('shop') || lowerMessage.includes('inventory') || lowerMessage.includes('item')) {
+      navigate('/shop');
+    } else if (lowerTitle.includes('pet') || lowerTitle.includes('nova') || lowerMessage.includes('feed')) {
+      navigate('/dashboard');
     }
   };
 
@@ -126,7 +169,7 @@ export const NotificationDropdown = () => {
               )}
               {notifications.length > 0 && (
                 <button 
-                  onClick={clearAll}
+                  onClick={() => setShowClearConfirm(true)}
                   className="p-1.5 text-text-secondary hover:text-rose-500 rounded transition-colors"
                   title="Clear All"
                 >
@@ -149,9 +192,10 @@ export const NotificationDropdown = () => {
                 <div 
                   key={notif.id} 
                   className={cn(
-                      "group px-5 py-4 border-b border-border-main/50 transition-all flex gap-4 hover:bg-bg-surface relative",
+                      "group px-5 py-4 border-b border-border-main/50 transition-all flex gap-4 hover:bg-bg-surface relative cursor-pointer",
                       !notif.read ? "bg-brand-gold/5" : "opacity-80"
                   )}
+                  onClick={() => handleNotificationClick(notif)}
                 >
                   {!notif.read && <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-gold" />}
                   <div className={cn(
@@ -191,6 +235,17 @@ export const NotificationDropdown = () => {
         </motion.div>
       )}
       </AnimatePresence>
+
+      <ConfirmModal
+        isOpen={showClearConfirm}
+        onClose={() => setShowClearConfirm(false)}
+        onConfirm={clearAll}
+        title="Clear Notifications"
+        message="Are you sure you want to clear all notifications? This action cannot be undone."
+        confirmText="Clear All"
+        cancelText="Keep Them"
+        variant="danger"
+      />
     </div>
   );
-};
+});
