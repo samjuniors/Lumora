@@ -23,10 +23,41 @@ import { FirebaseBaseService } from './FirebaseBaseService';
 export class FirebaseUserService extends FirebaseBaseService implements IUserService {
   async getUser(userId: string): Promise<User | null> {
     try {
-      const snap = await getDoc(doc(db, 'users', userId));
-      return snap.exists() ? { id: snap.id, ...snap.data() } as User : null;
+      const [fsResult, pgResult] = await Promise.allSettled([
+        getDoc(doc(db, 'users', userId)),
+        fetch(`/api/users/${userId}`).then(res => res.ok ? res.json() : Promise.reject(`Status: ${res.status}`))
+      ]);
+
+      let firestoreUser: User | null = null;
+      if (fsResult.status === 'fulfilled' && fsResult.value.exists()) {
+        firestoreUser = { id: fsResult.value.id, ...fsResult.value.data() } as User;
+      } else if (fsResult.status === 'rejected') {
+        handleFirestoreError(fsResult.reason, OperationType.GET, `users/${userId}`);
+      }
+
+      if (pgResult.status === 'fulfilled' && pgResult.value && pgResult.value.id) {
+        console.info(`[Pg Read] Successfully read user ${userId} from SQL`);
+        const pgUser = pgResult.value;
+        return {
+           ...(firestoreUser || {}), // Fallback arrays and unmapped fields
+           id: pgUser.id,
+           email: pgUser.email,
+           name: pgUser.name,
+           role: pgUser.role,
+           coins: pgUser.coins,
+           diamonds: pgUser.diamonds,
+           xp: pgUser.xp,
+           level: pgUser.level,
+           streak: pgUser.streak,
+           avatar: pgUser.avatar || firestoreUser?.avatar,
+           theme: pgUser.theme || firestoreUser?.theme,
+        } as User;
+      } else {
+        console.warn(`[Pg Read] Fallback to Firestore for user ${userId}. Reason: ${pgResult.status === 'rejected' ? pgResult.reason : 'Not found in SQL'}`);
+        return firestoreUser;
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.GET, `users/${userId}`);
+      console.error("Hybrid getUser error", error);
       return null;
     }
   }
@@ -34,10 +65,42 @@ export class FirebaseUserService extends FirebaseBaseService implements IUserSer
   async getUserByEmail(email: string): Promise<User | null> {
     try {
       const q = query(collection(db, 'users'), where('email', '==', email), fsLimit(1));
-      const snap = await getDocs(q);
-      return !snap.empty ? { id: snap.docs[0].id, ...snap.docs[0].data() } as User : null;
+      
+      const [fsResult, pgResult] = await Promise.allSettled([
+        getDocs(q),
+        fetch(`/api/users?email=${encodeURIComponent(email)}&limit=1`).then(res => res.ok ? res.json() : Promise.reject(`Status: ${res.status}`))
+      ]);
+
+      let firestoreUser: User | null = null;
+      if (fsResult.status === 'fulfilled' && !fsResult.value.empty) {
+        firestoreUser = { id: fsResult.value.docs[0].id, ...fsResult.value.docs[0].data() } as User;
+      } else if (fsResult.status === 'rejected') {
+        handleFirestoreError(fsResult.reason, OperationType.LIST, 'users');
+      }
+
+      if (pgResult.status === 'fulfilled' && Array.isArray(pgResult.value) && pgResult.value.length > 0) {
+        const pgUser = pgResult.value[0];
+        console.info(`[Pg Read] Successfully read user by email ${email} from SQL`);
+        return {
+           ...(firestoreUser || {}),
+           id: pgUser.id,
+           email: pgUser.email,
+           name: pgUser.name,
+           role: pgUser.role,
+           coins: pgUser.coins,
+           diamonds: pgUser.diamonds,
+           xp: pgUser.xp,
+           level: pgUser.level,
+           streak: pgUser.streak,
+           avatar: pgUser.avatar || firestoreUser?.avatar,
+           theme: pgUser.theme || firestoreUser?.theme,
+        } as User;
+      } else {
+        console.warn(`[Pg Read] Fallback to Firestore for email ${email}. Reason: ${pgResult.status === 'rejected' ? pgResult.reason : 'Not found in SQL'}`);
+        return firestoreUser;
+      }
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'users');
+      console.error("Hybrid getUserByEmail error", error);
       return null;
     }
   }
@@ -62,10 +125,48 @@ export class FirebaseUserService extends FirebaseBaseService implements IUserSer
   async getUsersByRole(role: string): Promise<User[]> {
     try {
       const q = query(collection(db, 'users'), where('role', '==', role));
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+      
+      const [fsResult, pgResult] = await Promise.allSettled([
+        getDocs(q),
+        fetch(`/api/users?role=${encodeURIComponent(role)}`).then(res => res.ok ? res.json() : Promise.reject(`Status: ${res.status}`))
+      ]);
+
+      let firestoreUsers: Record<string, User> = {};
+      if (fsResult.status === 'fulfilled') {
+        fsResult.value.docs.forEach(d => {
+          firestoreUsers[d.id] = { ...d.data(), id: d.id } as User;
+        });
+      } else {
+        handleFirestoreError(fsResult.reason, OperationType.LIST, 'users');
+      }
+
+      if (pgResult.status === 'fulfilled' && Array.isArray(pgResult.value)) {
+        console.info(`[Pg Read] Successfully read ${pgResult.value.length} users by role ${role} from SQL`);
+        
+        // Merge Postgres source of truth onto Firestore arrays per user
+        return pgResult.value.map((pgUser: any) => {
+          const fsUser = firestoreUsers[pgUser.id];
+          return {
+             ...(fsUser || {}),
+             id: pgUser.id,
+             email: pgUser.email,
+             name: pgUser.name,
+             role: pgUser.role,
+             coins: pgUser.coins,
+             diamonds: pgUser.diamonds,
+             xp: pgUser.xp,
+             level: pgUser.level,
+             streak: pgUser.streak,
+             avatar: pgUser.avatar || fsUser?.avatar,
+             theme: pgUser.theme || fsUser?.theme,
+          } as User;
+        });
+      }
+
+      console.warn(`[Pg Read] Fallback to Firestore list for role ${role}`);
+      return Object.values(firestoreUsers);
     } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'users');
+      console.error("Hybrid getUsersByRole error", error);
       return [];
     }
   }
@@ -75,8 +176,41 @@ export class FirebaseUserService extends FirebaseBaseService implements IUserSer
       'all_users',
       300000,
       async () => {
-        const snap = await getDocs(collection(db, 'users'));
-        return snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+        const [fsResult, pgResult] = await Promise.allSettled([
+          getDocs(collection(db, 'users')),
+          fetch(`/api/users?limit=1000`).then(res => res.ok ? res.json() : Promise.reject(`Status: ${res.status}`))
+        ]);
+
+        let firestoreUsers: Record<string, User> = {};
+        if (fsResult.status === 'fulfilled') {
+          fsResult.value.docs.forEach(d => {
+            firestoreUsers[d.id] = { ...d.data(), id: d.id } as User;
+          });
+        }
+        
+        if (pgResult.status === 'fulfilled' && Array.isArray(pgResult.value)) {
+           console.info(`[Pg Read] Successfully read ${pgResult.value.length} total users from SQL`);
+           return pgResult.value.map((pgUser: any) => {
+             const fsUser = firestoreUsers[pgUser.id];
+             return {
+               ...(fsUser || {}),
+               id: pgUser.id,
+               email: pgUser.email,
+               name: pgUser.name,
+               role: pgUser.role,
+               coins: pgUser.coins,
+               diamonds: pgUser.diamonds,
+               xp: pgUser.xp,
+               level: pgUser.level,
+               streak: pgUser.streak,
+               avatar: pgUser.avatar || fsUser?.avatar,
+               theme: pgUser.theme || fsUser?.theme,
+             } as User;
+           });
+        }
+        
+        console.warn(`[Pg Read] Fallback to Firestore for getAllUsers`);
+        return Object.values(firestoreUsers);
       },
       { type: OperationType.LIST, path: 'users' }
     );

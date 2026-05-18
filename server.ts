@@ -102,6 +102,47 @@ async function startServer() {
   });
 
   // Migration & Sync Routes (SQL Readiness)
+  app.get("/api/users/:uid", async (req, res) => {
+    try {
+      const { uid } = req.params;
+      const user = await prisma.user.findUnique({
+        where: { id: uid }
+      });
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: "User not found in SQL" });
+      }
+    } catch (err: any) {
+      console.error("[Pg Read] Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/users", async (req, res) => {
+    try {
+      const { role, limit, offset, email } = req.query;
+      
+      const whereClause: any = {};
+      if (role) whereClause.role = role as any;
+      if (email) whereClause.email = email as string;
+
+      const take = limit ? parseInt(limit as string, 10) : 50;
+      const skip = offset ? parseInt(offset as string, 10) : 0;
+
+      const users = await prisma.user.findMany({
+        where: whereClause,
+        take,
+        skip,
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(users);
+    } catch (err: any) {
+      console.error("[Pg Read All] Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post("/api/sync/user", async (req, res) => {
     try {
       const { uid, email, name, role } = req.body;

@@ -59,20 +59,37 @@ export class PrismaUserService implements IUserService {
     });
   }
 
-  async getUsersByRole(role: string): Promise<User[]> {
+  async getUsersByRole(role: string, limit?: number, offset?: number): Promise<User[]> {
     const users = await prisma.user.findMany({
       where: { role: role as any },
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' }
     });
     return users.map(u => this.mapToUserType(u));
   }
 
-  async getAllUsers(): Promise<User[]> {
-    const users = await prisma.user.findMany();
+  async getAllUsers(limit?: number, offset?: number): Promise<User[]> {
+    const users = await prisma.user.findMany({
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' }
+    });
     return users.map(u => this.mapToUserType(u));
   }
 
-  async getUsers(): Promise<User[]> {
-    return this.getAllUsers();
+  async getUsers(filters?: { role?: string, email?: string }, limit?: number, offset?: number): Promise<User[]> {
+    const where: any = {};
+    if (filters?.role) where.role = filters.role as any;
+    if (filters?.email) where.email = filters.email;
+
+    const users = await prisma.user.findMany({
+      where,
+      take: limit,
+      skip: offset,
+      orderBy: { createdAt: 'desc' }
+    });
+    return users.map(u => this.mapToUserType(u));
   }
 
   async deleteUser(userId: string): Promise<void> {
