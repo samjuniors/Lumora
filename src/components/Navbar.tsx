@@ -23,7 +23,7 @@ export const Navbar = () => {
       <Link 
         to={to} 
         className={cn(
-          "flex items-center gap-2.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all group relative",
+          "flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all group relative uppercase tracking-wider",
           isActive 
             ? "text-brand-gold bg-brand-gold/5" 
             : highlighted 
@@ -31,12 +31,12 @@ export const Navbar = () => {
               : "text-text-secondary hover:text-white hover:bg-white/5"
         )}
       >
-        <Icon className={cn("h-4 w-4 transition-transform group-hover:-translate-y-0.5", isActive ? "text-brand-gold" : "opacity-70")} />
+        <Icon className={cn("h-3.5 w-3.5 transition-transform group-hover:-translate-y-0.5", isActive ? "text-brand-gold" : "opacity-70")} />
         <span>{children}</span>
         {isActive && (
           <motion.div 
             layoutId="nav-active"
-            className="absolute inset-0 border-b-2 border-brand-gold/50 rounded-lg pointer-events-none"
+            className="absolute bottom-0 left-2 right-2 h-0.5 bg-brand-gold/50 rounded-full"
             initial={false}
           />
         )}
@@ -46,26 +46,26 @@ export const Navbar = () => {
 
   return (
     <>
-      <nav className="glass-dark fixed top-0 w-full z-[120] transition-all">
-        <div className="container mx-auto px-4 lg:px-8 max-w-7xl">
-          <div className="flex h-16 items-center justify-between">
+      <nav className="glass-dark fixed top-0 w-full z-[120] border-b border-white/[0.05]">
+        <div className="container mx-auto px-4 lg:px-6 max-w-7xl">
+          <div className="flex h-12 md:h-16 items-center justify-between">
             {/* Left: Logo */}
             <div className="flex-shrink-0">
               <Link to="/dashboard" className="flex items-center group transition-transform active:scale-95">
-                <Logo className="w-32 lg:w-40 h-auto text-white" />
+                <Logo className="w-24 md:w-32 h-auto text-white" />
               </Link>
             </div>
 
             {/* Center: Navigation Links */}
-            <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
+            <div className="hidden lg:flex items-center gap-1">
               {isAdmin ? (
                 <>
-                  <NavLink to="/dashboard" icon={BookOpen} title="Student View">Student View</NavLink>
+                  <NavLink to="/dashboard" icon={BookOpen} title="Student View">Student</NavLink>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
                   <NavLink to="/admin?tab=assignments" icon={Target}>Tasks</NavLink>
                   <NavLink to="/admin?tab=overview" icon={ShieldAlert}>System</NavLink>
                   <NavLink to="/admin?tab=recharges" icon={Wallet}>Economy</NavLink>
-                  <NavLink to="/admin?tab=reviews" icon={Zap}>Pending</NavLink>
+                  <NavLink to="/admin?tab=reviews" icon={Zap}>Queue</NavLink>
                 </>
               ) : (
                 <>
@@ -79,35 +79,35 @@ export const Navbar = () => {
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
                 <button 
                   onClick={() => setShowInvite(true)}
-                  className="hidden lg:flex items-center gap-2 bg-brand-gold text-navy-950 px-4 py-1.5 rounded-lg hover:bg-brand-gold-hover transition-colors font-bold text-xs"
+                  className="hidden sm:flex items-center gap-2 bg-brand-gold/10 text-brand-gold border border-brand-gold/20 px-3 py-1.5 rounded-lg hover:bg-brand-gold/20 transition-colors font-bold text-[10px] uppercase tracking-widest"
                 >
-                  <Share2 className="h-3.5 w-3.5" />
+                  <Share2 className="h-3 w-3" />
                   <span>Invite</span>
                 </button>
                 
-                <div className="flex items-center gap-2 sm:gap-3 border-l border-white/10 pl-3 sm:pl-4">
+                <div className="flex items-center gap-2 sm:gap-3 ml-2 pl-2 border-l border-white/10">
                   {isAdmin && (
-                    <div className="hidden sm:flex items-center gap-1">
-                      <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-lg" title="Invites">
+                    <div className="hidden md:flex items-center gap-1">
+                      <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                         <UserPlus className="h-4 w-4" />
                       </Link>
-                      <Link to="/admin?tab=settings" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-lg" title="System Settings">
+                      <Link to="/admin?tab=settings" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors">
                         <Settings className="h-4 w-4" />
                       </Link>
                     </div>
                   )}
-                  <Link to="/leaderboard?tab=diamonds" className="flex w-8 h-8 items-center justify-center text-brand-gold bg-brand-gold/10 border border-brand-gold/20 rounded-lg group" title="Hall of Fame">
-                    <Trophy className="h-4 w-4 transition-transform group-hover:scale-110" />
+                  <Link to="/leaderboard?tab=diamonds" className="flex w-8 h-8 items-center justify-center text-brand-gold bg-brand-gold/5 border border-brand-gold/10 rounded-lg hover:bg-brand-gold/10 transition-all">
+                    <Trophy className="h-4 w-4" />
                   </Link>
                   <NotificationDropdown />
-                  <Link to="/profile" className="ml-1 w-8 h-8 rounded-full border-2 border-brand-gold overflow-hidden hover:scale-105 active:scale-95 transition-transform shadow-glow-gold">
+                  <Link to="/profile" className="ml-1 w-8 h-8 rounded-full border border-white/20 overflow-hidden hover:border-brand-gold transition-colors">
                     {user.avatar?.startsWith('http') || user.avatar?.startsWith('data:') ? (
                       <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-brand-gold text-navy-950 font-bold text-xs">
+                      <div className="w-full h-full flex items-center justify-center bg-brand-gold text-bg-main font-bold text-xs">
                         {user.name?.charAt(0) || 'U'}
                       </div>
                     )}
@@ -118,28 +118,29 @@ export const Navbar = () => {
         </div>
       </nav>
 
-      {/* Mobile Bottom Navigation - Compact premium app style */}
-      <div className="fixed bottom-0 left-0 right-0 z-[120] md:hidden px-4 pb-6">
-        <div className="glass-dark rounded-2xl shadow-2xl flex items-center justify-around h-16 w-full max-w-md mx-auto px-2 border-white/10 relative">
+      {/* Mobile Bottom Navigation - Floating island style */}
+      <div className="fixed bottom-4 left-4 right-4 z-[120] md:hidden">
+        <div className="glass-dark rounded-xl shadow-2xl flex items-center justify-around h-14 w-full max-w-sm mx-auto px-1 border border-white/10">
           {isAdmin ? (
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Student" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} isCenter />
+              <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=reviews" icon={Zap} label="Queue" currentPath={location.pathname} />
             </>
           ) : (
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Home" currentPath={location.pathname} />
-              <MobileNavLink to="/assignments" icon={Calendar} label="Missions" currentPath={location.pathname} />
-              <MobileNavLink to="/syndicates" icon={Shield} label="Syndicate" currentPath={location.pathname} isCenter />
+              <MobileNavLink to="/assignments" icon={Calendar} label="Mission" currentPath={location.pathname} />
+              <MobileNavLink to="/syndicates" icon={Shield} label="Network" currentPath={location.pathname} />
               <MobileNavLink to="/badges" icon={Award} label="Awards" currentPath={location.pathname} />
               <MobileNavLink to="/shop" icon={ShoppingBag} label="Shop" currentPath={location.pathname} />
             </>
           )}
         </div>
       </div>
+
 
       <ShareModal isOpen={showInvite} onClose={() => setShowInvite(false)} />
     </>

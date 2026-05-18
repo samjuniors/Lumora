@@ -39,6 +39,10 @@ model User {
   rank             Int?
   streak           Int      @default(0)
   
+  // Cooldowns
+  lastRewardClaimedAt DateTime?
+  lastCollectionAt     DateTime?
+  
   // Timestamps
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

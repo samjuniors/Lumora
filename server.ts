@@ -1118,6 +1118,195 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
     } catch (err: any) { res.status(500).json({ error: err.message }); }
   });
 
+  // --- DETERMINISTIC COOLDOWN ENDPOINTS ---
+
+  app.post("/api/claim/daily", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      if (!userId) return res.status(400).json({ error: "Missing userId" });
+      
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const now = new Date();
+      const lastClaim = user.lastRewardClaimedAt;
+      
+      // Check if already claimed today (UTC)
+      if (lastClaim) {
+        const lastClaimDay = new Date(lastClaim);
+        if (
+          lastClaimDay.getUTCFullYear() === now.getUTCFullYear() &&
+          lastClaimDay.getUTCMonth() === now.getUTCMonth() &&
+          lastClaimDay.getUTCDate() === now.getUTCDate()
+        ) {
+          return res.status(400).json({ error: "Already claimed today" });
+        }
+      }
+
+      // Generate reward server-side
+      const rollout = Math.random();
+      let type: string;
+      let value: number | string;
+      let currency: 'coins' | 'diamonds' | 'xp' | 'item' | 'penalty';
+
+      if (rollout < 0.10) { 
+        type = 'item';
+        const items = ['frame_gold', 'frame_neon', 'frame_cyber'];
+        value = items[Math.floor(Math.random() * items.length)];
+        currency = 'item';
+      } else if (rollout < 0.30) {
+        type = 'penalty';
+        value = Math.floor(Math.random() * 20) + 1;
+        currency = 'penalty';
+      } else if (rollout < 0.60) {
+        type = 'xp';
+        value = Math.floor(Math.random() * 150) + 50;
+        currency = 'xp';
+      } else if (rollout < 0.85) {
+        type = 'diamonds';
+        value = Math.floor(Math.random() * 3) + 1;
+        currency = 'diamonds';
+      } else {
+        type = 'coins';
+        value = Math.floor(Math.random() * 3) + 1;
+        currency = 'coins';
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            lastRewardClaimedAt: now,
+            ...(currency === 'coins' && { coins: { increment: value as number } }),
+            ...(currency === 'diamonds' && { diamonds: { increment: value as number } }),
+            ...(currency === 'xp' && { xp: { increment: value as number } }),
+          }
+        });
+
+        await tx.transaction.create({
+          data: {
+            id: crypto.randomUUID(),
+            senderId: 'system',
+            receiverId: userId,
+            amount: typeof value === 'number' ? value : 0,
+            currency: currency === 'penalty' ? 'coins' : currency as string,
+            type: currency === 'penalty' ? 'penalty' : 'daily_reward',
+            status: 'completed',
+            message: `Daily Drop: ${type} ${value}`,
+            timestamp: now
+          }
+        });
+      });
+
+      res.json({ success: true, reward: { type, value }, timestamp: now.getTime() });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/claim/resource", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const now = new Date();
+      const lastCollect = user.lastCollectionAt;
+      
+      // 12 hour cooldown
+      if (lastCollect) {
+        const cooldownMs = 12 * 60 * 60 * 1000;
+        if (now.getTime() - lastCollect.getTime() < cooldownMs) {
+          return res.status(400).json({ error: "Collector on cooldown" });
+        }
+      }
+
+      // Tiered Reward Calculation server-side
+      const roller = Math.random();
+      let coins = 0;
+      let diamonds = 0;
+      let tier = "Common";
+
+      if (roller > 0.95) { // 5% Epic
+          tier = "Epic";
+          coins = Math.floor(Math.random() * 11) + 20; // 20-30
+          diamonds = Math.floor(Math.random() * 4) + 2; // 2-5
+      } else if (roller > 0.80) { // 15% Rare
+          tier = "Rare";
+          coins = Math.floor(Math.random() * 7) + 6; // 6-12
+          diamonds = 1;
+      } else { // 80% Common
+          tier = "Common";
+          coins = Math.floor(Math.random() * 4) + 2; // 2-5
+          diamonds = 0;
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            lastCollectionAt: now,
+            coins: { increment: coins },
+            diamonds: { increment: diamonds }
+          }
+        });
+
+        await tx.transaction.create({
+          data: {
+            id: crypto.randomUUID(),
+            senderId: 'system',
+            receiverId: userId,
+            amount: coins + diamonds,
+            currency: 'mixed',
+            type: 'mission_reward',
+            status: 'completed',
+            message: `Resource Miner: ${coins} coins, ${diamonds} diamonds [${tier}]`,
+            timestamp: now
+          }
+        });
+      });
+
+      res.json({ success: true, coins, diamonds, tier, timestamp: now.getTime() });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/claim/reset-collector", async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const resetCost = 3; // Diamonds
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      if (user.diamonds < resetCost) {
+        return res.status(400).json({ error: "Insufficient diamonds" });
+      }
+
+      await prisma.$transaction(async (tx) => {
+        await tx.user.update({
+          where: { id: userId },
+          data: {
+            diamonds: { decrement: resetCost },
+            lastCollectionAt: null 
+          }
+        });
+
+        await tx.transaction.create({
+          data: {
+            id: crypto.randomUUID(),
+            senderId: userId,
+            receiverId: 'system',
+            amount: resetCost,
+            currency: 'diamonds',
+            type: 'shop_purchase',
+            status: 'completed',
+            message: 'Instant Resource Collector Reset',
+            timestamp: new Date()
+          }
+        });
+      });
+
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
   // Vite middleware for development
   // ------------------------------------
   // Assignment Templates API

@@ -114,6 +114,43 @@ export class PrismaWalletService implements IWalletService {
   async approveRechargeRequest(requestId: string, adminId: string): Promise<void> {}
   async rejectRechargeRequest(requestId: string, adminId: string): Promise<void> {}
   
-  async claimDailyReward(userId: string, reward: { type: string, value: number | string }): Promise<void> {}
-  async claimCollectorReward(userId: string, coins: number, diamonds: number): Promise<void> {}
+  async claimDailyReward(userId: string): Promise<{ type: string, value: number | string }> {
+    const res = await fetch('/api/claim/daily', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to claim daily reward');
+    }
+    const data = await res.json();
+    return data.reward;
+  }
+
+  async claimCollectorReward(userId: string): Promise<{ coins: number, diamonds: number, tier: string }> {
+    const res = await fetch('/api/claim/resource', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to collect resources');
+    }
+    const data = await res.json();
+    return { coins: data.coins, diamonds: data.diamonds, tier: data.tier };
+  }
+
+  async resetCollector(userId: string): Promise<void> {
+    const res = await fetch('/api/claim/reset-collector', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Failed to reset collector');
+    }
+  }
 }

@@ -13,6 +13,7 @@ import { SHOP_ITEMS } from './Shop';
 import { cn, getUserLevelAndXP, getShortId, getVIPLevel } from '../lib/utils';
 import { calculatePerformanceScore, getPerformanceBadge } from '../lib/performance';
 import { ScoreChart } from '../components/ScoreChart';
+import { Card, Button } from '../components/CommonUI';
 import { Link } from 'react-router-dom';
 import { RulesModal } from '../components/RulesModal';
 import { ShareModal } from '../components/ShareModal';
@@ -276,17 +277,17 @@ export const Profile = () => {
       <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, false)} className="hidden" ref={bannerInputRef} />
 
       {/* Cover & Header Section */}
-      <div className="bg-navy-900 rounded-[2.5rem] shadow-glow-gold border border-brand-gold/20 overflow-hidden relative">
+      <div className="bg-bg-surface rounded-[2.5rem] shadow-premium border border-white/5 overflow-hidden relative">
         <div className={cn(
           "h-48 md:h-64 w-full relative transition-colors duration-500 bg-cover bg-center group/banner",
-          (!currentBanner || (!currentBanner.startsWith('http') && !currentBanner.startsWith('data:image') && !currentBanner.startsWith('#') && !currentBanner.startsWith('hsl') && !currentBanner.startsWith('rgb') && !currentBanner.includes('-'))) && "bg-navy-950",
+          (!currentBanner || (!currentBanner.startsWith('http') && !currentBanner.startsWith('data:image') && !currentBanner.startsWith('#') && !currentBanner.startsWith('hsl') && !currentBanner.startsWith('rgb') && !currentBanner.includes('-'))) && "bg-black/40",
           (currentBanner && currentBanner.includes('-') && !currentBanner.startsWith('http')) ? currentBanner : ""
         )}
         style={{ 
           backgroundImage: (currentBanner?.startsWith('http') || currentBanner?.startsWith('data:image')) ? `url(${currentBanner})` : (!currentBanner ? 'url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop)' : 'none'),
           backgroundColor: (currentBanner && (currentBanner.startsWith('#') || currentBanner.startsWith('rgb') || currentBanner.startsWith('hsl'))) ? currentBanner : 'transparent'
         }}>
-          <div className="absolute inset-0 bg-gradient-to-t from-navy-900/80 via-transparent to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-bg-surface via-bg-surface/20 to-transparent"></div>
           
           {isEditing && (
             <div 
@@ -298,7 +299,7 @@ export const Profile = () => {
             >
               <div className="flex flex-col items-center text-white/90">
                  <Upload className="w-8 h-8 mb-2 drop-shadow" />
-                 <span className="font-bold text-sm tracking-widest uppercase py-1 px-3 rounded-lg bg-black/20 backdrop-blur border border-white/20">Change Banner</span>
+                 <span className="font-black text-[10px] tracking-[0.3em] uppercase py-2 px-4 rounded-xl bg-black/40 backdrop-blur border border-white/20">Authorize Banner Change</span>
               </div>
             </div>
           )}
@@ -306,8 +307,8 @@ export const Profile = () => {
           {!isEditing ? (
             <button 
               onClick={logOut}
-              className="absolute top-6 right-6 md:top-8 md:right-8 bg-bg-surface/20 hover:bg-bg-surface/40 backdrop-blur-md text-bg-main border border-white/30 p-2.5 rounded-xl transition-all shadow-sm z-20 group"
-              title="Sign Out"
+              className="absolute top-6 right-6 md:top-8 md:right-8 bg-black/20 hover:bg-rose-500 text-white border border-white/10 p-3 rounded-2xl transition-all shadow-2xl z-20 group backdrop-blur-md"
+              title="Terminate Session"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>
@@ -321,21 +322,23 @@ export const Profile = () => {
                   setEditBanner(user.bannerColor || '');
                 }}
                 disabled={saving}
-                className="bg-bg-main/50 hover:bg-bg-main backdrop-blur-md border border-border-main text-text-primary px-4 py-2 rounded-xl font-bold transition-all shadow-sm flex items-center gap-2"
+                className="bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-white px-5 py-2.5 rounded-[1.25rem] font-black text-[10px] uppercase tracking-widest transition-all shadow-2xl flex items-center gap-2"
               >
                 <X className="w-4 h-4" /> Cancel
               </button>
-              <button 
+              <Button 
                 onClick={handleSaveProfile}
                 disabled={saving}
-                className="bg-brand-gold hover:bg-brand-gold-hover text-bg-main px-6 py-2 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2 border border-brand-gold"
+                variant="gold"
+                size="md"
+                className="px-8 shadow-2xl shadow-brand-gold/20"
               >
                 {saving ? (
-                  <><span className="animate-pulse flex items-center gap-2"><Upload className="w-4 h-4 animate-bounce" /> Saving...</span></>
+                  <><span className="animate-pulse flex items-center gap-2">Transmitting...</span></>
                 ) : (
-                  <><Check className="w-5 h-5" /> Save Profile</>
+                  <><Check className="w-4 h-4" /> Finalize Profile</>
                 )}
-              </button>
+              </Button>
             </div>
           )}
         </div>
@@ -345,8 +348,8 @@ export const Profile = () => {
             <div className="flex flex-col md:flex-row md:items-end gap-5 md:gap-8">
               <div 
                 className={cn(
-                  "w-28 h-28 md:w-40 md:h-40 rounded-3xl flex items-center justify-center bg-navy-900 border-[6px] border-navy-900 shadow-xl text-6xl relative z-20 shrink-0 overflow-hidden group/avatar transition-transform",
-                  "ring-2 ring-brand-gold/30",
+                  "w-28 h-28 md:w-40 md:h-40 rounded-[2.5rem] flex items-center justify-center bg-bg-surface border-[6px] border-bg-surface shadow-2xl text-6xl relative z-20 shrink-0 overflow-hidden group/avatar transition-all",
+                  "ring-1 ring-white/10",
                   isEditing && !uploadingAvatar && "cursor-pointer hover:scale-105"
                 )}
                 onClick={() => isEditing && !uploadingAvatar && avatarInputRef.current?.click()}
@@ -365,31 +368,31 @@ export const Profile = () => {
                     uploadingAvatar ? "opacity-100 animate-pulse" : "opacity-0 group-hover/avatar:opacity-100"
                   )}>
                      <Upload className="w-6 h-6 mb-1" />
-                     <span className="text-[10px] font-bold uppercase tracking-widest text-center px-2">{uploadingAvatar ? 'Uploading...' : 'Change Avatar'}</span>
+                     <span className="text-[10px] font-black uppercase tracking-widest text-center px-2">{uploadingAvatar ? 'Uploading...' : 'Authorize Change'}</span>
                   </div>
                 )}
               </div>
               
               <div className="pb-2">
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-4 flex-wrap">
                   {isEditing ? (
                     <input 
                       type="text" 
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="text-3xl md:text-4xl font-black text-text-primary bg-bg-main border-2 border-brand-gold rounded-xl px-4 py-1.5 focus:outline-none w-full max-w-[280px] sm:max-w-xs transition-shadow shadow-[0_0_0_4px_rgba(250,204,21,0.2)]"
-                      placeholder="Your Name"
+                      className="text-3xl md:text-5xl font-black text-text-primary bg-black/20 border-2 border-brand-gold rounded-2xl px-6 py-2 focus:outline-none w-full max-w-[280px] sm:max-w-xs transition-shadow shadow-[0_0_40px_rgba(251,191,36,0.1)] tracking-tighter"
+                      placeholder="Ident Name"
                       onClick={(e) => e.stopPropagation()}
                       autoFocus
                     />
                   ) : (
                     <div className="flex flex-col">
-                      <div className="flex items-center gap-3">
-                        <h1 className="text-3xl md:text-4xl font-black text-text-primary hover:text-brand-gold transition-colors cursor-default">{currentName}</h1>
+                      <div className="flex items-center gap-4">
+                        <h1 className="text-4xl md:text-6xl font-black text-text-primary tracking-tighter group hover:text-brand-gold transition-colors cursor-default select-none">{currentName}</h1>
                         <PresenceDot status={user.presence} showLabel className="hidden md:flex ml-2" />
                       </div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-mono font-bold text-brand-gold bg-bg-surface px-2 py-0.5 rounded-lg border border-brand-gold/20 shadow-sm">
+                      <div className="flex items-center gap-3 mt-2">
+                        <span className="text-[10px] font-mono font-black text-brand-gold bg-brand-gold/10 px-3 py-1 rounded-xl border border-brand-gold/20 shadow-inner">
                           #{user.luminaId || getShortId(user.id)}
                         </span>
                         <PresenceDot status={user.presence} className="md:hidden" />
@@ -397,114 +400,104 @@ export const Profile = () => {
                     </div>
                   )}
                   {user.inventory?.includes('badge_scholar') && !isEditing && (
-                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 p-1.5 rounded-xl shadow-lg shadow-indigo-200 animate-pulse" title="Scholar Badge">
-                      <Award className="w-5 h-5 text-bg-main" />
+                    <div className="bg-gradient-to-br from-brand-gold to-amber-600 p-2 rounded-2xl shadow-xl shadow-brand-gold/20 animate-pulse p-2" title="Academic Excellence Badge">
+                      <Award className="w-6 h-6 text-bg-main" />
                     </div>
                   )}
                   {!isEditing && (
                     <span className={cn(
-                      "text-xs font-black tracking-widest uppercase px-3 py-1.5 rounded-xl shadow-sm flex items-center justify-center -mt-1",
+                      "text-[10px] font-black tracking-[0.2em] uppercase px-4 py-2 rounded-2xl shadow-premium flex items-center justify-center -mt-1 border border-white/5",
                       getPerformanceBadge(calculatePerformanceScore(user)).color,
                       getPerformanceBadge(calculatePerformanceScore(user)).shadow,
-                      (calculatePerformanceScore(user) >= 2000 && calculatePerformanceScore(user) < 5000) ? "text-[#0A1128]" : "text-bg-main"
+                      (calculatePerformanceScore(user) >= 2000 && calculatePerformanceScore(user) < 5000) ? "text-[#0A1128]" : "text-white"
                     )}>
                       {getPerformanceBadge(calculatePerformanceScore(user)).title}
                     </span>
                   )}
                   {!isEditing && (
-                    <button onClick={() => setIsEditing(true)} className="p-2 text-text-secondary hover:text-brand-gold hover:bg-bg-main rounded-xl transition-colors border border-border-main shadow-sm bg-bg-surface">
-                      <Edit2 className="w-4 h-4" />
+                    <button onClick={() => setIsEditing(true)} className="p-3 text-text-muted hover:text-brand-gold hover:bg-white/5 rounded-2xl transition-all border border-white/5 shadow-premium bg-bg-surface">
+                      <Edit2 className="w-5 h-5" />
                     </button>
                   )}
                 </div>
-                <div className="flex flex-wrap items-center gap-3 md:gap-6 text-text-secondary font-medium text-[11px] md:text-sm mt-4">
-                  <div className="flex items-center gap-4 bg-[#1A2B48]/5 border border-[#1A2B48]/10 px-4 py-2 rounded-2xl">
-                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start">
-                      <span className="font-black text-text-primary text-base leading-none">{(user.followerIds || []).length}</span> 
-                      <span className="uppercase tracking-widest text-[8px] font-bold opacity-60">Followers</span>
+                <div className="flex flex-wrap items-center gap-4 md:gap-8 text-text-secondary font-medium text-[11px] md:text-sm mt-6">
+                  <div className="flex items-center gap-6 bg-white/[0.02] border border-white/5 px-6 py-3 rounded-[1.5rem] shadow-inner">
+                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start group">
+                      <span className="font-black text-text-primary text-xl leading-none tracking-tight group-hover:scale-110 transition-transform origin-left">{(user.followerIds || []).length}</span> 
+                      <span className="uppercase tracking-[0.2em] text-[8px] font-black opacity-40 mt-1">Followers</span>
                     </button>
-                    <div className="w-px h-6 bg-border-main" />
-                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start">
-                      <span className="font-black text-text-primary text-base leading-none">{(user.followingIds || []).length}</span> 
-                      <span className="uppercase tracking-widest text-[8px] font-bold opacity-60">Following</span>
+                    <div className="w-px h-8 bg-white/5 shadow-inner" />
+                    <button onClick={() => setActiveTab('social')} className="hover:text-brand-gold transition-colors flex flex-col items-start group">
+                      <span className="font-black text-text-primary text-xl leading-none tracking-tight group-hover:scale-110 transition-transform origin-left">{(user.followingIds || []).length}</span> 
+                      <span className="uppercase tracking-[0.2em] text-[8px] font-black opacity-40 mt-1">Following</span>
                     </button>
                   </div>
                   
-                  <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-                    <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-black text-text-secondary bg-bg-main border border-border-main px-3 py-2 rounded-xl shadow-sm">
-                      <span className="opacity-50">LUMINA-ID:</span>
-                      <span className="text-text-primary font-mono">{user.luminaId || getShortId(user.id)}</span>
-                      <button onClick={() => copyToClipboard(user.luminaId || user.id)} className="ml-1 text-brand-gold hover:scale-110 transition-transform shrink-0"><Copy className="w-3 h-3" /></button>
+                  <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                    <span className="flex items-center gap-3 uppercase tracking-[0.2em] text-[10px] font-black text-text-muted bg-white/[0.01] border border-white/5 px-4 py-3 rounded-[1.25rem] shadow-sm">
+                      <span className="opacity-40 tracking-widest">ID-PTR:</span>
+                      <span className="text-text-primary font-mono tabular-nums">{user.luminaId || getShortId(user.id)}</span>
+                      <button onClick={() => copyToClipboard(user.luminaId || user.id)} className="ml-1 text-brand-gold hover:scale-110 transition-transform shrink-0"><Copy className="w-3.5 h-3.5" /></button>
                     </span>
                     
-                    <span className="flex items-center gap-2 uppercase tracking-wider text-[10px] font-black text-brand-gold bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-3 py-2 rounded-xl shadow-sm">
-                      <Coins className="w-3.5 h-3.5" /> 
+                    <span className="flex items-center gap-3 uppercase tracking-[0.2em] text-[10px] font-black text-brand-gold bg-brand-gold/5 border border-brand-gold/20 px-4 py-3 rounded-[1.25rem] shadow-inner">
+                      <Coins className="w-4 h-4" /> 
                       {user.coins.toLocaleString()}
                     </span>
 
                     {user.xpBoosterUntil && user.xpBoosterUntil > Date.now() && (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-cyan-400 bg-cyan-400/10 border border-cyan-400/20 px-3 py-2 rounded-xl">
-                        <Zap className="w-3.5 h-3.5" /> 1.5x XP
-                      </span>
-                    )}
-                    {user.taxHavenUntil && user.taxHavenUntil > Date.now() && (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-3 py-2 rounded-xl">
-                        <Shield className="w-3.5 h-3.5" /> -10% Tax
-                      </span>
-                    )}
-                    {user.doubleDownShieldUntil && user.doubleDownShieldUntil > Date.now() && (
-                      <span className="flex items-center gap-1.5 uppercase tracking-wider text-[10px] font-black text-amber-400 bg-amber-400/10 border border-amber-400/20 px-3 py-2 rounded-xl">
-                        <ShieldAlert className="w-3.5 h-3.5" /> 75% Refund
+                      <span className="flex items-center gap-2 uppercase tracking-[0.2em] text-[10px] font-black text-cyan-400 bg-cyan-400/5 border border-cyan-400/20 px-4 py-3 rounded-[1.25rem]">
+                        <Zap className="w-4 h-4" /> 1.5x Multiplier
                       </span>
                     )}
                   </div>
                 </div>
 
                 {isEditing ? (
-                  <div className="mt-4">
-                    <p className="text-[10px] uppercase font-black text-text-secondary tracking-widest mb-1 mx-1">Your Bio</p>
+                  <div className="mt-6">
+                    <p className="text-[10px] uppercase font-black text-text-muted tracking-[0.3em] mb-2 mx-1 opacity-60">Neural Identifier Bio</p>
                     <textarea 
                       value={editBio}
                       onChange={(e) => setEditBio(e.target.value)}
-                      placeholder="Tell the world about your academic goal..."
-                      className="w-full max-w-sm bg-bg-main border-2 border-border-main rounded-2xl px-4 py-3 text-sm font-medium focus:border-brand-gold outline-none transition-all resize-none"
+                      placeholder="Define your operational objectives..."
+                      className="w-full max-w-lg bg-black/20 border-2 border-white/5 rounded-3xl px-6 py-4 text-sm font-medium focus:border-brand-gold/40 outline-none transition-all resize-none shadow-inner"
                       rows={2}
                     />
                   </div>
                 ) : currentBio && (
-                  <p className="mt-4 text-sm text-text-secondary font-medium italic border-l-2 border-[#D4AF37] pl-4 py-1 max-w-md">
+                  <p className="mt-6 text-sm text-text-muted font-medium italic border-l-2 border-brand-gold pl-6 py-2 max-w-lg leading-relaxed opacity-80">
                     "{currentBio}"
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 self-start md:self-end pt-6 md:pt-0 pb-2 w-full lg:w-auto">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 self-start md:self-end pt-6 md:pt-0 pb-2 w-full lg:w-auto">
               <button 
                 onClick={() => setShowShare(true)}
-                className="bg-bg-main hover:bg-border-main text-text-primary transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 border border-border-main active:scale-95"
+                className="bg-white/5 hover:bg-white/10 text-text-primary transition-all font-black text-[10px] uppercase tracking-[0.3em] px-6 py-4 rounded-[1.5rem] shadow-premium flex items-center justify-center gap-2 border border-white/5 active:scale-95"
               >
                 <Share2 className="w-4 h-4" /> <span>Share</span>
               </button>
               {user.role === 'student' && (
-                <Link to={`/scorecard/${user.id}`} className="bg-bg-surface hover:bg-brand-gold/5 text-text-primary border border-brand-gold/20 transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95 text-center">
-                  <Target className="w-4 h-4 text-brand-gold" /> <span>Transcript</span>
+                <Link to={`/scorecard/${user.id}`} className="bg-white/[0.01] hover:bg-brand-gold/5 text-text-primary border border-brand-gold/10 transition-all font-black text-[10px] uppercase tracking-[0.3em] px-6 py-4 rounded-[1.5rem] shadow-premium flex items-center justify-center gap-2 active:scale-95 text-center">
+                  <Target className="w-4 h-4 text-brand-gold" /> <span>Archive</span>
                 </Link>
               )}
               <button 
                 onClick={() => setActiveTab('social')}
                 className={cn(
-                  "transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95", 
-                  activeTab === 'social' ? 'bg-[#1A2B48] text-brand-gold border border-brand-gold/30 shadow-lg shadow-brand-gold/10' : 'bg-bg-main text-text-primary border border-border-main hover:bg-border-main'
+                  "transition-all font-black text-[10px] uppercase tracking-[0.3em] px-6 py-4 rounded-[1.5rem] shadow-premium flex items-center justify-center gap-2 active:scale-95", 
+                  activeTab === 'social' ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/30 shadow-2xl shadow-brand-gold/10' : 'bg-white/5 text-text-primary border border-white/5 hover:bg-white/10'
                 )}
               >
-                <Users className="w-4 h-4" /> <span>Social</span>
+                <Users className="w-4 h-4" /> <span>Network</span>
               </button>
               <button 
                 onClick={() => setActiveTab('settings')}
                 className={cn(
-                  "transition-all font-black text-[10px] uppercase tracking-widest px-4 py-3.5 rounded-2xl shadow-sm flex items-center justify-center gap-2 active:scale-95", 
-                  activeTab === 'settings' ? 'bg-[#1A2B48] text-brand-gold border border-brand-gold/30 shadow-lg shadow-brand-gold/10' : 'bg-bg-main text-text-primary border border-border-main hover:bg-border-main'
+                  "transition-all font-black text-[10px] uppercase tracking-[0.3em] px-6 py-4 rounded-[1.5rem] shadow-premium flex items-center justify-center gap-2 active:scale-95", 
+                  activeTab === 'settings' ? 'bg-brand-gold/10 text-brand-gold border border-brand-gold/30 shadow-2xl shadow-brand-gold/10' : 'bg-white/5 text-text-primary border border-white/5 hover:bg-white/10'
                 )}
               >
                 <Settings className="w-4 h-4" /> <span>System</span>
@@ -521,23 +514,23 @@ export const Profile = () => {
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
             className="grid grid-cols-1 lg:grid-cols-2 gap-6"
            >
-              <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 flex flex-col">
-                <h3 className="font-black text-text-primary text-lg md:text-xl mb-6 flex items-center justify-between">
-                  <span className="flex items-center gap-2"><Users className="w-5 h-5 text-brand-gold" /> Following</span>
-                  <span className="text-[10px] font-black bg-[#1A2B48] text-brand-gold px-3 py-1 rounded-full uppercase tracking-widest border border-brand-gold/20">{(user.followingIds || []).length}</span>
+              <div className="bg-bg-surface rounded-[2.5rem] border border-white/5 shadow-premium p-8 md:p-10 flex flex-col">
+                <h3 className="font-black text-text-primary text-xl md:text-2xl mb-8 flex items-center justify-between">
+                  <span className="flex items-center gap-4"><Users className="w-6 h-6 text-brand-gold" /> Subscribed Links</span>
+                  <span className="text-[10px] font-black bg-brand-gold/10 text-brand-gold px-4 py-1.5 rounded-full uppercase tracking-[0.2em] border border-brand-gold/20">{(user.followingIds || []).length}</span>
                 </h3>
 
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
                   {loadingSocial ? (
                     <div className="space-y-4">
                       {[1,2,3].map(i => (
-                        <div key={i} className="h-16 w-full animate-pulse bg-bg-main rounded-2xl" />
+                        <div key={i} className="h-20 w-full animate-pulse bg-white/[0.02] rounded-3xl" />
                       ))}
                     </div>
                   ) : following.length > 0 ? (
                     following.map(f => (
-                      <Link to={`/leaderboard?search=${f.name}`} key={f.id} className="flex items-center gap-3 p-3 bg-bg-main rounded-2xl border border-border-main hover:border-brand-gold/30 hover:shadow-lg hover:shadow-brand-gold/5 transition-all group">
-                        <div className="w-12 h-12 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0 group-hover:scale-105 transition-transform">
+                      <Link to={`/leaderboard?search=${f.name}`} key={f.id} className="flex items-center gap-4 p-4 bg-white/[0.01] rounded-3xl border border-white/5 hover:border-brand-gold/30 hover:bg-white/[0.03] transition-all group">
+                        <div className="w-14 h-14 rounded-2xl bg-bg-surface border border-white/5 flex items-center justify-center text-2xl overflow-hidden shrink-0 group-hover:scale-105 transition-transform shadow-inner">
                           {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
                             <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
                           ) : (
@@ -545,38 +538,38 @@ export const Profile = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="font-black text-sm text-text-primary truncate">{f.name}</p>
-                          <p className="text-[9px] font-mono font-black text-text-secondary uppercase tracking-tight truncate opacity-60">#{f.luminaId || getShortId(f.id)}</p>
+                          <p className="font-black text-base text-text-primary truncate tracking-tight">{f.name}</p>
+                          <p className="text-[10px] font-mono font-black text-text-muted uppercase tracking-widest truncate opacity-60">ID://{f.luminaId || getShortId(f.id)}</p>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-text-secondary group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
+                        <ChevronRight className="w-5 h-5 text-text-muted group-hover:text-brand-gold group-hover:translate-x-1 transition-all" />
                       </Link>
                     ))
                   ) : (
-                    <div className="text-center py-12 bg-bg-main rounded-[2rem] border border-dashed border-border-main">
-                      <Search className="w-10 h-10 mx-auto mb-3 opacity-20 text-[#1A2B48]" />
-                      <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">No active connections</p>
-                      <Link to="/leaderboard" className="mt-4 inline-block text-[10px] font-black uppercase tracking-[0.2em] text-brand-gold hover:underline bg-[#1A2B48] px-4 py-2 rounded-xl">Hunt Recruits</Link>
+                    <div className="text-center py-16 bg-white/[0.01] rounded-[2.5rem] border border-dashed border-white/10">
+                      <Search className="w-12 h-12 mx-auto mb-4 opacity-20 text-text-muted" />
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-60">Zero Active Links Identified</p>
+                      <Link to="/leaderboard" className="mt-8 inline-block text-[10px] font-black uppercase tracking-[0.3em] text-brand-gold hover:underline bg-brand-gold/10 px-6 py-3 rounded-2xl border border-brand-gold/20 shadow-lg shadow-brand-gold/5">Recruit Operatives</Link>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 flex flex-col">
-                <h3 className="font-black text-text-primary text-lg md:text-xl mb-6 flex items-center justify-between">
-                  <span className="flex items-center gap-2"><Heart className="w-5 h-5 text-rose-500" /> Followers</span>
-                  <span className="text-[10px] font-black bg-brand-gold text-[#1A2B48] px-3 py-1 rounded-full uppercase tracking-widest">{(user.followerIds || []).length}</span>
+              <div className="bg-bg-surface rounded-[2.5rem] border border-white/5 shadow-premium p-8 md:p-10 flex flex-col">
+                <h3 className="font-black text-text-primary text-xl md:text-2xl mb-8 flex items-center justify-between">
+                  <span className="flex items-center gap-4"><Heart className="w-6 h-6 text-rose-500" /> Incoming Signals</span>
+                  <span className="text-[10px] font-black bg-rose-500 text-white px-4 py-1.5 rounded-full uppercase tracking-[0.2em] shadow-lg shadow-rose-500/20">{(user.followerIds || []).length}</span>
                 </h3>
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
+                <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 no-scrollbar flex-1">
                   {loadingSocial ? (
                     <div className="space-y-4">
                       {[1,2,3].map(i => (
-                        <div key={i} className="h-16 w-full animate-pulse bg-bg-main rounded-2xl" />
+                        <div key={i} className="h-20 w-full animate-pulse bg-white/[0.02] rounded-3xl" />
                       ))}
                     </div>
                   ) : followers.length > 0 ? (
                     followers.map(f => (
-                      <div key={f.id} className="flex items-center gap-3 p-3 bg-bg-main rounded-2xl border border-border-main transition-all">
-                        <div className="w-12 h-12 rounded-xl bg-bg-surface border border-border-main flex items-center justify-center text-xl overflow-hidden shrink-0">
+                      <div key={f.id} className="flex items-center gap-4 p-4 bg-white/[0.01] rounded-3xl border border-white/5 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-bg-surface border border-white/5 flex items-center justify-center text-2xl overflow-hidden shrink-0 shadow-inner">
                           {(f.avatar?.startsWith('http') || f.avatar?.startsWith('data:')) ? (
                             <img src={f.avatar} alt={f.name} className="w-full h-full object-cover" />
                           ) : (
@@ -584,38 +577,37 @@ export const Profile = () => {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 text-left">
-                          <p className="font-black text-sm text-text-primary truncate">{f.name}</p>
-                          <p className="text-[9px] font-mono font-black text-text-secondary uppercase tracking-tight truncate opacity-60">#{f.luminaId || getShortId(f.id)}</p>
+                          <p className="font-black text-base text-text-primary truncate tracking-tight">{f.name}</p>
+                          <p className="text-[10px] font-mono font-black text-text-muted uppercase tracking-widest truncate opacity-60">ID://{f.luminaId || getShortId(f.id)}</p>
                         </div>
                         <div className="flex gap-2">
                            {user.followingIds?.includes(f.id) ? (
-                             <span className="text-[8px] font-black uppercase text-brand-gold tracking-widest bg-[#1A2B48] px-2 py-1.5 rounded-lg border border-brand-gold/20">Elite Link</span>
+                             <span className="text-[9px] font-black uppercase text-brand-gold tracking-[0.2em] bg-brand-gold/10 px-3 py-2 rounded-xl border border-brand-gold/20">Elite Link</span>
                            ) : (
                              <button 
                                onClick={() => {
                                  userService.followUser(user.id, f.id);
-                                 toast.success(`Connected with ${f.name}`);
+                                 toast.success(`Linked with ${f.name}`);
                                }} 
-                               className="text-[8px] font-black uppercase text-bg-main tracking-widest bg-brand-gold px-3 py-1.5 rounded-lg hover:scale-105 transition-all shadow-lg shadow-brand-gold/10"
+                               className="text-[9px] font-black uppercase text-bg-main tracking-[0.2em] bg-brand-gold px-4 py-2 rounded-xl hover:scale-105 transition-all shadow-xl shadow-brand-gold/20"
                              >
-                               Connect
+                               Authorize
                              </button>
                            )}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-center py-12 bg-bg-main rounded-[2rem] border border-dashed border-border-main">
-                      <Heart className="w-10 h-10 mx-auto mb-3 opacity-20 text-rose-500" />
-                      <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">No signals detected</p>
-                      <p className="text-[9px] font-black text-text-secondary mt-1 tracking-tighter opacity-60">Status comes from domination.</p>
+                    <div className="text-center py-16 bg-white/[0.01] rounded-[2.5rem] border border-dashed border-white/10">
+                      <Heart className="w-12 h-12 mx-auto mb-4 opacity-20 text-rose-500" />
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-60">No External Signals Detected</p>
+                      <p className="text-[9px] font-black text-text-muted/40 mt-2 tracking-widest uppercase italic">Operational dominance required for visibility.</p>
                     </div>
                   )}
                 </div>
               </div>
             </motion.div>
         )}
-
         {activeTab === 'settings' && (
           <motion.div 
             key="settings"
@@ -623,22 +615,27 @@ export const Profile = () => {
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
             {/* Column 1: Appearance */}
-            <div className="bg-bg-surface rounded-[2rem] border border-border-main shadow-sm p-8 h-fit">
-               <div className="flex items-center justify-between gap-3 mb-6">
-                 <h3 className="font-black text-text-primary text-xl flex items-center gap-3">
-                   <Palette className="w-6 h-6 text-brand-gold"/> Appearance
+            <div className="bg-bg-surface rounded-[2.5rem] border border-white/5 shadow-premium p-8 md:p-10 h-fit">
+               <div className="flex items-center justify-between gap-4 mb-8">
+                 <h3 className="font-black text-text-primary text-xl md:text-2xl flex items-center gap-4">
+                   <Palette className="w-6 h-6 text-brand-gold"/> Aesthetics
                  </h3>
                </div>
                
-               <div className="space-y-8">
+               <div className="space-y-10">
                  <div>
-                   <p className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-4">Avatar Symbol</p>
-                   <div className="grid grid-cols-6 sm:grid-cols-8 gap-3 max-h-64 overflow-y-auto p-2 -m-2 no-scrollbar">
+                   <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] mb-6 opacity-60">Neural Identifier Template</p>
+                   <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-5 lg:grid-cols-6 gap-4 max-h-80 overflow-y-auto p-2 -m-2 no-scrollbar">
                      {AVATARS.map(avatar => (
                        <button 
                          key={avatar} 
                          onClick={() => handleSaveAvatar(avatar)}
-                         className={cn("text-2xl aspect-square flex items-center justify-center rounded-xl transition hover:scale-110", user.avatar === avatar ? "bg-brand-gold/10 border-2 border-brand-gold scale-110" : "bg-bg-main border border-border-main hover:bg-border-main")}
+                         className={cn(
+                           "text-2xl aspect-square flex items-center justify-center rounded-[1.25rem] transition-all relative group shadow-sm", 
+                           user.avatar === avatar 
+                             ? "bg-brand-gold/10 border-2 border-brand-gold shadow-[0_0_40px_rgba(251,191,36,0.15)] scale-110 z-10" 
+                             : "bg-white/[0.02] border border-white/5 hover:bg-white/[0.05] hover:scale-105"
+                         )}
                        >
                          {avatar}
                        </button>
@@ -649,17 +646,17 @@ export const Profile = () => {
             </div>
 
             {/* Column 2: Account & System */}
-            <div className="bg-bg-surface rounded-3xl border border-border-main shadow-sm p-6 md:p-8 space-y-8 h-fit">
+            <div className="bg-bg-surface rounded-[2.5rem] border border-white/5 shadow-premium p-8 md:p-10 space-y-10 h-fit">
                {/* Account Section */}
-               <div className="space-y-6">
-                  <h3 className="font-black text-text-primary text-xl flex items-center gap-3 mb-6">
-                    <UserIcon className="w-6 h-6 text-brand-gold"/> Account
+               <div className="space-y-8">
+                  <h3 className="font-black text-text-primary text-xl md:text-2xl flex items-center gap-4">
+                    <UserIcon className="w-6 h-6 text-brand-gold"/> Neural-Link
                   </h3>
                   <div className="space-y-4">
-                     <div className="bg-bg-main p-4 md:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-border-main">
+                     <div className="bg-white/[0.01] p-6 rounded-3xl flex flex-col sm:flex-row sm:items-center justify-between gap-6 border border-white/5 shadow-inner">
                         <div>
-                           <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-1">Display Name</p>
-                           <p className="font-black text-text-primary">{user.name}</p>
+                           <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2 opacity-50">Operational Title</p>
+                           <p className="font-black text-text-primary text-lg tracking-tight tabular-nums">{user.name}</p>
                         </div>
                         <button onClick={() => {
                            setActiveTab('overview');
@@ -667,64 +664,63 @@ export const Profile = () => {
                            setEditName(user.name || '');
                            setEditAvatar(user.avatar || '');
                            setEditBanner(user.bannerColor || '');
-                        }} className="text-brand-gold hover:text-bg-main bg-brand-gold/10 hover:bg-brand-gold px-4 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all cursor-pointer border border-brand-gold/20 text-center">
-                           Modify Identity
+                        }} className="text-brand-gold hover:text-bg-main bg-brand-gold/5 hover:bg-brand-gold px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all border border-brand-gold/20 shadow-lg shadow-brand-gold/5 text-center">
+                           Modify Ident
                         </button>
                      </div>
-                     <div className="bg-bg-main p-4 md:p-5 rounded-2xl flex flex-col gap-1 border border-border-main">
-                        <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Email Identity</p>
-                        <div className="flex items-center gap-2">
-                           <p className="font-black text-text-primary truncate">{user.email}</p>
-                           <span className="text-[9px] font-black bg-emerald-500 text-white uppercase px-2 py-0.5 rounded-full tracking-widest shrink-0">Verified</span>
+                     <div className="bg-white/[0.01] p-6 rounded-3xl flex flex-col gap-2 border border-white/5 shadow-inner">
+                        <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-50">Signal Frequency (Email)</p>
+                        <div className="flex items-center gap-3">
+                           <p className="font-black text-text-primary truncate tracking-tight">{user.email}</p>
+                           <span className="text-[9px] font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase px-3 py-1 rounded-full tracking-widest shrink-0">AUTHORIZED</span>
                         </div>
                      </div>
                   </div>
                </div>
 
                {/* System Section */}
-               <div className="pt-6 border-t border-border-main">
-                 <h3 className="font-black text-text-primary text-xl flex items-center gap-3 mb-6">
-                   <Settings className="w-6 h-6 text-brand-gold"/> System
+               <div className="pt-8 border-t border-white/5">
+                 <h3 className="font-black text-text-primary text-xl md:text-2xl flex items-center gap-4 mb-8">
+                   <Settings className="w-6 h-6 text-brand-gold"/> System Ops
                  </h3>
-                 <div className="space-y-3">
-                   <div className="flex items-center justify-between p-4 md:p-5 bg-bg-main rounded-[1.5rem] border border-border-main">
-                     <div className="pr-4">
-                       <p className="font-black text-text-primary text-sm uppercase tracking-tight">Public Presence</p>
-                       <p className="text-[11px] text-text-secondary font-medium mt-0.5 leading-tight">Appear in the global domination rankings</p>
+                 <div className="space-y-4">
+                   <div className="flex items-center justify-between p-6 bg-white/[0.01] rounded-[2rem] border border-white/5 shadow-inner">
+                     <div className="pr-6">
+                       <p className="font-black text-text-primary text-sm font-black uppercase tracking-[0.1em]">Public Presence</p>
+                       <p className="text-[11px] text-text-muted font-medium mt-1 leading-relaxed italic opacity-60 tracking-tight">Appear in the global domination rankings</p>
                      </div>
-                     <div className="w-12 h-6 bg-brand-gold rounded-full relative cursor-pointer shadow-inner shrink-0" aria-label="Toggle setting" onClick={() => toast("Privacy focus: Forced public for now", { icon: '🔒' })}>
-                       <div className="w-4 h-4 bg-white rounded-full absolute top-1 right-1 shadow-sm"></div>
+                     <div className="w-14 h-7 bg-brand-gold rounded-full relative cursor-pointer shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)] shrink-0 transition-colors" aria-label="Toggle setting" onClick={() => toast("Privacy focus: Forced public for current epoch", { icon: '🔒' })}>
+                       <div className="w-5 h-5 bg-white rounded-full absolute top-1 right-1 shadow-lg shadow-black/20"></div>
                      </div>
                    </div>
-                   <div className="flex items-center justify-between p-4 md:p-5 bg-bg-main rounded-[1.5rem] border border-border-main">
-                     <div className="pr-4">
-                       <p className="font-black text-text-primary text-sm uppercase tracking-tight">Neural Alerts</p>
-                       <p className="text-[11px] text-text-secondary font-medium mt-0.5 leading-tight">Notifications about mission status</p>
+                   <div className="flex items-center justify-between p-6 bg-white/[0.01] rounded-[2rem] border border-white/5 shadow-inner">
+                     <div className="pr-6">
+                       <p className="font-black text-text-primary text-sm font-black uppercase tracking-[0.1em]">Neural Alerts</p>
+                       <p className="text-[11px] text-text-muted font-medium mt-1 leading-relaxed italic opacity-60 tracking-tight">Real-time status synchronisation</p>
                      </div>
-                     <div className="w-12 h-6 bg-bg-surface border border-border-main rounded-full relative cursor-pointer shrink-0" aria-label="Toggle setting" onClick={() => toast("Notifications under maintenance", { icon: '🔔' })}>
-                       <div className="w-4 h-4 bg-text-secondary rounded-full absolute top-0.5 left-0.5 mt-0.5 ml-0.5"></div>
+                     <div className="w-14 h-7 bg-white/[0.05] border border-white/10 rounded-full relative cursor-pointer shadow-inner shrink-0" aria-label="Toggle setting" onClick={() => toast("Notifications under maintenance", { icon: '🔔' })}>
+                       <div className="w-5 h-5 bg-text-muted/40 rounded-full absolute top-1 left-1 shadow-sm"></div>
                      </div>
                    </div>
                    <div 
                      onClick={() => setShowRules(true)}
-                     className="flex items-center justify-between p-4 md:p-5 bg-[#1A2B48] hover:bg-black group rounded-[1.5rem] border border-brand-gold/30 cursor-pointer transition-all active:scale-[0.98] shadow-lg shadow-brand-gold/5"
+                     className="flex items-center justify-between p-6 bg-brand-gold/5 hover:bg-brand-gold/10 group rounded-[2rem] border border-brand-gold/30 cursor-pointer transition-all active:scale-[0.98] shadow-2xl shadow-brand-gold/5"
                    >
-                     <div className="flex items-center gap-4">
-                       <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20">
-                          <BookOpen className="w-5 h-5 shadow-sm" />
+                     <div className="flex items-center gap-5">
+                       <div className="w-12 h-12 bg-white/5 text-brand-gold rounded-2xl flex items-center justify-center border border-white/10 group-hover:scale-110 transition-transform">
+                          <BookOpen className="w-6 h-6" />
                        </div>
                        <div>
-                         <p className="font-black text-brand-gold text-sm uppercase tracking-widest">Platform Codex</p>
-                         <p className="text-[10px] text-brand-gold/60 mt-0.5 font-bold uppercase tracking-tight">Regulations & Economy</p>
+                         <p className="font-black text-brand-gold text-base uppercase tracking-[0.1em]">Platform Codex</p>
+                         <p className="text-[10px] text-brand-gold/60 mt-1 font-black uppercase tracking-widest italic opacity-80">Regulations & Economy</p>
                        </div>
                      </div>
-                     <ChevronRight className="w-5 h-5 text-brand-gold group-hover:translate-x-1 transition-transform" />
+                     <ChevronRight className="w-6 h-6 text-brand-gold group-hover:translate-x-1 transition-transform" />
                    </div>
                  </div>
                  <button 
                    onClick={logOut}
-                   className="w-full mt-6 bg-rose-600/5 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-600/20 transition-all font-black text-xs uppercase tracking-[0.2em] p-5 rounded-2xl shadow-sm flex items-center justify-center gap-2 group"
-                   title="Logout"
+                   className="w-full mt-8 bg-rose-500/5 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 transition-all font-black text-[10px] uppercase tracking-[0.3em] p-6 rounded-3xl shadow-premium flex items-center justify-center gap-3 group"
                  >
                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> <span>Terminate Session</span>
                  </button>
@@ -741,73 +737,72 @@ export const Profile = () => {
           >
             {/* Bento Quick Stats Grid */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3 md:gap-4">
-                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center items-center relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                  <div className="bg-bg-surface rounded-3xl p-6 border border-white/5 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/5 opacity-40 group-hover:scale-110 transition-transform duration-700">
                       <Star className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Level</p>
+                    <p className="relative z-10 text-text-muted text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5 opacity-60">Status LVL</p>
                     <div className="relative z-10 flex items-center gap-1">
-                      <span className="text-xl font-black text-text-primary">{currentLevel}</span>
+                      <span className="text-2xl font-black text-text-primary tracking-tighter tabular-nums">{currentLevel}</span>
                     </div>
                   </div>
 
-                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center items-center relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                  <div className="bg-bg-surface rounded-3xl p-6 border border-white/5 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/5 opacity-40 group-hover:scale-110 transition-transform duration-700">
                       <Crown className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">VIP</p>
+                    <p className="relative z-10 text-text-muted text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5 opacity-60">VIP Tier</p>
                     <div className="relative z-10 flex items-center gap-1">
-                      <span className="text-xl font-black text-brand-gold">{getVIPLevel(user).level}</span>
+                      <span className="text-2xl font-black text-brand-gold tracking-tighter">{getVIPLevel(user).level}</span>
                     </div>
                   </div>
 
-                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center relative overflow-hidden group">
-                    <div className="absolute -right-4 -top-4 text-orange-500/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                  <div className="bg-bg-surface rounded-3xl p-6 border border-white/5 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-orange-500/5 opacity-40 group-hover:scale-110 transition-transform duration-700">
                       <Flame className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Streak</p>
-                    <div className="relative z-10 flex items-center gap-1">
-                      <span className="text-xl font-black text-text-primary">{user.streak || 0}</span>
-                      <span className="text-[10px] font-bold text-text-secondary">DAYS</span>
+                    <p className="relative z-10 text-text-muted text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5 opacity-60">Burn Duration</p>
+                    <div className="relative z-10 flex items-center justify-center gap-1.5">
+                      <span className="text-2xl font-black text-text-primary tracking-tighter tabular-nums">{user.streak || 0}</span>
+                      <span className="text-[8px] font-black text-text-muted opacity-40 tracking-widest mt-1 uppercase">Cycles</span>
                     </div>
                   </div>
-                  <div className="bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col relative overflow-hidden group border-brand-gold/10">
-                    <div className="absolute -right-4 -top-4 text-brand-gold/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+
+                  <div className="bg-bg-surface rounded-3xl p-6 border border-white/5 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/5 opacity-40 group-hover:scale-110 transition-transform duration-700">
                       <Trophy className="w-20 h-20" />
                     </div>
-                    <div className="relative z-10 w-full overflow-hidden">
-                      <p className="text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Rank</p>
-                      <div className="flex items-end gap-1">
-                        <span className="text-xl font-black text-text-primary leading-none">#{user.rank || '---'}</span>
-                      </div>
+                    <p className="relative z-10 text-text-muted text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5 opacity-60">Global Rank</p>
+                    <div className="relative z-10 flex items-center gap-1">
+                      <span className="text-2xl font-black text-text-primary tracking-tighter tabular-nums">#{user.rank || '---'}</span>
                     </div>
                   </div>
 
-                  <Link to="/assignments?filter=missed" className="bg-rose-500/10 rounded-3xl p-5 border border-rose-500/20 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:bg-rose-500/20 transition-all cursor-pointer">
-                    <div className="absolute -right-4 -top-4 text-rose-500/20 opacity-20 group-hover:scale-110 transition-transform duration-500">
+                  <Link to="/assignments?filter=missed" className="bg-rose-500/5 rounded-3xl p-6 border border-rose-500/20 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group hover:bg-rose-500/10 transition-all cursor-pointer">
+                    <div className="absolute -right-4 -top-4 text-rose-500/10 opacity-30 group-hover:scale-110 transition-transform duration-700">
                       <AlertCircle className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-rose-500 text-[10px] font-black uppercase tracking-widest leading-none mb-1">Missed</p>
-                    <p className="relative z-10 text-xl font-black text-rose-500">{missionStats.missed}</p>
+                    <p className="relative z-10 text-rose-500 text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5">Terminated</p>
+                    <p className="relative z-10 text-2xl font-black text-rose-500 tabular-nums">{missionStats.missed}</p>
                   </Link>
 
-                  <Link to="/assignments?filter=retest" className="bg-amber-500/10 rounded-3xl p-5 border border-amber-500/20 shadow-sm flex flex-col justify-center relative overflow-hidden group hover:bg-amber-500/20 transition-all cursor-pointer">
-                    <div className="absolute -right-4 -top-4 text-amber-500/20 opacity-20 group-hover:scale-110 transition-transform duration-500">
+                  <Link to="/assignments?filter=retest" className="bg-amber-500/5 rounded-3xl p-6 border border-amber-500/20 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group hover:bg-amber-500/10 transition-all cursor-pointer">
+                    <div className="absolute -right-4 -top-4 text-amber-500/10 opacity-30 group-hover:scale-110 transition-transform duration-700">
                       <Zap className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-amber-500 text-[10px] font-black uppercase tracking-widest leading-none mb-1">Retests</p>
-                    <p className="relative z-10 text-xl font-black text-amber-500">{missionStats.retest}</p>
+                    <p className="relative z-10 text-amber-500 text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5">Pending Re-Val</p>
+                    <p className="relative z-10 text-2xl font-black text-amber-500 tabular-nums">{missionStats.retest}</p>
                   </Link>
 
                   <button 
                     onClick={() => setShowBadges(true)}
-                    className="text-left bg-bg-surface rounded-3xl p-5 border border-border-main shadow-sm flex flex-col justify-center relative overflow-hidden group hover:border-fuchsia-500/50 hover:shadow-md transition-all cursor-pointer"
+                    className="bg-white/[0.01] rounded-3xl p-6 border border-white/5 shadow-premium flex flex-col justify-center items-center relative overflow-hidden group hover:border-brand-gold/30 hover:bg-white/[0.03] transition-all cursor-pointer"
                   >
-                    <div className="absolute -right-4 -top-4 text-fuchsia-500/10 opacity-30 group-hover:scale-110 transition-transform duration-500">
+                    <div className="absolute -right-4 -top-4 text-brand-gold/5 opacity-40 group-hover:scale-110 transition-transform duration-700">
                       <Award className="w-20 h-20" />
                     </div>
-                    <p className="relative z-10 text-text-secondary text-[10px] font-black uppercase tracking-widest leading-none mb-1">Badges</p>
-                    <p className="relative z-10 text-xl font-black text-fuchsia-500">{Object.keys(achievementsSummary).length}</p>
+                    <p className="relative z-10 text-text-muted text-[9px] font-black uppercase tracking-[0.2em] leading-none mb-1.5 opacity-60">Accolades</p>
+                    <p className="relative z-10 text-2xl font-black text-brand-gold tabular-nums">{Object.keys(achievementsSummary).length}</p>
                   </button>
                 </div>
 
@@ -818,85 +813,87 @@ export const Profile = () => {
                   <div className="lg:col-span-2 space-y-6">
                     {/* Top Badges */}
                     {(user.badgesClaimed && user.badgesClaimed.length > 0) && (
-                      <div className="bg-bg-surface rounded-[2rem] p-8 border border-border-main shadow-sm">
-                        <div className="flex items-center justify-between pb-4 mb-2">
-                          <h2 className="text-xl font-black text-text-primary flex items-center gap-2"><Award className="w-6 h-6 text-pink-500" /> Recent Badges</h2>
-                          <Link to="/badges" className="text-xs font-bold text-text-secondary hover:text-text-primary">View All →</Link>
+                      <Card className="p-8 md:p-10">
+                        <div className="flex items-center justify-between mb-8">
+                          <h2 className="text-xl md:text-2xl font-black text-text-primary flex items-center gap-4"><Award className="w-7 h-7 text-brand-gold" /> Distinguished Merits</h2>
+                          <Link to="/badges" className="text-[10px] font-black text-brand-gold hover:underline uppercase tracking-widest">Global Archives →</Link>
                         </div>
                         <div className="grid grid-cols-3 gap-4">
                           {user.badgesClaimed.slice(0, 3).map(badgeId => {
                             const badge = BADGES.find(b => b.id === badgeId);
                             if(!badge) return null;
                             return (
-                              <div key={badge.id} className="relative p-4 bg-bg-main rounded-[1.5rem] border border-border-main flex flex-col items-center text-center">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-2 shadow-inner border border-white/10 text-white ${badge.color}`}>
+                              <div key={badge.id} className="relative p-6 bg-white/[0.01] rounded-[2rem] border border-white/5 flex flex-col items-center text-center group hover:bg-white/[0.03] transition-all hover:scale-105">
+                                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-2xl border border-white/10 ${badge.color} text-white`}>
                                   {badge.icon}
                                 </div>
-                                <h3 className="font-bold text-text-primary text-xs">{badge.name}</h3>
+                                <h3 className="font-black text-text-primary text-xs uppercase tracking-tight opacity-80">{badge.name}</h3>
                               </div>
                             )
                           })}
                         </div>
-                      </div>
+                      </Card>
                     )}
 
-                    <div className="bg-bg-surface rounded-[2rem] p-8 border border-border-main shadow-sm">
-                      <div className="flex items-center justify-between pb-4 mb-2">
-                        <h2 className="text-xl font-black text-text-primary flex items-center gap-2"><TrendingUp className="w-6 h-6 text-brand-gold" /> Performance Analysis</h2>
+                    <Card className="p-8 md:p-10">
+                      <div className="flex items-center justify-between mb-10">
+                        <h2 className="text-xl md:text-2xl font-black text-text-primary flex items-center gap-4"><TrendingUp className="w-7 h-7 text-brand-gold" /> Performance Synthesis</h2>
                         <div className={cn(
-                          "px-4 py-1.5 rounded-xl text-bg-main text-xs font-black uppercase tracking-widest shadow-md",
+                          "px-5 py-2 rounded-2xl text-bg-main text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all hover:scale-105",
                           getPerformanceBadge(calculatePerformanceScore(user)).color
                         )}>
                           {getPerformanceBadge(calculatePerformanceScore(user)).title}
                         </div>
                       </div>
                       
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <div className="p-4 bg-bg-main rounded-[20px] border border-border-main flex flex-col justify-center items-center text-center">
-                          <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-1">Coin Power</p>
-                          <p className="text-lg font-black text-text-primary">+{user.coins || 0}</p>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+                        <div className="p-6 bg-white/[0.01] rounded-3xl border border-white/5 flex flex-col justify-center items-center text-center shadow-inner">
+                          <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-2 opacity-50">Liquidity</p>
+                          <p className="text-xl font-black text-text-primary tabular-nums tracking-tighter">+{user.coins || 0}</p>
                         </div>
-                        <div className="p-4 bg-orange-500/10 rounded-[20px] border border-orange-500/20 flex flex-col justify-center items-center text-center">
-                          <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">Streak Bonus</p>
-                          <p className="text-lg font-black text-orange-500">+{ (user.streak || 0) * 50 }</p>
+                        <div className="p-6 bg-orange-500/5 rounded-3xl border border-orange-500/10 flex flex-col justify-center items-center text-center shadow-inner">
+                          <p className="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em] mb-2 opacity-60">Neural Burn</p>
+                          <p className="text-xl font-black text-orange-500 tabular-nums tracking-tighter">+{ (user.streak || 0) * 50 }</p>
                         </div>
-                        <div className="p-4 bg-fuchsia-500/10 rounded-[20px] border border-fuchsia-500/20 flex flex-col justify-center items-center text-center">
-                          <p className="text-[10px] font-black text-fuchsia-500 uppercase tracking-widest mb-1">Achievement</p>
-                          <p className="text-lg font-black text-fuchsia-500">+{ (user.achievements?.length || 0) * 200 }</p>
+                        <div className="p-6 bg-brand-gold/5 rounded-3xl border border-brand-gold/10 flex flex-col justify-center items-center text-center shadow-inner">
+                          <p className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em] mb-2 opacity-60">Merit Points</p>
+                          <p className="text-xl font-black text-brand-gold tabular-nums tracking-tighter">+{ (user.achievements?.length || 0) * 200 }</p>
                         </div>
-                        <div className="p-4 bg-brand-gold/10 rounded-[20px] border border-brand-gold/20 flex flex-col justify-center items-center text-center">
-                          <p className="text-[10px] font-black text-brand-gold uppercase tracking-widest mb-1">Stockpile</p>
-                          <p className="text-lg font-black text-brand-gold">+{ (user.inventory?.length || 0) * 150 }</p>
+                        <div className="p-6 bg-cyan-500/5 rounded-3xl border border-cyan-500/10 flex flex-col justify-center items-center text-center shadow-inner">
+                          <p className="text-[10px] font-black text-cyan-500 uppercase tracking-[0.2em] mb-2 opacity-60">Stockpile Val</p>
+                          <p className="text-xl font-black text-cyan-500 tabular-nums tracking-tighter">+{ (user.inventory?.length || 0) * 150 }</p>
                         </div>
                       </div>
 
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between mb-2">
-                           <span className="text-sm font-bold text-text-primary">Weekly Progress Trend</span>
-                           <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Growth Analytics</span>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                           <span className="text-base font-black text-text-primary tracking-tight uppercase">Operational Velocity</span>
+                           <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-40">Delta Analytics</span>
                         </div>
-                        <ScoreChart />
+                        <div className="bg-white/[0.01] rounded-[2.5rem] p-6 border border-white/5 shadow-inner">
+                          <ScoreChart />
+                        </div>
                       </div>
-                    </div>
+                    </Card>
                   </div>
 
                   {/* Sidebar (Right: 1 col) */}
                   <div className="space-y-6">
-                    <div className="bg-bg-surface rounded-[2rem] p-8 border border-border-main shadow-sm">
-                      <div className="flex items-center justify-between pb-6">
-                        <h2 className="text-xl font-black text-text-primary flex items-center gap-2"><Package className="w-6 h-6 text-brand-gold" /> Inventory</h2>
+                    <Card className="p-8 md:p-10 flex flex-col min-h-full">
+                      <div className="flex items-center justify-between mb-8">
+                        <h2 className="text-xl md:text-2xl font-black text-text-primary flex items-center gap-4"><Package className="w-7 h-7 text-brand-gold" /> Stockpile</h2>
                       </div>
                       
                       {Object.keys(inventorySummary).length > 0 ? (
-                        <div className="grid grid-cols-1 gap-3">
+                        <div className="space-y-4 flex-1">
                           {Object.entries(inventorySummary).map(([itemId, data]: [string, any]) => {
                             const shopItem = (SHOP_ITEMS as any).find((i: any) => i.id === itemId) || { 
                               name: itemId.replace(/_/g, ' '), 
                               icon: Package, 
-                              color: 'from-gray-400 to-gray-500', 
+                              color: 'from-zinc-500 to-zinc-700', 
                               type: 'unknown',
-                              description: 'Special item',
-                              howToUse: 'Used automatically or via special actions.',
+                              description: 'Restricted access asset.',
+                              howToUse: 'Operational automatic activation.',
                               category: 'passive'
                             };
                             const Icon = shopItem.icon;
@@ -909,93 +906,99 @@ export const Profile = () => {
                             const timeRemaining = expiringSoon ? Math.ceil((expiringSoon - Date.now()) / (1000 * 60 * 60 * 24)) : null;
 
                             return (
-                              <div key={itemId} className="group relative flex flex-col p-5 bg-bg-main rounded-3xl border border-border-main shadow-sm hover:border-brand-gold/30 transition-all duration-300">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                                  <div className="flex items-center gap-4 flex-1 min-w-0">
-                                    <div className={`w-14 h-14 bg-gradient-to-br ${shopItem.color} text-bg-main rounded-2xl flex items-center justify-center shadow-lg shrink-0 group-hover:scale-105 transition-transform duration-300`}>
-                                      <Icon className="w-7 h-7" />
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                       <div className="flex items-center gap-2">
-                                         <p className="font-black text-text-primary capitalize truncate text-base">{shopItem.name}</p>
-                                         <button 
-                                           onClick={() => setShowInfoId(showInfo ? null : itemId)}
-                                           className={cn("p-1 transition-colors", showInfo ? "text-brand-gold" : "text-text-secondary hover:text-brand-gold")}
-                                         >
-                                           <Info className="w-3.5 h-3.5" />
-                                         </button>
-                                       </div>
-                                       <div className="flex items-center gap-2 mt-0.5">
-                                          <div className="bg-[#1A2B48]/5 text-[#1A2B48] font-black text-[10px] px-2 py-0.5 rounded-lg uppercase tracking-wider border border-[#1A2B48]/10">x{String(data.count)}</div>
-                                          {timeRemaining !== null && (
-                                            <p className="text-[10px] font-bold text-rose-500 flex items-center gap-1">
-                                               <Clock className="w-3 h-3" /> {timeRemaining}d left
-                                            </p>
-                                          )}
-                                          {isConsumable && (
-                                             <div className={cn(
-                                               "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg",
-                                               isManual ? "bg-brand-gold/10 text-brand-gold" : "bg-bg-surface text-text-secondary/60 border border-border-main"
-                                             )}>
-                                               {isManual ? 'Active' : 'Passive'}
-                                             </div>
-                                          )}
-                                       </div>
-                                    </div>
+                              <div key={itemId} className="group relative flex flex-col p-6 bg-white/[0.01] rounded-[2rem] border border-white/5 shadow-premium hover:border-brand-gold/30 hover:bg-white/[0.02] transition-all duration-500">
+                                <div className="flex items-center gap-5">
+                                  <div className={`w-16 h-16 bg-gradient-to-br ${shopItem.color} text-bg-main rounded-2xl flex items-center justify-center shadow-xl shrink-0 group-hover:scale-110 transition-transform duration-500`}>
+                                    <Icon className="w-8 h-8" />
                                   </div>
-                                  
-                                  <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
-                                     <button 
-                                       onClick={() => setSendingItemId(itemId)}
-                                       className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 bg-[#1A2B48]/5 text-[#1A2B48] hover:bg-[#1A2B48] hover:text-white rounded-xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest border border-[#1A2B48]/10"
-                                       title="Gift to Friend"
-                                     >
-                                       <Gift className="w-4 h-4" /> <span>Gift</span>
-                                     </button>
-                                     {isManual && (
+                                  <div className="flex-1 min-w-0">
+                                     <div className="flex items-center gap-2">
+                                       <p className="font-black text-text-primary capitalize truncate text-base tracking-tight">{shopItem.name}</p>
                                        <button 
-                                         onClick={() => consumeItem(itemId)}
-                                         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-brand-gold text-[#1A2B48] hover:shadow-lg hover:shadow-brand-gold/20 rounded-xl transition-all active:scale-95 text-[10px] font-black uppercase tracking-widest"
-                                         title="Use Item"
+                                         onClick={() => setShowInfoId(showInfo ? null : itemId)}
+                                         className={cn("p-1 transition-colors", showInfo ? "text-brand-gold scale-110" : "text-text-muted hover:text-brand-gold")}
                                        >
-                                         <Zap className="w-4 h-4" /> <span>Use</span>
+                                         <Info className="w-4 h-4" />
                                        </button>
-                                     )}
-                                     {!isManual && isConsumable && (
-                                       <div className="flex-1 sm:flex-none bg-bg-surface border border-border-main text-text-secondary/60 px-4 py-3 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest opacity-60">
-                                          <Shield className="w-4 h-4" /> <span>Passive</span>
-                                       </div>
-                                     )}
-                                   </div>
-                                </div>
-
-                                 <div className="mt-3 overflow-hidden">
-                                     <div className="p-3 bg-bg-main/50 rounded-2xl border border-border-main/50">
-                                        <div className="flex gap-2 items-start mt-0.5">
-                                           <Info className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
-                                           <div className="flex-1">
-                                             <p className="text-[10px] text-text-secondary font-medium leading-relaxed italic">
-                                               {shopItem.description}
-                                             </p>
-                                             <p className="text-[9px] text-text-secondary/80 font-medium mt-1.5 leading-tight">
-                                               <span className="font-black text-indigo-400 uppercase mr-1">Activation:</span> {shopItem.howToUse}
-                                             </p>
-                                           </div>
-                                        </div>
                                      </div>
+                                     <div className="flex items-center gap-3 mt-1.5">
+                                        <div className="bg-brand-gold/10 text-brand-gold font-black text-[10px] px-3 py-1 rounded-xl uppercase tracking-widest border border-brand-gold/20 shadow-inner">x{String(data.count)}</div>
+                                        {timeRemaining !== null && (
+                                          <p className="text-[10px] font-black text-rose-500 flex items-center gap-1.5 tabular-nums">
+                                             <Clock className="w-3.5 h-3.5" /> {timeRemaining}D REMAINING
+                                          </p>
+                                        )}
+                                        {isConsumable && (
+                                           <div className={cn(
+                                             "text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-xl border",
+                                             isManual ? "bg-brand-gold/10 text-brand-gold border-brand-gold/20" : "bg-white/[0.05] text-text-muted border-white/10 opacity-60"
+                                           )}>
+                                             {isManual ? 'ACTIVE' : 'PASSIVE'}
+                                           </div>
+                                        )}
+                                     </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-3 mt-6">
+                                   <button 
+                                     onClick={() => setSendingItemId(itemId)}
+                                     className="flex items-center justify-center gap-3 px-4 py-3.5 bg-white/[0.02] text-text-primary hover:bg-brand-gold hover:text-bg-main rounded-2xl transition-all active:scale-[0.98] text-[10px] font-black uppercase tracking-[0.3em] border border-white/5 shadow-premium group/gift"
+                                     title="Transfer Asset"
+                                   >
+                                     <Gift className="w-4 h-4 group-hover/gift:scale-110 transition-transform" /> <span>Transfer</span>
+                                   </button>
+                                   {isManual ? (
+                                     <button 
+                                       onClick={() => consumeItem(itemId)}
+                                       className="flex items-center justify-center gap-3 px-4 py-3.5 bg-brand-gold text-bg-main hover:brightness-110 hover:shadow-2xl hover:shadow-brand-gold/20 rounded-2xl transition-all active:scale-[0.98] text-[10px] font-black uppercase tracking-[0.3em] group/use"
+                                       title="Init Deployment"
+                                     >
+                                       <Zap className="w-4 h-4 group-hover/use:scale-110 transition-transform" /> <span>Deploy</span>
+                                     </button>
+                                   ) : (
+                                     <div className="bg-white/[0.01] border border-white/5 text-text-muted/40 px-4 py-3.5 rounded-2xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.3em] italic">
+                                        <Shield className="w-4 h-4 opacity-40" /> <span>Shielded</span>
+                                     </div>
+                                   )}
                                  </div>
+
+                                 {showInfo && (
+                                   <motion.div 
+                                     initial={{ height: 0, opacity: 0 }}
+                                     animate={{ height: 'auto', opacity: 1 }}
+                                     className="mt-6 overflow-hidden"
+                                   >
+                                       <div className="p-5 bg-black/20 rounded-3xl border border-white/5 shadow-inner relative overflow-hidden">
+                                          <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+                                            <Icon className="w-16 h-16" />
+                                          </div>
+                                          <div className="flex gap-4 items-start relative z-10">
+                                             <div className="flex-1">
+                                               <p className="text-[11px] text-text-muted font-medium leading-relaxed italic opacity-80">
+                                                 "{shopItem.description}"
+                                               </p>
+                                               <div className="h-px bg-white/5 my-3" />
+                                               <p className="text-[10px] text-brand-gold font-black mt-2 leading-tight uppercase tracking-tight">
+                                                 <span className="opacity-40 tracking-widest mr-2 uppercase">Activation Mode:</span> {shopItem.howToUse}
+                                               </p>
+                                             </div>
+                                          </div>
+                                       </div>
+                                   </motion.div>
+                                 )}
                               </div>
                             )
                           })}
                         </div>
                       ) : (
-                        <div className="text-center py-10 text-text-secondary/80 bg-bg-main border border-dashed border-border-main rounded-3xl">
-                          <Package className="w-10 h-10 mx-auto mb-3 opacity-30 text-brand-gold" />
-                          <p className="font-medium text-text-secondary text-sm">Inventory is empty.<br/>Visit the Shop!</p>
-                          <Link to="/shop" className="mt-4 inline-block bg-bg-surface border border-border-main text-brand-gold font-bold px-4 py-2 rounded-xl text-sm shadow-sm hover:bg-bg-main transition">Go to Shop</Link>
+                        <div className="flex-1 flex flex-col items-center justify-center py-20 text-center bg-white/[0.01] border border-dashed border-white/10 rounded-[2.5rem] opacity-60">
+                          <Package className="w-16 h-16 mx-auto mb-6 opacity-10 text-brand-gold" />
+                          <p className="font-black text-text-muted text-[10px] uppercase tracking-[0.3em] mb-6">Stockpile Offline<br/>Aquire Assets via Market</p>
+                          <Link to="/shop" className="bg-brand-gold/10 border border-brand-gold/20 text-brand-gold font-black uppercase tracking-[0.2em] px-8 py-4 rounded-2xl text-[10px] shadow-2xl shadow-brand-gold/5 hover:bg-brand-gold/20 transition-all active:scale-95">Access Trade Hub</Link>
                         </div>
                       )}
-                    </div>
+                    </Card>
                   </div>
                 </div>
               </motion.div>
@@ -1020,32 +1023,33 @@ export const Profile = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-8"
           >
             <motion.div 
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="bg-bg-surface rounded-3xl shadow-2xl p-6 md:p-8 w-full max-w-2xl relative max-h-[90vh] overflow-y-auto flex flex-col border border-border-main"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="bg-bg-surface rounded-[3rem] shadow-2xl p-10 md:p-14 w-full max-w-4xl relative max-h-[90vh] overflow-y-auto no-scrollbar flex flex-col border border-white/10"
             >
               <button 
                 onClick={() => setShowBadges(false)}
-                className="absolute top-6 right-6 p-2 text-text-secondary hover:text-text-primary bg-bg-main hover:bg-border-main rounded-full transition-colors"
+                className="absolute top-10 right-10 p-4 text-text-muted hover:text-brand-gold bg-white/[0.05] hover:bg-brand-gold/10 rounded-[1.5rem] transition-all group z-20"
                >
-                 <X className="w-5 h-5"/>
+                 <X className="w-6 h-6 group-hover:rotate-90 transition-transform duration-500" />
               </button>
               
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-fuchsia-500/10 text-fuchsia-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Award className="w-8 h-8" />
+              <div className="text-center mb-16 relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-brand-gold/10 blur-[80px] pointer-events-none rounded-full" />
+                <div className="w-24 h-24 bg-brand-gold/10 text-brand-gold rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-brand-gold/20 shadow-2xl shadow-brand-gold/5 relative z-10">
+                  <Award className="w-12 h-12" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-black text-text-primary tracking-tight">Mastery Badges</h2>
-                <p className="text-text-secondary font-medium mt-2">Badges earned from your learning missions.</p>
+                <h2 className="text-4xl md:text-5xl font-black text-text-primary tracking-tighter tabular-nums mb-4 relative z-10">Operational Mastery</h2>
+                <p className="text-text-muted font-medium text-lg max-w-md mx-auto opacity-60 leading-relaxed italic relative z-10">Verification of status achieved through consistent academic domination.</p>
               </div>
 
               {Object.keys(achievementsSummary).length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 relative z-10">
                   {Object.entries(achievementsSummary).map(([id, tier]) => {
                     let badgeName = id;
                     let badgeImage = "";
@@ -1053,46 +1057,46 @@ export const Profile = () => {
                     if (id === 'wealth') {
                        badgeName = "Tycoon"; 
                        badgeImage = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Money%20Bag.png";
-                       badgeColor = "from-amber-100 to-yellow-200 text-brand-gold";
+                       badgeColor = "from-amber-400/20 to-yellow-600/20 text-brand-gold";
                     }
                     else if (id === 'scholar') {
                        badgeName = "Scholar";
                        badgeImage = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Graduation%20Cap.png";
-                       badgeColor = "from-blue-100 to-indigo-200 text-indigo-700";
+                       badgeColor = "from-blue-400/20 to-indigo-600/20 text-indigo-400";
                     }
                     else if (id === 'perfectionist') {
                        badgeName = "Flawless";
                        badgeImage = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Objects/Gem%20Stone.png";
-                       badgeColor = "from-emerald-100 to-teal-200 text-teal-700";
+                       badgeColor = "from-emerald-400/20 to-teal-600/20 text-emerald-400";
                     }
                     else if (id === 'socialite') {
                        badgeName = "Generous";
                        badgeImage = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Smilies/Heart%20with%20Ribbon.png";
-                       badgeColor = "from-rose-100 to-pink-200 text-pink-700";
+                       badgeColor = "from-rose-400/20 to-pink-600/20 text-rose-400";
                     } else {
                        badgeImage = "https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Activities/Trophy.png";
-                       badgeColor = "from-gray-100 to-gray-200 text-text-secondary";
+                       badgeColor = "from-zinc-400/20 to-zinc-600/20 text-text-muted";
                     }
 
                     return (
-                      <div key={id} className="flex flex-col items-center p-6 bg-bg-main rounded-3xl border border-border-main hover:shadow-xl hover:-translate-y-1 transition duration-300 text-center group relative overflow-hidden">
-                        <div className={`w-20 h-20 bg-gradient-to-br ${badgeColor} rounded-[2rem] flex items-center justify-center font-black mb-4 shadow-inner border border-white/50 relative z-10 transition-transform group-hover:scale-110 duration-500`}>
-                          <img src={badgeImage} alt={badgeName} className="w-12 h-12 drop-shadow-md" />
+                      <div key={id} className="group relative flex flex-col items-center p-8 bg-white/[0.02] rounded-[2.5rem] border border-white/5 hover:bg-white/[0.05] hover:shadow-[0_0_40px_rgba(251,191,36,0.1)] transition-all duration-500 overflow-hidden">
+                        <div className={`w-28 h-28 bg-gradient-to-br ${badgeColor} rounded-[2rem] flex items-center justify-center font-black mb-6 shadow-2xl border border-white/10 relative z-10 group-hover:scale-110 transition-transform duration-700`}>
+                          <img src={badgeImage} alt={badgeName} className="w-16 h-16 drop-shadow-2xl" />
                         </div>
-                        <span className="font-black text-text-primary text-sm md:text-base mb-1.5">{badgeName}</span>
-                        <div className="absolute top-0 right-0 p-3 opacity-10 blur-sm group-hover:opacity-30 transition-opacity">
-                           <img src={badgeImage} alt="" className="w-24 h-24" />
-                        </div>
-                        <span className="bg-bg-surface text-text-primary font-black text-[10px] md:text-xs uppercase tracking-widest px-4 py-1.5 rounded-xl w-fit inline-block border border-border-main shadow-sm relative z-10">Tier {String(tier)}</span>
+                        <span className="font-black text-text-primary text-lg mb-3 tracking-tight group-hover:text-brand-gold transition-colors">{badgeName}</span>
+                        <div className="bg-bg-surface text-brand-gold font-black text-[10px] uppercase tracking-[0.3em] px-5 py-2 rounded-2xl border border-brand-gold/20 shadow-2xl relative z-10 tabular-nums">Level {String(tier)}</div>
+                        
+                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 bg-gradient-to-t from-brand-gold/5 via-transparent to-transparent pointer-events-none" />
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <div className="text-center py-12 text-text-secondary bg-bg-main border border-dashed border-border-main rounded-3xl">
-                  <Award className="w-12 h-12 mx-auto mb-4 opacity-30 text-brand-gold" />
-                  <p className="font-medium text-text-primary text-lg">No badges earned yet.</p>
-                  <p className="text-sm text-text-secondary mt-1">Complete missions to start leveling up!</p>
+                <div className="text-center py-24 bg-white/[0.01] border border-dashed border-white/10 rounded-[3rem] opacity-60">
+                  <Award className="w-20 h-20 mx-auto mb-8 opacity-10 text-brand-gold" />
+                  <p className="font-black text-text-primary text-2xl tracking-tight mb-2 uppercase italic">Zero Mastery Identified</p>
+                  <p className="text-text-muted font-medium mb-10 opacity-60 italic uppercase tracking-widest text-[10px]">Dominat operational missions to unlock merit status.</p>
+                  <button onClick={() => setShowBadges(false)} className="bg-brand-gold/10 border border-brand-gold/20 text-brand-gold font-black uppercase tracking-[0.2em] px-10 py-5 rounded-2xl shadow-2xl shadow-brand-gold/5 hover:bg-brand-gold hover:text-bg-main transition-all">Synchronise Objectives</button>
                 </div>
               )}
             </motion.div>
@@ -1100,16 +1104,19 @@ export const Profile = () => {
         )}
       </AnimatePresence>
 
-      <div className="mt-8 mb-4 flex flex-col items-center justify-center gap-1 text-sm font-semibold text-text-secondary pb-20 md:pb-0">
-        <div>Lumora v2.0.3 • Quality Improvements</div>
+      <div className="mt-16 mb-8 flex flex-col items-center justify-center gap-6 text-sm font-semibold text-text-muted pb-24 md:pb-0 opacity-60">
+        <div className="flex items-center gap-4">
+           <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+           <span className="font-black uppercase tracking-[0.3em] text-[10px]">Neural-Link Operational • V2.0.3_STABLE</span>
+        </div>
         <a 
           href="https://www.samjuniors.com" 
           target="_blank" 
           rel="noopener noreferrer" 
-          className="flex items-center gap-2 mt-3 px-4 py-2 bg-brand-gold/10 hover:bg-brand-gold/20 border justify-center border-brand-gold/30 rounded-full transition-all text-brand-gold shadow-[0_0_10px_rgba(212,175,55,0.15)] hover:shadow-[0_0_15px_rgba(212,175,55,0.3)] group"
+          className="flex items-center gap-4 px-6 py-3 bg-white/[0.02] hover:bg-brand-gold hover:text-bg-main border border-white/5 hover:border-brand-gold rounded-[1.5rem] transition-all group shadow-premium"
         >
-          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Welcome" className="w-5 h-5 drop-shadow-md group-hover:rotate-12 transition-transform" />
-          <span className="font-black uppercase tracking-widest text-[9px]">Powered by Samjuniors • Visit Us</span>
+          <img src="https://raw.githubusercontent.com/Tarikul-Islam-Anik/Animated-Fluent-Emojis/master/Emojis/Hand%20gestures/Waving%20Hand.png" alt="Signal" className="w-6 h-6 drop-shadow-md group-hover:rotate-12 transition-transform" />
+          <span className="font-black uppercase tracking-[0.3em] text-[10px]">Authored by samjuniors // protocol://visit</span>
         </a>
       </div>
       <AnimatePresence>

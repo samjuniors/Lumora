@@ -64,7 +64,7 @@ export const Container: React.FC<ContainerProps> = ({
 
 // Card Primitives
 interface CardProps extends HTMLMotionProps<'div'> {
-  variant?: 'primary' | 'secondary' | 'glass' | 'outline';
+  variant?: 'primary' | 'secondary' | 'glass' | 'outline' | 'flat';
   hover?: boolean;
 }
 
@@ -76,10 +76,11 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(({
   ...props 
 }, ref) => {
   const variants = {
-    primary: 'bg-navy-900 border-navy-700/50',
-    secondary: 'bg-navy-800 border-navy-700/30',
-    glass: 'bg-navy-900/40 backdrop-blur-md border-white/5',
-    outline: 'bg-transparent border-navy-700/50'
+    primary: 'card-premium',
+    secondary: 'bg-bg-surface-soft border-white/5',
+    glass: 'glass-card',
+    outline: 'bg-transparent border-white/10',
+    flat: 'bg-black/20 border-transparent'
   };
 
   return (
@@ -88,7 +89,7 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(({
       className={cn(
         'rounded-2xl border transition-all duration-200',
         variants[variant],
-        hover && 'hover:border-navy-600 hover:shadow-lg hover:shadow-black/20',
+        hover && 'hover:translate-y-[-2px] hover:shadow-xl hover:shadow-black/40 hover:border-white/10',
         className
       )}
       {...props}
@@ -117,58 +118,31 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   className
 }) => {
   return (
-    <div className={cn('flex items-center justify-between pb-4 border-b border-navy-700/50 mb-6', className)}>
-      <div className="flex items-center gap-3">
+    <div className={cn('flex items-center justify-between gap-4 py-2 mb-6', className)}>
+      <div className="flex items-center gap-4">
         {Icon && (
-          <div className="p-2 bg-navy-800 rounded-lg text-brand-gold shrink-0">
+          <div className="w-10 h-10 flex items-center justify-center bg-white/[0.03] border border-white/5 rounded-xl text-brand-gold shrink-0">
             <Icon size={20} />
           </div>
         )}
-        <div>
-          <h2 className="text-xl font-display font-bold text-text-primary tracking-tight leading-none">{title}</h2>
-          {subtitle && <p className="text-[10px] text-text-muted font-black uppercase tracking-widest mt-1.5">{subtitle}</p>}
+        <div className="space-y-0.5">
+          <h2 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight leading-tight">{title}</h2>
+          {subtitle && <p className="text-[10px] sm:text-xs text-text-muted font-bold uppercase tracking-widest leading-none">{subtitle}</p>}
         </div>
       </div>
-      {action && <div>{action}</div>}
-    </div>
-  );
-};
-
-// Empty State Primitive
-interface EmptyStateProps {
-  icon?: LucideIcon;
-  title: string;
-  description: string;
-  action?: React.ReactNode;
-}
-
-export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon: Icon,
-  title,
-  description,
-  action
-}) => {
-  return (
-    <div className="flex flex-col items-center justify-center p-12 text-center bg-navy-900/50 rounded-3xl border border-dashed border-navy-700/50">
-      {Icon && (
-        <div className="p-4 bg-navy-800 rounded-2xl text-text-muted/30 mb-4">
-          <Icon size={40} />
-        </div>
-      )}
-      <h3 className="text-lg font-bold text-text-primary mb-2 tracking-tight">{title}</h3>
-      <p className="text-sm text-text-secondary max-w-xs mx-auto mb-6 leading-relaxed">{description}</p>
-      {action && <div>{action}</div>}
+      {action && <div className="shrink-0">{action}</div>}
     </div>
   );
 };
 
 // Button Primitives
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'gold';
-  size?: 'sm' | 'md' | 'lg' | 'icon';
+  variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost' | 'gold' | 'link';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'icon';
   isLoading?: boolean;
   icon?: LucideIcon;
   iconPosition?: 'left' | 'right';
+  fullWidth?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
@@ -179,22 +153,25 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   isLoading = false,
   icon: Icon,
   iconPosition = 'left',
+  fullWidth = false,
   disabled,
   ...props
 }, ref) => {
   const variants = {
-    primary: 'bg-navy-800 text-text-primary border-navy-700 hover:bg-navy-700 hover:border-navy-600',
-    secondary: 'bg-white/10 text-white border-white/10 hover:bg-white/20',
-    outline: 'bg-transparent border-navy-700 text-text-primary hover:bg-navy-800',
-    danger: 'bg-red-500/10 border-red-500/20 text-red-500 hover:bg-red-500/20',
-    ghost: 'bg-transparent border-transparent text-text-muted hover:text-text-primary hover:bg-white/5',
-    gold: 'bg-brand-gold text-navy-950 font-black hover:brightness-110 shadow-lg shadow-brand-gold/20'
+    primary: 'bg-white/[0.05] text-text-primary border-white/10 hover:bg-white/[0.08] hover:border-white/15',
+    secondary: 'bg-brand-gold/10 text-brand-gold border-brand-gold/20 hover:bg-brand-gold/20',
+    outline: 'bg-transparent border-white/10 text-text-primary hover:bg-white/5',
+    danger: 'bg-red-500/10 border-red-500/10 text-red-500 hover:bg-red-500/20',
+    ghost: 'bg-transparent border-transparent text-text-secondary hover:text-text-primary hover:bg-white/5',
+    gold: 'bg-brand-gold text-bg-main border-brand-gold hover:brightness-110 shadow-lg shadow-brand-gold/10 font-black',
+    link: 'bg-transparent border-transparent text-brand-gold p-0 h-auto hover:underline'
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs rounded-lg',
-    md: 'px-5 py-2.5 text-sm rounded-xl',
-    lg: 'px-8 py-3.5 text-base rounded-2xl',
+    sm: 'px-3 py-1.5 text-[10px] tracking-widest rounded-lg',
+    md: 'px-5 py-2.5 text-xs tracking-wider rounded-xl',
+    lg: 'px-8 py-3.5 text-sm tracking-widest rounded-2xl',
+    xl: 'px-10 py-5 text-base tracking-widest rounded-[2rem]',
     icon: 'p-2.5 rounded-xl'
   };
 
@@ -203,7 +180,8 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
       ref={ref}
       disabled={disabled || isLoading}
       className={cn(
-        'inline-flex items-center justify-center font-bold uppercase tracking-widest transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed border',
+        'button-premium border transition-all duration-200 active:scale-95 disabled:scale-100',
+        fullWidth ? 'w-full flex items-center justify-center' : 'inline-flex items-center justify-center',
         variants[variant],
         sizes[size],
         className
@@ -211,17 +189,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
       {...props}
     >
       {isLoading ? (
-        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        <div className="mr-2 h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent opacity-50" />
       ) : Icon && iconPosition === 'left' && (
-        <Icon size={size === 'sm' ? 14 : 18} className={cn(children ? 'mr-2' : '')} />
+        <Icon size={size === 'sm' ? 14 : 16} className={cn(children ? 'mr-2' : '')} />
       )}
       {children}
       {!isLoading && Icon && iconPosition === 'right' && (
-        <Icon size={size === 'sm' ? 14 : 18} className={cn(children ? 'ml-2' : '')} />
+        <Icon size={size === 'sm' ? 14 : 16} className={cn(children ? 'ml-2' : '')} />
       )}
     </button>
   );
 });
+
 
 Button.displayName = 'Button';
 
@@ -274,6 +253,31 @@ export const ProgressBar = ({ progress, className, label }: { progress: number, 
           className="h-full bg-brand-gold shadow-glow-gold"
         />
       </div>
+    </div>
+  );
+};
+
+export const EmptyState = ({ 
+  icon: Icon, 
+  title, 
+  description, 
+  action, 
+  className 
+}: { 
+  icon: LucideIcon, 
+  title: string, 
+  description: string, 
+  action?: React.ReactNode,
+  className?: string
+}) => {
+  return (
+    <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-3xl", className)}>
+      <div className="w-16 h-16 bg-white/[0.03] rounded-2xl flex items-center justify-center text-text-muted/20 mb-6 border border-white/5 shadow-inner">
+        <Icon size={32} />
+      </div>
+      <h3 className="text-lg font-bold text-text-primary mb-2 uppercase tracking-tight">{title}</h3>
+      <p className="text-xs text-text-muted max-w-xs mx-auto mb-8 font-medium leading-relaxed italic">{description}</p>
+      {action && action}
     </div>
   );
 };

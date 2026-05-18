@@ -64,68 +64,69 @@ export const AdminPanel = () => {
     ] as const;
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-12 pt-4 px-2 md:px-6 mt-4">
-            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                <div>
-                    <h1 className="text-4xl font-black text-text-primary tracking-tight md:text-5xl">
-                        Platform Operations
+        <div className="max-w-7xl mx-auto space-y-8 pb-32 pt-6 px-4">
+            <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2 border-b border-white/5">
+                <div className="space-y-1">
+                    <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tighter">
+                        Platform <span className="text-brand-gold text-glow-gold">Ops</span>
                     </h1>
-                    <p className="text-text-secondary mt-2 font-medium">
-                        Signed in as <span className="text-text-primary font-bold capitalize bg-bg-surface px-2 py-1 rounded-md border border-border-main ml-1">{user.role}</span>
-                    </p>
+                    <div className="flex items-center gap-2 text-text-muted font-bold text-[10px] uppercase tracking-widest">
+                       Cleared as <span className="text-brand-gold">{user.role}</span> &bull; System Stable
+                    </div>
                 </div>
 
                 {/* Tab Navigation - Desktop */}
-                <div className="hidden lg:flex items-center gap-1 bg-bg-surface p-1.5 rounded-[24px] border border-border-main shadow-sm h-fit">
+                <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-2xl border border-white/5 h-fit">
                     {MAIN_TABS.map((t) => (
                         <button
                             key={t.id}
                             onClick={() => setTab(t.id)}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black transition-all text-xs uppercase tracking-widest ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest ${
                                 tab === t.id 
-                                    ? 'bg-text-primary text-bg-main shadow-lg translate-y-[-2px]' 
-                                    : 'text-text-secondary hover:bg-bg-main hover:text-text-primary'
+                                    ? 'bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/10' 
+                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
                             }`}
                         >
-                            <t.icon size={16} />
+                            <t.icon size={13} />
                             {t.label}
                         </button>
                     ))}
                     {isSuperAdmin && (
                         <button
                             onClick={() => setTab('settings')}
-                            className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black transition-all text-xs uppercase tracking-widest ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest border border-transparent ${
                                 tab === 'settings' 
-                                    ? 'bg-text-primary text-bg-main shadow-lg translate-y-[-2px]' 
-                                    : 'text-text-secondary hover:bg-bg-main hover:text-text-primary'
+                                    ? 'bg-white text-bg-main shadow-lg' 
+                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
                             }`}
                         >
-                            <Settings size={16} />
+                            <Settings size={13} />
                             System
                         </button>
                     )}
                 </div>
 
                 {/* Mobile Tab Navigation (Horizontal Scroll) */}
-                <div className="lg:hidden flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4 sticky top-0 z-40 bg-bg-main/80 backdrop-blur-md">
+                <div className="lg:hidden flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4">
                     {ALL_TABS.map((t) => (
                         (t.id !== 'settings' || isSuperAdmin) && (
                             <button
                                 key={t.id}
                                 onClick={() => setTab(t.id)}
-                                className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-xs whitespace-nowrap border ${
+                                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest whitespace-nowrap border transition-all ${
                                     tab === t.id 
-                                        ? 'bg-text-primary text-bg-main border-text-primary' 
-                                        : 'bg-bg-surface text-text-secondary border-border-main'
+                                        ? 'bg-brand-gold text-bg-main border-brand-gold' 
+                                        : 'bg-white/[0.03] text-text-secondary border-white/5'
                                 }`}
                             >
-                                <t.icon size={14} />
+                                <t.icon size={12} />
                                 {t.label}
                             </button>
                         )
                     ))}
                 </div>
             </div>
+
 
             <div className="relative z-10">
                 <motion.div 

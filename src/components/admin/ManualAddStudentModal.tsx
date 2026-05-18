@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Mail, User as UserIcon, Coins } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 

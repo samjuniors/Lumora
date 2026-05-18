@@ -17,6 +17,7 @@ export interface IWalletService {
   rejectRechargeRequest(requestId: string, adminId: string): Promise<void>;
   
   // Rewards
-  claimDailyReward(userId: string, reward: { type: string, value: number | string }): Promise<void>;
-  claimCollectorReward(userId: string, coins: number, diamonds: number): Promise<void>;
+  claimDailyReward(userId: string): Promise<{ type: string, value: number | string }>;
+  claimCollectorReward(userId: string): Promise<{ coins: number, diamonds: number, tier: string }>;
+  resetCollector(userId: string): Promise<void>;
 }

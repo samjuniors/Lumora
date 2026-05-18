@@ -16,7 +16,7 @@ import {
     ChevronRight,
     Search as SearchIcon
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
 import { submissionService, userService, adminService, assignmentService } from '../../services/dbProvider';

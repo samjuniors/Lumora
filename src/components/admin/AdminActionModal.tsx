@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send, Coins, ShieldAlert, Gift, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { walletService, userService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { User, TransactionType } from '../../types';

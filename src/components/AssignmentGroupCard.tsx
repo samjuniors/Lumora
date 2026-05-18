@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Assignment, Enrollment } from '../types';
 import { BookOpen, CheckCircle2, Lock, Clock, ChevronRight } from 'lucide-react';
+import { Card, Button } from './CommonUI';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
 import { motion } from 'motion/react';
@@ -92,104 +93,112 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
   const config = getStatusConfig(overallStatus as any);
 
   return (
-    <div className={cn(
-      "card-premium p-4 md:p-6 transition-all duration-300", 
-      isDuoGroup ? "bg-brand-gold/5 border-brand-gold/20" : config.color
-    )}>
-      <div className="flex items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-3">
+    <Card 
+      variant="flat" 
+      className={cn(
+        "p-6 transition-all duration-300 border-white/[0.03]", 
+        isDuoGroup ? "border-brand-gold/20" : ""
+      )}
+    >
+      <div className="flex items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-4">
           <div className={cn(
-            "w-10 h-10 border flex items-center justify-center shrink-0 rounded-xl transition-all",
-            isDuoGroup ? "bg-brand-gold/10 border-brand-gold/20 text-brand-gold" : "bg-navy-800 border-navy-700 text-text-primary"
+            "w-12 h-12 border flex items-center justify-center shrink-0 rounded-2xl transition-all",
+            isDuoGroup 
+              ? "bg-brand-gold/10 border-brand-gold/20 text-brand-gold" 
+              : "bg-white/[0.03] border-white/5 text-text-primary"
           )}>
             <BookOpen size={20} />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm md:text-base font-display font-bold text-text-primary truncate">{group.name}</h2>
+            <div className="flex items-center gap-2 mb-1">
+              <h2 className="text-base md:text-lg font-black text-text-primary truncate tracking-tight">{group.name}</h2>
               {isDuoGroup && (
-                <span className="bg-brand-gold text-navy-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest">Duo</span>
+                <span className="bg-brand-gold text-bg-main text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest leading-none">Duo Ops</span>
               )}
             </div>
-            <p className="text-[10px] md:text-xs text-text-secondary font-bold uppercase tracking-tight">
-              {total} Missions • {progressPercent}% Efficiency
+            <p className="text-[10px] text-text-muted font-bold uppercase tracking-[0.2em] leading-none">
+              {total} Missions &bull; {progressPercent}% Tactical Efficiency
             </p>
           </div>
         </div>
         
         <div className="hidden sm:block w-32 shrink-0">
-           <div className="w-full h-1 bg-navy-800 rounded-full overflow-hidden">
+           <div className="w-full h-1 bg-white/[0.03] rounded-full overflow-hidden">
               <motion.div 
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercent}%` }}
-                className={cn("h-full", isAllFinished ? "bg-success shadow-glow-success" : "bg-brand-gold shadow-glow-gold")}
+                className={cn("h-full", isAllFinished ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-brand-gold shadow-[0_0_8px_rgba(251,191,36,0.5)]")}
               />
            </div>
         </div>
       </div>
 
-      <div className="bg-navy-950/40 border border-navy-700/30 rounded-2xl p-4 mb-4 relative overflow-hidden group">
+      <div className="bg-white/[0.02] border border-white/[0.03] rounded-2xl p-5 mb-6 relative overflow-hidden group">
         {isAllFinished ? (
-          <div className="flex items-center gap-3 text-success">
-             <div className="p-2 bg-success/10 rounded-lg">
+          <div className="flex items-center gap-4 text-emerald-500">
+             <div className="p-2.5 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
                 <CheckCircle2 size={20} />
              </div>
              <div>
-                <p className="text-xs font-bold uppercase tracking-widest">Campaign Success</p>
-                <p className="text-[10px] text-text-secondary">All objectives achieved. Rewards secured.</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1">Campaign Successful</p>
+                <p className="text-xs text-text-muted font-medium">All objectives neutralized. Full XP yields secured.</p>
              </div>
           </div>
         ) : currentActive ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 mb-1.5">
+                <div className="min-w-0 space-y-2">
+                  <div className="flex items-center gap-2">
                     <span className={cn(
-                      "px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest rounded border",
-                      now > Number(currentActive.dueDate || 0) ? "bg-error/10 text-error border-error/20" : "bg-success/10 text-success border-success/20"
+                      "px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md border",
+                      now > Number(currentActive.dueDate || 0) ? "bg-rose-500/10 text-rose-500 border-rose-500/20" : "bg-brand-gold/10 text-brand-gold border-brand-gold/20"
                     )}>
-                      {now > Number(currentActive.dueDate || 0) ? 'Expired' : 'Active'} M{currentActive.missionNumber || 1}
+                      {now > Number(currentActive.dueDate || 0) ? 'Terminated' : 'Active'} Objective
                     </span>
                     {currentActive.xpReward > 0 && (
-                      <span className="text-[9px] font-black text-brand-gold-hover uppercase">+{currentActive.xpReward} XP</span>
+                      <span className="text-[10px] font-black text-brand-gold uppercase tracking-widest">+{currentActive.xpReward} XP Priority</span>
                     )}
                   </div>
-                  <h3 className="font-bold text-sm text-text-primary leading-tight truncate">{currentActive.title}</h3>
+                  <h3 className="font-black text-base text-text-primary tracking-tight truncate">{currentActive.title}</h3>
                 </div>
                 
-                <div className="shrink-0 bg-navy-900/50 border border-navy-700 px-2 py-1 rounded-lg flex items-center gap-1.5">
-                  <Clock size={10} className={cn(now > Number(currentActive.dueDate || 0) ? "text-error" : "text-brand-gold")} />
-                  <span className="font-mono text-[10px] font-bold text-text-primary">{timeLeftStr || '00:00:00'}</span>
+                <div className="shrink-0 bg-white/[0.03] border border-white/5 px-3 py-1.5 rounded-xl flex items-center gap-2">
+                  <Clock size={12} className={cn(now > Number(currentActive.dueDate || 0) ? "text-rose-500" : "text-brand-gold")} />
+                  <span className="font-mono text-xs font-black text-text-primary tracking-tighter">{timeLeftStr || '00:00:00'}</span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 pt-3 border-t border-navy-700/30">
-                <p className="text-[11px] text-text-secondary font-medium line-clamp-1 flex-1">{currentActive.description}</p>
-                <button 
+              <div className="flex items-center gap-4 pt-4 border-t border-white/5">
+                <p className="text-[11px] text-text-muted font-bold tracking-tight line-clamp-1 flex-1">{currentActive.description}</p>
+                <Button 
+                  size="sm"
+                  variant="gold"
+                  icon={ChevronRight}
                   onClick={() => navigate(`/assignments/${currentActive!.id}`)}
-                  className="bg-brand-gold text-navy-950 px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-glow-gold shrink-0 flex items-center gap-1"
+                  className="shrink-0 text-[10px] font-black px-4"
                 >
-                  {now > Number(currentActive.dueDate || 0) ? 'Resolve' : 'Deploy'} <ChevronRight size={12} />
-                </button>
+                  {now > Number(currentActive.dueDate || 0) ? 'Force Resolve' : 'Deploy Payload'}
+                </Button>
               </div>
             </div>
         ) : upcoming ? (
-          <div className="flex items-center justify-between opacity-70">
-            <div className="flex items-center gap-3">
-              <Clock size={18} className="text-text-secondary" />
+          <div className="flex items-center justify-between opacity-50 px-2 py-1">
+            <div className="flex items-center gap-4">
+              <Clock size={20} className="text-text-muted" />
               <div>
-                <p className="text-xs font-bold text-text-primary">Next: {upcoming.title}</p>
-                <p className="text-[10px] text-text-secondary">Expected {upcoming.startDate ? format(new Date(upcoming.startDate), 'MMM d') : 'soon'}</p>
+                <p className="text-xs font-black text-text-primary uppercase tracking-widest">Awaiting Command: {upcoming.title}</p>
+                <p className="text-[10px] text-text-muted font-bold uppercase tracking-tight">Window opens {upcoming.startDate ? format(upcoming.startDate, 'MMM d') : 'imminently'}</p>
               </div>
             </div>
-            <div className="text-[9px] font-black text-brand-gold uppercase tracking-tighter">In {timeLeftStr}</div>
+            <div className="text-[10px] font-black text-brand-gold uppercase tracking-[0.2em]">{timeLeftStr} Remaining</div>
           </div>
         ) : (
-          <p className="text-center text-[10px] text-text-secondary py-2 font-bold uppercase tracking-widest">Campaign Concluded</p>
+          <p className="text-center text-[10px] text-text-muted py-4 font-black uppercase tracking-[0.3em]">Campaign Concluded & Archive Sealed</p>
         )}
       </div>
 
-      <div className="flex justify-center sm:justify-start items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      <div className="flex flex-wrap items-center gap-2">
         {sortedItems.map((a, i) => {
           const state = getMissionState(a);
           const isCompleted = state.status === 'completed';
@@ -198,27 +207,27 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
           
           return (
             <motion.div 
-              whileHover={!isLocked ? { scale: 1.05 } : {}}
+              whileHover={!isLocked ? { scale: 1.05, y: -2 } : {}}
               whileTap={!isLocked ? { scale: 0.95 } : {}}
               key={a.id}
               onClick={() => !isLocked && navigate(`/assignments/${a.id}`)}
               className={cn(
-                "shrink-0 w-8 h-8 rounded-xl border flex items-center justify-center transition-all cursor-pointer relative",
-                isCompleted ? "bg-success/10 border-success/30 text-success" : 
-                isActive ? "bg-brand-gold/10 border-brand-gold text-brand-gold shadow-glow-gold" :
-                isLocked ? "bg-navy-900 border-navy-800 opacity-30 cursor-not-allowed" : 
-                "bg-navy-800 border-navy-700 text-text-secondary hover:border-brand-gold/50"
+                "shrink-0 w-9 h-9 rounded-xl border flex items-center justify-center transition-all cursor-pointer relative",
+                isCompleted ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500" : 
+                isActive ? "bg-brand-gold text-bg-main border-brand-gold shadow-lg shadow-brand-gold/20" :
+                isLocked ? "bg-white/[0.02] border-white/5 opacity-30 cursor-not-allowed" : 
+                "bg-white/[0.03] border-white/5 text-text-muted hover:border-white/20 hover:text-text-primary"
               )}
             >
-              {isCompleted ? <CheckCircle2 size={14} /> : (isLocked ? <Lock size={12} /> : <span className="text-[10px] font-black">{i + 1}</span>)}
+              {isCompleted ? <CheckCircle2 size={16} /> : (isLocked ? <Lock size={14} /> : <span className="text-[11px] font-black">{i + 1}</span>)}
               {isActive && (
-                <div className="absolute -bottom-0.5 w-1 h-1 bg-brand-gold rounded-full shadow-glow-gold" />
+                <div className="absolute -bottom-1 w-1 h-1 bg-brand-gold rounded-full shadow-[0_0_8px_rgba(251,191,36,0.8)]" />
               )}
             </motion.div>
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 };
 

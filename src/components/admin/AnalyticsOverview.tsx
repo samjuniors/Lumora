@@ -11,7 +11,7 @@ import {
     ArrowUpRight, 
     Bell
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { 
     AreaChart, 
     Area, 
@@ -30,6 +30,7 @@ import { userService, assignmentService, submissionService, walletService, admin
 import { toast } from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 import StatCard from './StatCard';
+import { Card, Button } from '../CommonUI';
 
 export const AnalyticsOverview = () => {
     const { user } = useAuth();
@@ -142,77 +143,79 @@ export const AnalyticsOverview = () => {
     );
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-10">
             {/* Profit Metrics */}
-            <div className="bg-[#1A2B48] rounded-[2.5rem] p-8 text-white shadow-2xl border border-white/5 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
+            <Card variant="glass" className="p-8 relative overflow-hidden shadow-2xl border-white/[0.03]">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
                 <div className="relative z-10">
-                    <div className="flex justify-between items-center mb-8">
-                        <div>
-                            <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
+                        <div className="space-y-1">
+                            <h2 className="text-3xl font-black tracking-tighter flex items-center gap-3 text-text-primary">
                                 <TrendingUp className="text-brand-gold w-8 h-8" />
-                                Platform Revenue
+                                Platform Operations
                             </h2>
-                            <p className="text-white/60 font-medium text-sm mt-1 uppercase tracking-widest">Global Earnings & Profitability</p>
+                            <p className="text-text-secondary font-bold text-xs uppercase tracking-[0.2em]">Global Revenue & Performance Index</p>
                         </div>
-                        <button 
+                        <Button 
+                            variant="gold"
                             onClick={generateEconomyInsights}
-                            disabled={isAnalyzing}
-                            className="bg-brand-gold text-bg-main px-6 py-3 rounded-2xl font-black text-xs uppercase tracking-widest hover:scale-105 transition-all shadow-xl shadow-brand-gold/20 flex items-center gap-2"
+                            isLoading={isAnalyzing}
+                            icon={Sparkles}
+                            size="md"
                         >
-                            <Sparkles size={16} />
-                            {isAnalyzing ? "Analyzing..." : "AI Economy Suggest"}
-                        </button>
+                            AI Economy Insights
+                        </Button>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
-                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Tax Collected (30%)</p>
-                             <div className="flex items-center gap-3">
-                                <div className="p-3 bg-brand-gold/20 rounded-2xl text-brand-gold">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 hover:bg-white/[0.05] transition-all group">
+                             <p className="text-[10px] font-black uppercase text-text-muted tracking-[0.2em] mb-4">Tax Yield (30%)</p>
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 flex items-center justify-center bg-brand-gold/10 rounded-xl text-brand-gold border border-brand-gold/20">
                                     <ShieldCheck size={24} />
                                 </div>
                                 <div>
-                                    <span className="text-2xl font-black text-white flex items-center gap-1 leading-none">
-                                        <Coins size={20} className="fill-current" />
+                                    <p className="text-3xl font-black text-text-primary flex items-center gap-1.5 leading-none">
+                                        <Coins size={20} className="text-brand-gold/50" />
                                         {stats.taxRevenue.toLocaleString()}
-                                    </span>
-                                    <p className="text-[10px] text-brand-gold font-bold mt-1">SUPERADMIN WALLET</p>
+                                    </p>
+                                    <p className="text-[10px] text-brand-gold/60 font-bold mt-2 uppercase tracking-wide">Treasury Balance</p>
                                 </div>
                              </div>
                         </div>
 
-                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
-                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Penalty Revenue</p>
-                             <div className="flex items-center gap-3">
-                                <div className="p-3 bg-rose-500/20 rounded-2xl text-rose-500">
+                        <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 hover:bg-white/[0.05] transition-all group">
+                             <p className="text-[10px] font-black uppercase text-text-muted tracking-[0.2em] mb-4">Penalty Volume</p>
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 flex items-center justify-center bg-rose-500/10 rounded-xl text-rose-500 border border-rose-500/20">
                                     <Zap size={24} />
                                 </div>
                                 <div>
-                                    <span className="text-2xl font-black text-white flex items-center gap-1 leading-none">
-                                        <Coins size={20} className="fill-current" />
+                                    <p className="text-3xl font-black text-text-primary flex items-center gap-1.5 leading-none">
+                                        <Coins size={20} className="text-rose-500/50" />
                                         {stats.penaltyVolume.toLocaleString()}
-                                    </span>
-                                    <p className="text-[10px] text-rose-400 font-bold mt-1">FROM MISSED TASKS</p>
+                                    </p>
+                                    <p className="text-[10px] text-rose-500/60 font-bold mt-2 uppercase tracking-wide">Deadline Enforcement</p>
                                 </div>
                              </div>
                         </div>
 
-                        <div className="bg-white/5 p-6 rounded-3xl border border-white/10 hover:bg-white/10 transition-all group">
-                             <p className="text-[10px] font-black uppercase text-white/40 tracking-widest mb-3">Gross Sales (Recharges)</p>
-                             <div className="flex items-center gap-3">
-                                <div className="p-3 bg-emerald-500/20 rounded-2xl text-emerald-500">
+                        <div className="bg-white/[0.03] p-6 rounded-2xl border border-white/5 hover:bg-white/[0.05] transition-all group">
+                             <p className="text-[10px] font-black uppercase text-text-muted tracking-[0.2em] mb-4">Gross Inflow</p>
+                             <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 flex items-center justify-center bg-emerald-500/10 rounded-xl text-emerald-500 border border-emerald-500/20">
                                     <Wallet size={24} />
                                 </div>
                                 <div>
-                                    <span className="text-2xl font-black text-white leading-none">
+                                    <p className="text-3xl font-black text-text-primary flex items-center gap-1 leading-none">
                                         ${stats.rechargeVolume.toLocaleString()}
-                                    </span>
-                                    <p className="text-[10px] text-emerald-400 font-bold mt-1">REAL MONEY VOLUME</p>
+                                    </p>
+                                    <p className="text-[10px] text-emerald-500/60 font-bold mt-2 uppercase tracking-wide">Fiat Converters</p>
                                 </div>
                              </div>
                         </div>
                     </div>
+
 
                     {economyInsights && (
                         <motion.div 
@@ -230,7 +233,7 @@ export const AnalyticsOverview = () => {
                         </motion.div>
                     )}
                 </div>
-            </div>
+            </Card>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <StatCard 
@@ -266,11 +269,11 @@ export const AnalyticsOverview = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-bg-surface rounded-[32px] p-8 border border-border-main shadow-sm">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="text-xl font-bold text-text-primary mt-0 pt-0 pl-[3px]">Submission Velocity</h3>
-                            <p className="text-sm text-text-secondary font-medium">Activity over the last 7 days</p>
+                <Card className="lg:col-span-2 p-8 border-white/[0.03]">
+                    <div className="flex justify-between items-center mb-8">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-bold text-text-primary leading-none">Submission Velocity</h3>
+                            <p className="text-xs text-text-muted font-medium tracking-wide">Activity recorded over the last 7 days</p>
                         </div>
                     </div>
                     <div className="h-[300px] w-full">
@@ -278,105 +281,111 @@ export const AnalyticsOverview = () => {
                             <AreaChart data={submissionData}>
                                 <defs>
                                     <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.1}/>
-                                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                                        <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.15}/>
+                                        <stop offset="95%" stopColor="#fbbf24" stopOpacity={0}/>
                                     </linearGradient>
                                 </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
                                 <XAxis 
                                     dataKey="name" 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }}
                                     dy={10}
                                 />
                                 <YAxis 
                                     axisLine={false} 
                                     tickLine={false} 
-                                    tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                                    tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }}
                                 />
                                 <Tooltip 
                                     contentStyle={{ 
-                                        borderRadius: '16px', 
-                                        backgroundColor: 'var(--bg-surface)',
-                                        borderColor: 'var(--border-main)',
-                                        color: 'var(--text-primary)',
-                                        boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
-                                        fontWeight: 'bold'
+                                        borderRadius: '12px', 
+                                        backgroundColor: '#0a1027',
+                                        borderColor: 'rgba(255,255,255,0.1)',
+                                        color: '#f8fafc',
+                                        boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        fontSize: '12px'
                                     }}
-                                    itemStyle={{ color: 'var(--text-primary)' }}
+                                    itemStyle={{ color: '#fbbf24', fontWeight: 'bold' }}
                                 />
                                 <Area 
                                     type="monotone" 
                                     dataKey="count" 
-                                    stroke="#6366f1" 
-                                    strokeWidth={4}
+                                    stroke="#fbbf24" 
+                                    strokeWidth={3}
                                     fillOpacity={1} 
                                     fill="url(#colorCount)" 
                                 />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
-                </div>
+                </Card>
 
-                <div className="bg-bg-surface rounded-[32px] p-8 border border-border-main shadow-sm flex flex-col">
-                    <h3 className="text-xl font-bold text-text-primary mb-2">System Health</h3>
-                    <p className="text-sm text-text-secondary font-medium mb-8">Role distribution</p>
+                <Card className="p-8 border-white/[0.03] flex flex-col">
+                    <h3 className="text-lg font-bold text-text-primary leading-none mb-1">System Health</h3>
+                    <p className="text-xs text-text-muted font-medium mb-8 uppercase tracking-widest">Network Distribution</p>
                     <div className="flex-grow flex items-center justify-center">
-                        <PieChart width={200} height={200}>
+                        <PieChart width={160} height={160}>
                             <Pie
                                 data={[
                                     { name: 'Students', value: stats.studentCount },
                                     { name: 'Staff', value: stats.totalUsers - stats.studentCount }
                                 ]}
-                                cx={100}
-                                cy={100}
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
+                                cx={80}
+                                cy={80}
+                                innerRadius={50}
+                                outerRadius={70}
+                                paddingAngle={8}
                                 dataKey="value"
                             >
-                                <Cell fill="#6366f1" />
-                                <Cell fill="#cbd5e1" />
+                                <Cell fill="#fbbf24" stroke="none" />
+                                <Cell fill="rgba(255,255,255,0.05)" stroke="none" />
                             </Pie>
                         </PieChart>
                     </div>
-                    <div className="space-y-4 mt-4">
-                        <div className="flex justify-between items-center text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-brand-gold"></div>
-                                <span className="text-text-secondary font-medium tracking-tight">Active Students</span>
+                    <div className="space-y-4 mt-8">
+                        <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-brand-gold"></div>
+                                <span className="text-text-secondary font-bold tracking-wide">Elite Students</span>
                             </div>
-                            <span className="font-bold text-text-primary">{stats.studentCount}</span>
+                            <span className="font-black text-text-primary">{stats.studentCount}</span>
                         </div>
-                        <div className="flex justify-between items-center text-sm">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-slate-300"></div>
-                                <span className="text-text-secondary font-medium tracking-tight">Privileged Staff</span>
+                        <div className="flex justify-between items-center text-xs">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-white/10"></div>
+                                <span className="text-text-secondary font-bold tracking-wide">Command Staff</span>
                             </div>
-                            <span className="font-bold text-text-primary">{stats.totalUsers - stats.studentCount}</span>
+                            <span className="font-black text-text-primary">{stats.totalUsers - stats.studentCount}</span>
                         </div>
                     </div>
-                </div>
+                </Card>
             </div>
 
-            <div className="bg-brand-gold-hover rounded-[32px] p-8 text-bg-main shadow-xl shadow-indigo-100 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-bg-surface/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700" />
-                <div className="relative z-10 flex flex-col md:flex-row gap-8 items-center">
+            <Card className="p-1 w-full bg-brand-gold relative overflow-hidden group">
+                <div className="bg-bg-main p-8 rounded-[14px] flex flex-col md:flex-row gap-8 items-center">
                     <div className="flex-1 text-center md:text-left">
-                        <h3 className="text-2xl font-black mb-2 flex items-center justify-center md:justify-start gap-3">
-                            <Bell size={24} /> Global Broadcast
+                        <h3 className="text-2xl font-black mb-2 flex items-center justify-center md:justify-start gap-4 text-text-primary">
+                            <Bell className="text-brand-gold" size={24} /> 
+                            Global Transmission
                         </h3>
-                        <p className="text-indigo-100 text-sm font-medium mb-2 leading-relaxed">Instantly reach every student on the platform with a high-priority alert.</p>
+                        <p className="text-text-secondary text-sm font-medium leading-relaxed">Broadcast high-priority system alerts and mission directives to all student terminals.</p>
                     </div>
                     
-                    <div className="w-full md:w-[400px] flex flex-col xs:flex-row gap-3">
-                        <input 
-                            className="flex-1 w-full xs:w-auto bg-bg-surface/10 border border-white/20 rounded-2xl px-5 py-4 text-sm text-bg-main placeholder:text-bg-main/40 outline-none focus:bg-bg-surface/20 transition-all font-medium"
-                            placeholder="Announcement content..."
-                            id="broadcast-input"
-                        />
-                        <button 
+                    <div className="w-full md:w-[450px] flex flex-col sm:flex-row gap-3">
+                        <div className="flex-grow">
+                           <input 
+                                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3 text-sm text-text-primary placeholder:text-text-muted outline-none focus:border-brand-gold/50 transition-all"
+                                placeholder="Transmission content..."
+                                id="broadcast-input"
+                            />
+                        </div>
+                        <Button 
+                            variant="gold"
+                            size="md"
+                            className="shrink-0 font-black"
                             onClick={async () => {
                                 const input = document.getElementById('broadcast-input') as HTMLInputElement;
                                 const msg = input?.value;
@@ -389,13 +398,13 @@ export const AnalyticsOverview = () => {
                                     toast.error("Broadcast failed");
                                 }
                             }}
-                            className="w-full xs:w-auto bg-bg-surface text-brand-gold px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-bg-main active:scale-95 transition-all shadow-lg shrink-0"
                         >
-                            Send
-                        </button>
+                            Execute
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
+
         </div>
     );
 };

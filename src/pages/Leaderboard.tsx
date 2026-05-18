@@ -47,15 +47,14 @@ const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[],
     const top3 = [leaders[1], leaders[0], leaders[2]]; // 2nd, 1st, 3rd
 
     return (
-      <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-6 pt-8 pb-12 px-2 sm:px-4 relative items-center md:items-end">
+      <div className="flex flex-col md:flex-row items-stretch justify-center gap-6 md:gap-8 pt-12 pb-16 px-2 sm:px-4 relative items-center md:items-end">
         {top3.map((student, i) => {
           const rank = i === 1 ? 1 : i === 0 ? 2 : 3;
           if (!student) return <div key={`empty-${rank}`} className="hidden md:block flex-1 max-w-[220px]"></div>;
           
           const isFirst = rank === 1;
-          const bgClass = isFirst ? 'bg-gradient-to-b from-[#1A2B48] to-indigo-950 text-white' : 'bg-bg-surface text-text-primary';
-          const borderClass = isFirst ? 'border-amber-400/50 shadow-2xl shadow-amber-500/20' : rank === 2 ? 'border-slate-300 shadow-lg' : 'border-orange-200 shadow-md';
-          const iconColor = isFirst ? 'text-amber-400' : rank === 2 ? 'text-slate-400' : 'text-orange-400';
+          const bgClass = isFirst ? 'bg-gradient-to-br from-brand-gold to-amber-600 text-bg-main' : 'bg-white/[0.02] text-text-primary';
+          const borderClass = isFirst ? 'border-brand-gold shadow-[0_20px_50px_rgba(251,191,36,0.3)]' : 'border-white/5 shadow-premium';
           
           return (
             <motion.div 
@@ -64,32 +63,27 @@ const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[],
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: (3 - rank) * 0.1, type: "spring", stiffness: 250, damping: 20 }}
               className={cn(
-                "flex flex-col items-center justify-center relative group w-full md:flex-1 max-w-[280px] rounded-3xl p-6 border-2 transition-all duration-300",
+                "flex flex-col items-center justify-center relative group w-full md:flex-1 max-w-[300px] rounded-[2.5rem] p-8 border transition-all duration-500",
                 bgClass, borderClass,
-                isFirst ? "md:order-2 md:h-80 z-10" : i === 0 ? "md:order-1 md:h-64" : "md:order-3 md:h-64"
+                isFirst ? "md:order-2 md:h-96 z-10 scale-110 shadow-glow-gold" : i === 0 ? "md:order-1 md:h-72" : "md:order-3 md:h-72"
               )}
             >
               {isFirst && (
-                <div className="absolute -top-5 bg-amber-400 text-[#1A2B48] text-xs font-black px-4 py-1 rounded-full flex items-center gap-1 shadow-md">
-                   <Crown className="w-4 h-4" /> CHAMPION
+                <div className="absolute -top-6 bg-white text-bg-main text-[10px] font-black px-6 py-2 rounded-full flex items-center gap-2 shadow-2xl border border-white/20 uppercase tracking-[0.3em]">
+                   <Crown className="w-4 h-4" /> Apex Operative
                 </div>
               )}
-              {rank === 2 && (
-                <div className="absolute -top-4 bg-slate-200 text-slate-700 text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
-                   RANK 2
-                </div>
-              )}
-              {rank === 3 && (
-                <div className="absolute -top-4 bg-orange-100 text-orange-800 text-[10px] font-black px-3 py-1 rounded-full shadow-sm">
-                   RANK 3
+              {!isFirst && (
+                <div className="absolute -top-4 bg-white/10 backdrop-blur-md text-[9px] font-black px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-widest opacity-60">
+                   Rank {rank}
                 </div>
               )}
 
               <motion.div 
-                 whileHover={{ scale: 1.05 }}
+                 whileHover={{ scale: 1.1, rotate: 5 }}
                  className={cn(
-                 "relative flex items-center justify-center bg-bg-main rounded-2xl shadow-inner mb-4 overflow-hidden border",
-                 isFirst ? 'w-24 h-24 border-amber-400/30' : 'w-16 h-16 border-border-main'
+                 "relative flex items-center justify-center bg-bg-main rounded-3xl shadow-inner mb-6 overflow-hidden border-2 transition-all",
+                 isFirst ? 'w-28 h-28 border-white/40' : 'w-20 h-20 border-white/10'
                )}>
                  {(student.avatar?.startsWith('http') || student.avatar?.startsWith('data:')) ? (
                    <img src={student.avatar} alt={student.name} className="w-full h-full object-cover" />
@@ -97,36 +91,35 @@ const Podium = ({ leaders, type, setSelectedUser, timeframe }: { leaders: any[],
                    <span className={cn("text-3xl", isFirst && "text-5xl")}>{student.avatar || '👤'}</span>
                  )}
                  {student.inventory?.includes('avatar_frame_gold') && (
-                   <div className="absolute inset-0 border-[3px] border-yellow-400/80 rounded-2xl z-20 pointer-events-none" />
+                    <div className="absolute inset-0 border-[4px] border-brand-gold rounded-3xl z-20 pointer-events-none animate-pulse" />
                  )}
                </motion.div>
                
-               <button onClick={() => setSelectedUser(student)} className="font-bold text-center truncate block max-w-full px-1 text-lg hover:opacity-80 transition-opacity">
+               <button onClick={() => setSelectedUser(student)} className="font-black text-center truncate block max-w-full px-2 text-xl hover:opacity-80 transition-opacity uppercase tracking-tight">
                   {student.name.split(' ')[0]}
                </button>
 
-               <div className={cn("mt-1 text-xs font-medium opacity-80 uppercase tracking-widest", isFirst && "text-amber-200")}>
-                  Lvl {getUserLevelAndXP(student).currentLevel}
+               <div className={cn("mt-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-60", isFirst ? "text-bg-main" : "text-text-muted")}>
+                  Clearance Lvl {getUserLevelAndXP(student).currentLevel}
                </div>
-               
-               <div className={cn("mt-4 font-black flex items-center gap-1.5", isFirst ? "text-3xl text-amber-400" : "text-2xl")}>
+                            <div className={cn("mt-6 font-black flex items-center gap-2", isFirst ? "text-4xl text-bg-main" : "text-3xl text-brand-gold")}>
                  {type === 'diamonds' ? (
                    <>{(() => {
-                     const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-                     const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
-                     const d = new Date(nowIST);
-                     d.setHours(0,0,0,0);
-                     d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-                     const yearStart = new Date(d.getFullYear(),0,1);
-                     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-                     const thisWeek = `${d.getFullYear()}-W${weekNo}`;
-                     
-                     if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
-                     if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
-                     return student.lifetimeDiamonds || student.diamonds || 0;
-                   })()} <Gem className={cn("w-5 h-5", isFirst ? 'text-cyan-400' : iconColor)}/></>
+                      const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                      const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+                      const d = new Date(nowIST);
+                      d.setHours(0,0,0,0);
+                      d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                      const yearStart = new Date(d.getFullYear(),0,1);
+                      const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                      const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+                      
+                      if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
+                      if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
+                      return student.lifetimeDiamonds || student.diamonds || 0;
+                    })()} <Gem className={cn("w-6 h-6", isFirst ? 'text-bg-main' : 'text-cyan-400')}/></>
                  ) : (
-                   <>{student.averageGrade}% <GraduationCap className={cn("w-5 h-5", iconColor)}/></>
+                   <>{student.averageGrade}% <GraduationCap className={cn("w-6 h-6", isFirst ? 'text-bg-main' : 'text-brand-gold')}/></>
                  )}
                </div>
             </motion.div>
@@ -377,59 +370,65 @@ export const Leaderboard = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 relative pb-48 px-4 md:px-0">
-      {/* Premium Minimal Header */}
+    <div className="max-w-7xl mx-auto space-y-12 relative pb-48 px-6">
+      {/* Premium minimal Header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center space-y-4 pt-12 pb-8"
+        className="text-center space-y-6 pt-16 pb-12"
       >
-        <div className="inline-flex items-center justify-center p-3 bg-brand-gold/10 rounded-2xl border border-brand-gold/30 mb-2">
-           <Crown className="w-10 h-10 text-brand-gold" />
+        <div className="flex flex-col items-center gap-4">
+           <div className="flex items-center gap-3">
+             <span className="h-[1px] w-12 bg-brand-gold/30"></span>
+             <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Operational Dominance</span>
+             <span className="h-[1px] w-12 bg-brand-gold/30"></span>
+           </div>
+           <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-text-primary uppercase leading-[0.85]">
+              Syndicate <span className="text-brand-gold text-glow-gold">Rankings</span>
+           </h1>
+           <p className="text-text-secondary text-lg md:text-xl font-medium max-w-2xl mx-auto italic opacity-80">
+              Elite performance metrics. Only the most precise operatives ascend to the Apex Tier.
+           </p>
         </div>
-        <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-text-primary">
-          The <span className="text-brand-gold">Hall of Fame</span>
-        </h1>
-        <p className="text-text-secondary text-lg font-medium max-w-xl mx-auto">Elite performers recognized by the Lumina Syndicate.</p>
         
         {/* Navigation Tabs */}
-        <div className="pt-8">
-          <div className="flex bg-navy-900/50 backdrop-blur-md p-1.5 w-full max-w-md mx-auto rounded-2xl border border-navy-700/50 shadow-inner">
+        <div className="pt-12">
+          <div className="flex bg-white/[0.02] backdrop-blur-md p-2 w-full max-w-xl mx-auto rounded-[2rem] border border-white/5 shadow-premium">
             <button
               onClick={() => setActiveTab('diamonds')}
               className={cn(
-                "flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-                activeTab === 'diamonds' ? "bg-navy-800 text-cyan-400 border border-navy-700" : "text-text-secondary hover:text-text-primary"
+                "flex-1 px-8 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3",
+                activeTab === 'diamonds' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
               )}
             >
-              <Gem className="w-4 h-4" /> Diamonds
+              <Gem className="w-4 h-4" /> Asset Leaders
             </button>
             <button
               onClick={() => setActiveTab('grades')}
               className={cn(
-                "flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2",
-                activeTab === 'grades' ? "bg-navy-800 text-brand-gold border border-navy-700" : "text-text-secondary hover:text-text-primary"
+                "flex-1 px-8 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3",
+                activeTab === 'grades' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
               )}
             >
-              <GraduationCap className="w-4 h-4" /> Mastery
+              <GraduationCap className="w-4 h-4" /> Mastery Tier
             </button>
           </div>
 
           {activeTab === 'diamonds' && (
             <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex items-center justify-center gap-4 mt-6"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center justify-center gap-6 mt-10"
             >
                {['daily', 'weekly', 'overall'].map((t) => (
                  <button
                    key={t}
                    onClick={() => setTimeframe(t)}
                    className={cn(
-                     "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                     "px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-all border",
                      timeframe === t 
-                       ? "bg-navy-900 border border-cyan-500/30 text-cyan-400" 
-                       : "text-text-muted hover:text-text-secondary"
+                       ? "bg-brand-gold/5 border-brand-gold/30 text-brand-gold" 
+                       : "text-text-muted border-transparent hover:text-text-primary hover:bg-white/5"
                    )}
                  >
                    {t}
@@ -466,42 +465,43 @@ export const Leaderboard = () => {
                 const tier = getTierInfo(me.lifetimeDiamonds || me.diamonds || 0);
                 
                 return (
-                  <motion.div 
-                    key={activeTab}
-                    initial={{ y: 50, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 350, damping: 25 }}
-                    className="bg-[#1A2B48] border border-[#D4AF37]/50 rounded-2xl shadow-xl shadow-indigo-900/20 p-3 md:p-4 flex items-center gap-3 text-white overflow-hidden relative"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/5 to-transparent pointer-events-none"></div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/10 rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shrink-0 border border-white/20">
-                      #{myIndex + 1}
-                    </div>
-                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white/5 rounded-xl flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
-                      {(me.avatar?.startsWith('http') || me.avatar?.startsWith('data:')) ? (
-                         <img src={me.avatar} key={me.avatar} alt={me.name} className="w-full h-full object-cover" />
-                      ) : (
-                         <span className="text-xl md:text-2xl">{me.avatar || '👤'}</span>
-                      )}
-                    </div>
-                    <div className="flex-1 font-medium z-10 min-w-0">
-                      <p className="truncate text-xs text-white/70 uppercase tracking-widest hidden md:block mb-0.5">Your Current Rank</p>
-                      <p className="truncate text-[10px] text-white/70 uppercase tracking-widest md:hidden mb-0.5">Your Rank</p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={cn("text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded text-white bg-white/10 border border-white/20")}>
-                          {tier.name}
-                        </span>
-                        <span className={cn(
-                          "text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded shadow-sm text-white",
-                          getPerformanceBadge(calculatePerformanceScore(me)).color || "bg-white/20"
-                        )}>
-                          {getPerformanceBadge(calculatePerformanceScore(me)).title}
-                        </span>
+                    <motion.div 
+                      key={activeTab}
+                      initial={{ y: 50, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                      className="bg-bg-card/90 backdrop-blur-3xl border border-brand-gold/30 rounded-[2rem] shadow-glow-gold p-3 md:p-5 flex items-center gap-4 text-text-primary overflow-hidden relative"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 to-transparent pointer-events-none"></div>
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-brand-gold text-bg-main rounded-[1.25rem] flex items-center justify-center font-black text-xl md:text-2xl shrink-0">
+                        #{myIndex + 1}
                       </div>
-                    </div>
-                    <div className="font-bold text-lg md:text-xl z-10 whitespace-nowrap bg-[#D4AF37]/10 px-4 md:px-6 py-2 md:py-3 rounded-xl flex items-center gap-2 border border-[#D4AF37]/30 text-[#D4AF37] shadow-sm">
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-white/5 overflow-hidden">
+                        {(me.avatar?.startsWith('http') || me.avatar?.startsWith('data:')) ? (
+                           <img src={me.avatar} key={me.avatar} alt={me.name} className="w-full h-full object-cover" />
+                        ) : (
+                           <span className="text-2xl md:text-3xl">{me.avatar || '👤'}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 font-black z-10 min-w-0">
+                        <p className="truncate text-[10px] text-brand-gold uppercase tracking-[0.3em] mb-1">Operative Standing</p>
+                        <div className="flex items-center gap-3">
+                          <span className="text-lg md:text-xl truncate uppercase tracking-tighter">Apex Designation</span>
+                          <div className="hidden md:flex items-center gap-2">
+                            <span className={cn("text-[9px] uppercase tracking-[0.2em] font-black px-3 py-1 rounded-full text-bg-main bg-brand-gold")}>
+                              {tier.name}
+                            </span>
+                            <span className={cn(
+                              "text-[9px] uppercase font-black tracking-[0.2em] px-3 py-1 rounded-full shadow-sm text-text-primary border border-white/10 bg-white/5",
+                            )}>
+                              {getPerformanceBadge(calculatePerformanceScore(me)).title}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    <div className="font-black text-xl md:text-3xl z-10 whitespace-nowrap bg-brand-gold/10 px-6 py-3 rounded-2xl flex items-center gap-2 border border-brand-gold/20 text-brand-gold shadow-glow-gold">
                       {activeTab === 'diamonds' ? (
-                        <span className="flex items-center gap-2 text-cyan-400">
+                        <span className="flex items-center gap-3">
                           {(() => {
                              const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
                              const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
@@ -515,10 +515,12 @@ export const Leaderboard = () => {
                              if (timeframe === 'daily') return me.lastResetDay === today ? (me.dailyDiamonds || 0) : 0;
                              if (timeframe === 'weekly') return me.lastResetWeek === thisWeek ? (me.weeklyDiamonds || 0) : 0;
                              return me.lifetimeDiamonds || me.diamonds || 0;
-                          })()} <Gem className="w-4 h-4 md:w-5 md:h-5"/>
+                          })()} <Gem className="w-5 h-5 text-cyan-400" />
                         </span>
                       ) : (
-                        <>{(me as any).averageGrade}% <GraduationCap className="w-4 h-4 md:w-5 md:h-5"/></>
+                        <span className="flex items-center gap-3">
+                          {me.averageGrade || 0}% <GraduationCap className="w-5 h-5" />
+                        </span>
                       )}
                     </div>
                   </motion.div>

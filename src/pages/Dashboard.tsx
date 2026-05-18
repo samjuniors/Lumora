@@ -62,11 +62,11 @@ export const Dashboard = () => {
 
   useEffect(() => {
     const events = [
-      { id: 1, text: "Avery J. earned an A+ in Physics!", icon: "🎓", color: "text-amber-500" },
-      { id: 2, text: "Marcus L. collected 50 Coins!", icon: "⛏️", color: "text-cyan-400" },
-      { id: 3, text: "Global Mission: 'Mesh Theory' is active!", icon: "🌐", color: "text-indigo-400" },
-      { id: 4, text: "Sarah K. found a 'Rare Badge'!", icon: "💎", color: "text-fuchsia-400" },
-      { id: 5, text: "System: Weekly leaderboard reset in 2 days", icon: "⏰", color: "text-orange-400" }
+      { id: 1, text: "OPERATIONAL: Sector 7 reported 98% efficiency.", icon: "⚡", color: "text-brand-gold" },
+      { id: 2, text: "MARKET: Diamond liquidity increased by 4%.", icon: "💎", color: "text-cyan-400" },
+      { id: 3, text: "GLOBAL: 'Mesh Theory' protocol in effect.", icon: "🌐", color: "text-indigo-400" },
+      { id: 4, text: "SIGNAL: Elite status detected in neural-link.", icon: "🛰️", color: "text-fuchsia-400" },
+      { id: 5, text: "SYSTEM: Epoch reset in 48 hours.", icon: "⏳", color: "text-orange-400" }
     ];
     setPlatformEvents(events);
   }, []);
@@ -202,95 +202,109 @@ export const Dashboard = () => {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-8 pb-32 px-4"
+      className="max-w-7xl mx-auto space-y-12 pb-32 px-4"
     >
-      {/* Premium Minimal Header */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pt-4">
-        <div className="lg:col-span-8 flex flex-col justify-between space-y-6">
-          <div className="space-y-1">
-             <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-text-primary">
-                The Lumina <span className="text-brand-gold">Terminal</span>
+      {/* Premium Header */}
+      <div className="flex flex-col lg:flex-row gap-10 items-start pt-10">
+        <div className="flex-grow space-y-8">
+          <div className="space-y-3">
+             <div className="flex items-center gap-3">
+               <span className="h-[1px] w-12 bg-brand-gold/30"></span>
+               <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Strategic Control Center</span>
+             </div>
+             <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-text-primary leading-[0.85] uppercase">
+                Lumina <span className="text-brand-gold text-glow-gold">Protocol</span>
              </h1>
-             <p className="text-text-secondary font-medium md:text-lg">Elite academic performance monitoring and mission control.</p>
+             <p className="text-text-secondary font-medium md:text-xl max-w-2xl border-l-2 border-brand-gold/20 pl-6 py-2 italic opacity-80">
+               High-stakes academic dominance monitoring. Execute with precision or face systemic liquidation.
+             </p>
           </div>
           
-          <div className="flex flex-wrap gap-3">
-             <div className="bg-navy-900 border border-navy-700/50 rounded-xl px-5 py-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
-                   <Flame size={18} />
+          <div className="flex flex-wrap gap-5">
+             <div className="bg-white/[0.02] border border-white/5 rounded-3xl px-8 py-5 flex items-center gap-5 transition-all hover:bg-white/[0.04] hover:scale-105 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-lg shadow-orange-500/10">
+                   <Flame size={24} />
                 </div>
                 <div>
-                   <div className="text-[10px] uppercase tracking-widest font-black text-text-muted">Daily Streak</div>
-                   <div className="text-xl font-black text-text-primary">{user?.streak || 0} Days</div>
+                   <p className="text-[9px] uppercase tracking-[0.2em] font-black text-text-muted opacity-60">Neural Burn Streak</p>
+                   <p className="text-3xl font-black text-text-primary leading-none tabular-nums">{user?.streak || 0}</p>
                 </div>
              </div>
-             <div className="bg-navy-900 border border-navy-700/50 rounded-xl px-5 py-3 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-brand-gold/10 flex items-center justify-center text-brand-gold">
-                   <Coins size={18} />
+             <div className="bg-white/[0.02] border border-white/5 rounded-3xl px-8 py-5 flex items-center gap-5 transition-all hover:bg-white/[0.04] hover:scale-105 shadow-inner">
+                <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shadow-lg shadow-brand-gold/10">
+                   <Coins size={24} />
                 </div>
                 <div>
-                   <div className="text-[10px] uppercase tracking-widest font-black text-text-muted">Lumina Coins</div>
-                   <div className="text-xl font-black text-text-primary">{user?.coins?.toLocaleString() || 0}</div>
+                   <p className="text-[9px] uppercase tracking-[0.2em] font-black text-text-muted opacity-60">Capital Stockpile</p>
+                   <p className="text-3xl font-black text-text-primary leading-none tabular-nums">{user?.coins?.toLocaleString() || 0}</p>
                 </div>
              </div>
           </div>
         </div>
 
         <Card
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="lg:col-span-4 p-6 flex flex-col justify-between relative overflow-hidden group"
+          variant="glass"
+          className="w-full lg:w-[400px] p-8 md:p-10 flex flex-col justify-between relative overflow-hidden group shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border-white/10"
         >
-          <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
-             <Gem size={120} />
+          <div className="absolute top-0 right-0 p-10 opacity-[0.04] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110 group-hover:rotate-12">
+             <Gem size={140} />
           </div>
           <div className="relative z-10">
-            <div className="flex justify-between items-center mb-6">
-              <span className="text-[11px] font-bold text-text-secondary uppercase tracking-widest">Available Diamonds</span>
-              <Gem className="text-cyan-400" size={20} />
+            <div className="flex justify-between items-center mb-10">
+              <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] border-b border-brand-gold/20 pb-1.5 italic">Asset Allocation: Diamonds</span>
+              <Gem className="text-brand-gold animate-pulse" size={24} />
             </div>
-            <div className="text-5xl font-display font-bold text-text-primary tracking-tighter mb-1">
+            <div className="text-7xl font-black text-text-primary tracking-tighter mb-4 tabular-nums">
               {user?.diamonds || 0}
             </div>
-            <div className="text-[10px] text-text-secondary font-medium flex items-center gap-1.5">
-              Ranked #{user?.rank || '--'} global <ArrowUpRight size={10} />
+            <div className="flex items-center gap-3">
+               <span className="bg-brand-gold text-bg-main text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Level {currentLevel}</span>
+               <div className="h-1 flex-1 bg-white/[0.05] rounded-full overflow-hidden">
+                  <div className="h-full bg-brand-gold shadow-glow-gold" style={{ width: `${xpProgress}%` }} />
+               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 pt-6 mt-6 border-t border-navy-700/50 relative z-10">
-            <Link to="/assignments?filter=active" className="p-4 bg-navy-800 border border-navy-700/50 rounded-xl hover:border-navy-600 transition-colors group">
-              <div className="text-[9px] font-black text-text-muted uppercase tracking-wider mb-1">Active</div>
-              <div className="text-xl font-black text-brand-gold">{studentEnrollments.filter((e) => e.status === "active").length}</div>
+          <div className="grid grid-cols-2 gap-6 pt-10 mt-10 border-t border-white/5 relative z-10">
+            <Link to="/assignments?filter=active" className="space-y-2 group">
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] group-hover:text-brand-gold transition-colors opacity-60">Operations</p>
+              <p className="text-3xl font-black text-text-primary leading-none tabular-nums group-hover:translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "active").length}</p>
             </Link>
-            <Link to="/assignments?filter=completed" className="p-4 bg-navy-800 border border-navy-700/50 rounded-xl hover:border-navy-600 transition-colors group">
-              <div className="text-[9px] font-black text-text-muted uppercase tracking-wider mb-1">Done</div>
-              <div className="text-xl font-black text-success">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</div>
+            <Link to="/assignments?filter=completed" className="space-y-2 group text-right">
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] group-hover:text-success transition-colors opacity-60">Secured</p>
+              <p className="text-3xl font-black text-text-primary leading-none tabular-nums group-hover:-translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</p>
             </Link>
           </div>
         </Card>
       </div>
 
       {(potentialLoss > 0 || missedCount > 3) && (
-        <div className="flex flex-col gap-3">
+        <div className="space-y-6">
           {potentialLoss > 0 && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center justify-between">
-               <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-500 text-white rounded-lg flex items-center justify-center shrink-0 shadow-lg shadow-red-500/20">
-                     <AlertTriangle size={20} />
+            <motion.div 
+              initial={{ scale: 0.98, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-rose-500/5 border border-rose-500/10 rounded-[2rem] p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-premium"
+            >
+               <div className="flex items-center gap-6">
+                  <div className="w-16 h-16 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-2xl flex items-center justify-center shrink-0">
+                     <AlertTriangle size={32} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-red-500 uppercase tracking-widest">Risk Exposure</h3>
-                    <p className="text-sm font-medium text-text-primary">
-                       Potential loss of <span className="font-bold text-red-500">{potentialLoss} Coins</span> due to pending deadlines.
+                    <h3 className="text-xs font-black text-rose-500 uppercase tracking-[0.3em] mb-2">Liquidation Exposure Alert</h3>
+                    <p className="text-sm font-medium text-text-secondary leading-relaxed max-w-xl italic">
+                       System predicts a loss of <span className="font-black text-rose-500 underline underline-offset-4 decoration-2">{potentialLoss} Credits</span> due to deadline degradation. Immediate intervention mandatory.
                     </p>
                   </div>
                </div>
-               <Link to="/assignments?filter=active" className="bg-red-500 text-white px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-widest">Secure Now</Link>
-            </div>
+               <Link to="/assignments?filter=active">
+                 <Button variant="danger" size="lg" className="w-full sm:w-auto font-black shadow-lg shadow-rose-500/10">Execute Defense</Button>
+               </Link>
+            </motion.div>
           )}
         </div>
       )}
+
 
       {/* The Oracle AI Strategic Advisor */}
       <TheOracle 

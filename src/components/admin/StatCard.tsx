@@ -12,32 +12,30 @@ interface StatCardProps {
 
 const StatCard = ({ title, value, icon, color, unit = '', subtitle }: StatCardProps) => {
     const colors: Record<string, string> = {
-        blue: "bg-blue-50 text-blue-600",
-        amber: "bg-brand-gold/10 text-brand-gold",
-        indigo: "bg-brand-gold-secondary-hover text-brand-gold",
-        emerald: "bg-success-green/10 text-emerald-600",
+        blue: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+        amber: "bg-brand-gold/10 text-brand-gold border-brand-gold/20",
+        indigo: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
+        emerald: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     };
 
     return (
-        <div className="bg-bg-surface rounded-[32px] p-6 border border-border-main shadow-sm hover:shadow-md transition-all duration-300 group">
-            <div className="flex justify-between items-start mb-4">
-                <div className={cn("p-3 rounded-2xl transition-transform group-hover:scale-110 duration-300", colors[color])}>
-                    <div className="w-6 h-6 flex items-center justify-center">
-                        {icon}
-                    </div>
+        <div className="bg-white/[0.03] rounded-2xl p-6 border border-white/5 hover:border-white/10 transition-all duration-300 group">
+            <div className="flex justify-between items-start mb-6">
+                <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl border transition-transform group-hover:scale-105 duration-300", colors[color])}>
+                    {icon}
                 </div>
-                <div className="flex items-center gap-1.5 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                <div className="flex items-center gap-2 bg-emerald-500/5 px-3 py-1 rounded-full border border-emerald-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Live</span>
                 </div>
             </div>
-            <div>
-                <h4 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-1">{title}</h4>
+            <div className="space-y-1">
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">{title}</h4>
                 <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-black text-text-primary tracking-tight">{value}</span>
+                    <span className="text-3xl font-black text-text-primary tracking-tighter">{value}</span>
                     {unit && <span className="text-sm font-bold text-text-secondary">{unit}</span>}
                 </div>
-                {subtitle && <p className="text-xs text-text-secondary font-medium mt-1">{subtitle}</p>}
+                {subtitle && <p className="text-[10px] text-text-secondary font-bold uppercase tracking-tight opacity-60">{subtitle}</p>}
             </div>
         </div>
     );

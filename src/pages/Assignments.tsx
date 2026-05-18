@@ -132,39 +132,51 @@ export const Assignments = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8 md:mb-10">
+        <div className="max-w-7xl mx-auto px-4 pt-8 pb-32">
+            <motion.div 
+               initial={{ opacity: 0, y: -20 }}
+               animate={{ opacity: 1, y: 0 }}
+               className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-16"
+            >
                 <div>
-                    <h1 className="text-2xl md:text-5xl font-display font-bold text-text-primary tracking-tight">Missions Hub</h1>
-                    <p className="text-[10px] md:text-base text-text-secondary mt-1 md:mt-2 font-bold uppercase tracking-widest opacity-70">Strategic Command & Operations</p>
+                   <div className="flex items-center gap-3 mb-4">
+                      <span className="h-[1px] w-12 bg-brand-gold/30"></span>
+                      <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Active Operations</span>
+                   </div>
+                    <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter uppercase leading-none">
+                        Mission <span className="text-brand-gold text-glow-gold">Hub</span>
+                    </h1>
+                    <p className="text-text-muted mt-4 font-medium text-lg max-w-xl italic opacity-80 leading-relaxed">
+                        Strategize, execute, and dominate. High-stakes assignments for elite operatives only.
+                    </p>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                    <div className="flex bg-navy-900 p-1 rounded-xl border border-navy-700/50 shadow-soft">
+                <div className="flex items-center gap-4 flex-wrap">
+                    <div className="flex bg-white/[0.03] backdrop-blur-md p-1 rounded-2xl border border-white/5 shadow-premium">
                         <button 
                             onClick={() => setViewMode('list')}
-                            className={cn("p-2 rounded-lg transition-all", viewMode === 'list' ? "bg-brand-gold text-navy-950 shadow-sm" : "text-text-secondary hover:text-text-primary")}
+                            className={cn("px-4 py-2.5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2", viewMode === 'list' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-white")}
                         >
-                            <LayoutList size={16} />
+                            <LayoutList className="w-4 h-4" /> Grid
                         </button>
                         <button 
                             onClick={() => setViewMode('calendar')}
-                            className={cn("p-2 rounded-lg transition-all", viewMode === 'calendar' ? "bg-brand-gold text-navy-950 shadow-sm" : "text-text-secondary hover:text-text-primary")}
+                            className={cn("px-4 py-2.5 rounded-xl transition-all font-black text-[10px] uppercase tracking-widest flex items-center gap-2", viewMode === 'calendar' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-white")}
                         >
-                            <CalendarIcon size={16} />
+                            <CalendarIcon className="w-4 h-4" /> Schedule
                         </button>
                     </div>
 
                     {isAdmin && (
                         <button 
                             onClick={() => setShowCreateModal(true)}
-                            className="bg-brand-gold text-navy-950 px-4 md:px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all"
+                            className="bg-white text-bg-main px-8 py-3.5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-white/5 hover:scale-105 transition-all flex items-center gap-2"
                         >
-                            <Plus size={14} /> <span className="hidden sm:inline">New Operation</span><span className="sm:hidden">New</span>
+                            <Plus className="w-4 h-4" /> Authorized Deploy
                         </button>
                     )}
                 </div>
-            </div>
+            </motion.div>
 
             {isLoading ? (
                 <ListSkeleton />
@@ -174,31 +186,37 @@ export const Assignments = () => {
                     onViewMission={(id) => navigate(`/assignments/${id}`)} 
                 />
             ) : (
-                <div className="space-y-8 md:space-y-12">
-                    <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 scroll-smooth">
+                <div className="space-y-12">
+                    <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
                         {['all', 'active', 'upcoming', 'completed', 'missed', 'retest'].map((s) => (
                             <button
                                 key={s}
                                 onClick={() => setFilterStatus(s)}
                                 className={cn(
-                                    "px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all border whitespace-nowrap shrink-0",
+                                    "px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] transition-all border whitespace-nowrap shrink-0",
                                     filterStatus === s 
-                                        ? "bg-brand-gold text-navy-950 border-brand-gold shadow-glow-gold" 
-                                        : "bg-navy-900 text-text-secondary border-navy-700 hover:border-brand-gold/30"
+                                        ? "bg-brand-gold text-bg-main border-brand-gold shadow-glow-gold" 
+                                        : "bg-white/[0.02] text-text-muted border-white/5 hover:border-brand-gold/30 hover:text-brand-gold shadow-premium"
                                 )}
                             >
-                                {s === 'all' ? 'All Missions' : s}
+                                {s === 'all' ? 'Inventory (All)' : s}
                             </button>
                         ))}
                     </div>
 
                     {groupedAssignments.length === 0 ? (
-                        <div className="bg-navy-900/50 rounded-3xl p-12 md:p-20 text-center border border-navy-700 border-dashed">
-                            <Sparkles className="w-10 h-10 text-brand-gold/20 mx-auto mb-4" />
-                            <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest">No matching objectives found</p>
+                        <div className="bg-white/[0.01] rounded-[3rem] py-32 text-center border border-white/5 border-dashed shadow-inner">
+                            <motion.div
+                                animate={{ scale: [1, 1.1, 1] }}
+                                transition={{ repeat: Infinity, duration: 4 }}
+                            >
+                                <Sparkles className="w-16 h-16 text-brand-gold/20 mx-auto mb-8" />
+                            </motion.div>
+                            <p className="text-[11px] text-text-muted uppercase font-black tracking-[0.4em]">No objectives detected in this sector</p>
+                            <p className="text-text-muted/60 mt-2 text-xs">Maintain vigilance. New directives incoming.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-6 md:gap-10">
+                        <div className="grid grid-cols-1 gap-12">
                             {groupedAssignments.map((group) => (
                                 <AssignmentGroupCard 
                                     key={group.id}
@@ -211,6 +229,7 @@ export const Assignments = () => {
                             ))}
                         </div>
                     )}
+
 
 
                     {isStudent && <CompletedMissionsStack />}

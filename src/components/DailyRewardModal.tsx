@@ -28,83 +28,50 @@ export const DailyRewardModal = () => {
   useEffect(() => {
     if (!isStudent || !user) return;
     
-    const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-    const year = nowIST.getFullYear();
-    const month = String(nowIST.getMonth() + 1).padStart(2, '0');
-    const day = String(nowIST.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
+    const now = new Date();
+    const lastClaim = user.lastRewardClaimedAt;
+    let alreadyClaimed = false;
+
+    if (lastClaim) {
+      const claimDate = new Date(lastClaim);
+      alreadyClaimed = 
+        claimDate.getUTCFullYear() === now.getUTCFullYear() &&
+        claimDate.getUTCMonth() === now.getUTCMonth() &&
+        claimDate.getUTCDate() === now.getUTCDate();
+    }
     
-    if (user.lastRewardClaimed !== today) {
+    if (!alreadyClaimed) {
       const timer = setTimeout(() => {
         setIsOpen(true);
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [user?.id, user?.lastRewardClaimed]);
-
-  const generateReward = (): DailyReward => {
-    const roll = Math.random();
-    
-    if (roll < 0.10) { // 10% chance for a temporary item
-      const items = [
-        { label: 'Gold Frame', id: 'frame_gold', duration: 1 },
-        { label: 'Neon Glow Frame', id: 'frame_neon', duration: 3 },
-        { label: 'Cyber Aura', id: 'frame_cyber', duration: 1 }
-      ];
-      const item = items[Math.floor(Math.random() * items.length)];
-      return {
-        type: 'item',
-        value: item.id,
-        label: `${item.label} (${item.duration}d)`,
-        icon: <Zap className="w-10 h-10 text-amber-400" />,
-        duration: item.duration
-      };
-    } else if (roll < 0.30) { // 20% chance for penalty
-      const penaltyVal = Math.floor(Math.random() * 20) + 1; // 1 to 20 coins penalty
-      return {
-         type: 'penalty',
-         value: penaltyVal,
-         label: `-${penaltyVal} Coins (Unlucky Drop!)`,
-         icon: <Zap className="w-10 h-10 text-red-500" />
-      };
-    } else if (roll < 0.60) { // 30% chance for XP boost
-      const xpVal = Math.floor(Math.random() * 150) + 50; // 50 to 200 XP
-      return {
-        type: 'xp',
-        value: xpVal,
-        label: `${xpVal} Mission XP`,
-        icon: <Star className="w-10 h-10 text-indigo-400" />
-      };
-    } else if (roll < 0.85) { // 25% chance for diamonds
-      const diamondVal = Math.floor(Math.random() * 3) + 1; // 1 to 3 diamonds
-      return {
-        type: 'diamonds' as any,
-        value: diamondVal,
-        label: `${diamondVal} Diamonds`,
-        icon: <Star className="w-10 h-10 text-cyan-400" />
-      };
-    } else { // 15% chance for coins
-      const coinVal = Math.floor(Math.random() * 3) + 1; // 1 to 3 coins
-      return {
-        type: 'coins',
-        value: coinVal,
-        label: `${coinVal} Coins`,
-        icon: <Coins className="w-10 h-10 text-amber-500" />
-      };
-    }
-  };
+  }, [user?.id, user?.lastRewardClaimedAt]);
 
   const handleClaim = async () => {
     if (!user) return;
     setIsClaiming(true);
     
     try {
-      const reward = generateReward();
+      const serverReward = await walletService.claimDailyReward(user.id);
       
-      // Background claim, don't await so we don't hang if quota exceeded
-      walletService.claimDailyReward(user.id, { type: reward.type, value: reward.value }).catch(e => {
-        console.warn("Background claim failed", e);
-      });
+      const rewardIcons: Record<string, React.ReactNode> = {
+        item: <Zap className="w-10 h-10 text-amber-400" />,
+        penalty: <Zap className="w-10 h-10 text-red-500" />,
+        xp: <Star className="w-10 h-10 text-indigo-400" />,
+        diamonds: <Star className="w-10 h-10 text-cyan-400" />,
+        coins: <Coins className="w-10 h-10 text-amber-500" />
+      };
+
+      const reward: DailyReward = {
+        type: serverReward.type as any,
+        value: serverReward.value,
+        label: serverReward.type === 'penalty' 
+          ? `-${serverReward.value} Coins (Unlucky!)`
+          : `${serverReward.value} ${serverReward.type.toUpperCase()}`,
+        icon: rewardIcons[serverReward.type] || <Gift className="w-10 h-10" />,
+        duration: serverReward.type === 'item' ? 1 : undefined
+      };
 
       setClaimedReward(reward);
       playSound(reward.type === 'penalty' ? 'notification' : 'success');
@@ -114,7 +81,7 @@ export const DailyRewardModal = () => {
           particleCount: 150,
           spread: 90,
           origin: { y: 0.6 },
-          colors: ['#6366f1', '#a855f7', '#fbbf24', '#ffffff']
+          colors: ['#D4AF37', '#1A2B48', '#ffffff']
         });
       }
 
@@ -124,7 +91,7 @@ export const DailyRewardModal = () => {
       
     } catch (e: any) {
       console.error(e);
-      toast.error("Failed to claim reward. Please try again.");
+      toast.error(e.message || "Failed to claim reward.");
     } finally {
       setIsClaiming(false);
     }

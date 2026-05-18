@@ -55,7 +55,7 @@ import Markdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
 import Confetti from "react-confetti";
 import { ExpandableText } from "../components/ExpandableText";
-import { ProgressBar } from "../components/CommonUI";
+import { ProgressBar, Card, Button } from "../components/CommonUI";
 // Note: we're using base64 for simplicity in prototype due to Firebase Storage Rules constraint
 // In production, upload to Storage and use Firebase Functions + Vertex AI for larger max payload.
 
@@ -684,74 +684,78 @@ export const AssignmentDetail = () => {
 
       <button
         onClick={() => navigate("/assignments")}
-        className="flex items-center gap-2 text-text-secondary hover:text-brand-gold transition text-[10px] font-bold uppercase tracking-widest bg-navy-900 border border-navy-700/50 w-fit px-3 py-1.5 rounded-lg"
+        className="flex items-center gap-2 text-text-muted hover:text-brand-gold transition text-[10px] font-black uppercase tracking-[0.2em] bg-white/[0.03] border border-white/5 w-fit px-4 py-2 rounded-xl"
       >
         <ArrowLeft size={12} /> Return to Mission Hub
       </button>
 
       {/* Assignment Header */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-navy-900 rounded-[2rem] border border-navy-700/50 shadow-soft overflow-hidden relative"
+      <Card
+        variant="glass"
+        className="border-white/[0.03] shadow-2xl overflow-hidden relative"
       >
-        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         
-        <div className="p-6 md:p-8 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+        <div className="p-8 md:p-10 relative z-10">
+          <div className="flex flex-col lg:flex-row justify-between items-start gap-10">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-3 mb-6">
                 {assignment.isBonus && (
-                  <span className="bg-brand-gold text-navy-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shadow-glow-gold">
-                    Classified
+                  <span className="bg-brand-gold text-bg-main text-[8px] font-black px-2 py-1 rounded-md uppercase tracking-[0.2em] shadow-lg shadow-brand-gold/20">
+                    Classified Directive
                   </span>
                 )}
-                <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{assignment.subject || 'Strategic Objective'}</span>
+                <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">{assignment.subject || 'Strategic Objective'}</span>
                 {isAdmin && (
                   <button 
                     onClick={() => navigate('/assignments', { state: { editId: assignment.id } })}
-                    className="flex items-center gap-1 text-brand-gold hover:text-white transition font-bold text-[10px] uppercase tracking-wider ml-2"
+                    className="flex items-center gap-1.5 text-brand-gold hover:text-white transition font-black text-[10px] uppercase tracking-widest ml-4 px-2 py-1 bg-white/[0.03] rounded-md border border-white/5"
                   >
-                    <Edit size={12} /> Config
+                    <Edit size={12} /> Console Fix
                   </button>
                 )}
               </div>
 
               <h1 className={cn(
-                "text-2xl md:text-4xl font-display font-bold tracking-tight mb-4",
-                assignment.isBonus ? "text-brand-gold" : "text-white"
+                "text-3xl md:text-5xl font-black tracking-tight mb-6",
+                assignment.isBonus ? "text-brand-gold text-glow-gold" : "text-text-primary"
               )}>
                 {assignment.title}
               </h1>
 
-              <div className="flex flex-wrap gap-2 mb-6">
-                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
-                  <Calendar size={12} className="text-brand-gold" />
-                  <span>Due {format(assignment.dueDate, "MMM d, p")}</span>
+              <div className="flex flex-wrap gap-3 mb-8">
+                <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 px-4 py-2 rounded-xl text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                  <Calendar size={14} className="text-brand-gold" />
+                  <span>Deadline: {format(assignment.dueDate, "MMM d, HH:mm")}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
+                <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 px-4 py-2 rounded-xl text-[10px] font-black text-text-secondary uppercase tracking-widest">
                   <span>Stake: <span className="text-brand-gold">🪙 {finalEntryFee}</span></span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
-                  <span>Yield: <span className="text-success">🪙 {finalBonusReward}</span></span>
+                <div className="flex items-center gap-2 bg-white/[0.03] border border-white/5 px-4 py-2 rounded-xl text-[10px] font-black text-text-secondary uppercase tracking-widest">
+                  <span>Est. Yield: <span className="text-emerald-500">🪙 {finalBonusReward}</span></span>
                 </div>
               </div>
 
-              <div className="text-text-secondary text-sm md:text-base leading-relaxed font-medium max-w-2xl">
-                <ExpandableText text={assignment.description} maxLength={250} />
+              <div className="text-text-secondary text-sm md:text-base leading-relaxed font-medium max-w-3xl prose prose-invert opacity-80">
+                <ExpandableText text={assignment.description} maxLength={300} />
               </div>
             </div>
 
-            <div className="w-full md:w-64 shrink-0">
-                <div className="p-5 bg-navy-950 rounded-2xl border border-navy-700/50 shadow-inner">
-                    <h4 className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Target size={12} className="text-brand-gold" /> Success Criteria
+            <div className="w-full lg:w-72 shrink-0">
+                <div className="p-6 bg-white/[0.02] rounded-2xl border border-white/5 shadow-inner">
+                    <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                      <Target size={14} className="text-brand-gold" /> Assessment Criteria
                     </h4>
-                    <div className="space-y-2.5">
+                    <div className="space-y-3">
                         {assignment.rubric?.map((r, i) => (
-                            <div key={i} className="flex items-center justify-between gap-3 text-[11px]">
-                                <span className="text-text-primary font-bold truncate">{r.name}</span>
-                                <span className="text-brand-gold font-black tabular-nums">{r.weight}%</span>
+                            <div key={i} className="flex flex-col gap-1.5 pb-3 border-b border-white/[0.03] last:border-0 last:pb-0">
+                                <div className="flex items-center justify-between gap-3 text-[11px]">
+                                    <span className="text-text-primary font-black uppercase tracking-tight">{r.name}</span>
+                                    <span className="text-brand-gold font-black tabular-nums">{r.weight}%</span>
+                                </div>
+                                <div className="w-full h-1 bg-white/[0.03] rounded-full overflow-hidden">
+                                   <div className="h-full bg-brand-gold/30" style={{ width: `${r.weight}%` }} />
+                                </div>
                             </div>
                         ))}
                     </div>
@@ -759,61 +763,65 @@ export const AssignmentDetail = () => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </Card>
+
 
       {isStudent && !enrollment && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-navy-900 border border-navy-700/50 p-6 md:p-10 rounded-[2rem] text-center max-w-lg mx-auto shadow-xl relative overflow-hidden"
+          className="bg-white/[0.02] border border-white/5 p-8 md:p-12 rounded-[2.5rem] text-center max-w-xl mx-auto shadow-2xl relative overflow-hidden"
         >
-          <div className="w-12 h-12 bg-navy-950 rounded-xl flex items-center justify-center mx-auto mb-6 border border-navy-800">
-            <Lock size={20} className="text-text-muted opacity-50" />
+          <div className="w-16 h-16 bg-white/[0.03] rounded-2xl flex items-center justify-center mx-auto mb-8 border border-white/5">
+            <Lock size={28} className="text-text-muted opacity-30" />
           </div>
-          <h3 className="text-xl font-display font-bold text-white tracking-tight mb-2">Initiate Deployment</h3>
-          <p className="text-xs text-text-secondary mb-8 leading-relaxed font-bold uppercase tracking-widest opacity-70">
-            Requires Strategic commitment of <span className="text-brand-gold">🪙 {finalEntryFee}</span>
+          <h3 className="text-2xl font-black text-text-primary tracking-tight mb-3">Authorize Operation</h3>
+          <p className="text-xs text-text-muted mb-10 leading-relaxed font-black uppercase tracking-[0.2em] opacity-80">
+            Strategic Stake Required: <span className="text-brand-gold">🪙 {finalEntryFee}</span>
           </p>
 
-          <div className="mb-8 p-4 bg-navy-950 border border-navy-800 rounded-xl flex items-center justify-between gap-4">
-             <div className="flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg transition-all", isDoubleDown ? "bg-error text-white shadow-glow-error" : "bg-navy-800 text-text-secondary")}>
-                   <Zap size={16} />
+          <div className="mb-10 p-6 bg-white/[0.03] border border-white/5 rounded-2xl flex items-center justify-between gap-6">
+             <div className="flex items-center gap-4">
+                <div className={cn("w-12 h-12 flex items-center justify-center rounded-xl transition-all border", isDoubleDown ? "bg-rose-500/20 text-rose-500 border-rose-500/20 shadow-lg shadow-rose-500/20" : "bg-white/5 text-text-muted border-white/5")}>
+                   <Zap size={22} className={isDoubleDown ? "fill-current" : ""} />
                 </div>
-                <div className="text-left">
-                   <h4 className="text-[9px] font-black text-white uppercase tracking-widest mb-0.5">Double Down</h4>
-                   <p className="text-[8px] text-text-secondary font-black uppercase tracking-tight">2.5x Yield | 2x Risk</p>
+                <div className="text-left space-y-1">
+                   <h4 className="text-[10px] font-black text-text-primary uppercase tracking-[0.2em] leading-none">Double Down</h4>
+                   <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest leading-none">High Risk | 2.5x Optimized Yield</p>
                 </div>
              </div>
              <button 
                onClick={() => setIsDoubleDown(!isDoubleDown)}
-               className={cn("w-10 h-5 rounded-full relative transition-all", isDoubleDown ? "bg-error" : "bg-navy-700")}
+               className={cn("w-12 h-6 rounded-full relative transition-all shadow-inner", isDoubleDown ? "bg-rose-500/40" : "bg-white/10")}
              >
                <motion.div 
-                 animate={{ x: isDoubleDown ? 22 : 2 }}
-                 className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
+                 animate={{ x: isDoubleDown ? 26 : 2 }}
+                 className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-md"
                />
              </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {hasNotStarted ? (
-              <div className="bg-navy-950 text-text-secondary text-[10px] font-black uppercase tracking-widest p-4 rounded-xl flex items-center justify-center gap-2 border border-navy-800 italic">
-                <Clock size={14} /> Begins {format(assignment.startDate!, "MMM d, p")}
+              <div className="bg-white/[0.03] text-text-muted text-[10px] font-black uppercase tracking-[0.2em] p-5 rounded-2xl flex items-center justify-center gap-3 border border-white/5 italic">
+                <Clock size={16} /> Opening Window {format(assignment.startDate!, "MMM d, HH:mm")}
               </div>
             ) : (
-                <button
-                onClick={handleEnroll}
-                disabled={enrolling || user.coins < finalEntryFee}
-                className="w-full bg-brand-gold text-navy-950 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
-              >
-                {enrolling ? "Linking..." : `Authorize Deployment`}
-              </button>
+                <Button
+                    variant={isDoubleDown ? "outline" : "gold"}
+                    size="lg"
+                    className="w-full font-black text-[10px] uppercase tracking-[0.2em] py-5"
+                    onClick={handleEnroll}
+                    isLoading={enrolling}
+                    disabled={user.coins < finalEntryFee}
+                >
+                    {enrolling ? "Linking..." : `Authorize Deployment`}
+                </Button>
             )}
 
             {user.coins < finalEntryFee && (
-              <p className="text-error text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-2">
-                <ShieldAlert size={12} /> Insufficient Balance
+              <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 mt-4">
+                <ShieldAlert size={14} /> Critical Balance Shortfall
               </p>
             )}
           </div>
@@ -821,175 +829,212 @@ export const AssignmentDetail = () => {
       )}
 
       {isStudent && enrollment && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
           {/* Editor Area */}
-          <div className="card-premium p-6 md:p-8 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center border border-navy-700">
-                    <FileText size={20} />
+          <Card variant="flat" className="p-8 space-y-8 border-white/[0.03]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/[0.03] text-brand-gold rounded-2xl flex items-center justify-center border border-white/5">
+                    <FileText size={24} />
                 </div>
-                <h2 className="text-lg font-display font-bold text-text-primary tracking-tight">Mission Console</h2>
+                <div>
+                   <h2 className="text-xl font-black text-text-primary tracking-tight">Mission Terminal</h2>
+                   <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Live Assessment Active</p>
+                </div>
               </div>
               {timeLeftStr && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-error/10 text-error rounded-lg border border-error/20 font-mono text-xs font-bold">
-                  <Clock size={12} />
+                <div className="flex items-center gap-3 px-4 py-2 bg-rose-500/10 text-rose-500 rounded-xl border border-rose-500/20 font-mono text-sm font-black tabular-nums shadow-lg shadow-rose-500/5">
+                  <Clock size={14} />
                   <span>{timeLeftStr}</span>
                 </div>
               )}
             </div>
 
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={submitting || ((submission?.status === "assessed" || submission?.status === "pending_review") && !isEditing) || isTimeUp}
-              className="w-full min-h-[300px] p-5 text-sm border border-navy-700 rounded-xl bg-navy-950/50 text-text-primary focus:border-brand-gold/50 outline-none transition-all resize-none leading-relaxed font-medium"
-              placeholder="Inject assessment response..."
-            />
+            <div className="relative group">
+               <textarea
+                 value={content}
+                 onChange={(e) => setContent(e.target.value)}
+                 disabled={submitting || ((submission?.status === "assessed" || submission?.status === "pending_review") && !isEditing) || isTimeUp}
+                 className="w-full min-h-[400px] p-6 text-sm border border-white/5 rounded-2xl bg-white/[0.01] text-text-primary focus:border-brand-gold/30 outline-none transition-all resize-none leading-relaxed font-medium placeholder:text-text-muted/30"
+                 placeholder="Input submission sequence..."
+               />
+               <div className="absolute top-4 right-4 pointer-events-none opacity-20">
+                  <Bot size={24} className="text-brand-gold" />
+               </div>
+            </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Evidence Units</h4>
+            <div className="space-y-5">
+              <div className="flex items-center justify-between px-1">
+                <h4 className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Evidence Repository</h4>
                 {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
-                   <div className="flex items-center gap-2">
+                   <div className="flex items-center gap-4">
                       <input type="file" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/pdf,video/*" />
-                      <button onClick={() => fileInputRef.current?.click()} className="text-[9px] font-black text-brand-gold hover:text-white transition uppercase tracking-widest">
-                         Upload Matrix
+                      <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-black text-brand-gold hover:text-white transition uppercase tracking-[0.2em] flex items-center gap-2">
+                        <Upload size={12} /> Link Files
                       </button>
                    </div>
                 )}
               </div>
 
               {attachments.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {attachments.map((att, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-navy-900 border border-navy-700 p-2 rounded-lg">
-                      <div className="shrink-0 text-brand-gold">{att.type.startsWith("image") ? <ImageIcon size={14}/> : <FileIcon size={14}/>}</div>
-                      <span className="text-[10px] font-bold text-text-secondary truncate flex-1 uppercase tracking-tighter">{att.name}</span>
+                    <div key={idx} className="flex items-center gap-3 bg-white/[0.02] border border-white/5 p-3 rounded-xl hover:bg-white/[0.04] transition-all">
+                      <div className="shrink-0 text-brand-gold">{att.type.startsWith("image") ? <ImageIcon size={16}/> : <FileIcon size={16}/>}</div>
+                      <span className="text-[10px] font-black text-text-secondary truncate flex-1 uppercase tracking-tight">{att.name}</span>
                       {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
-                        <button onClick={() => removeAttachment(idx)} className="text-text-secondary hover:text-error transition"><X size={12}/></button>
+                        <button onClick={() => removeAttachment(idx)} className="text-text-muted hover:text-rose-500 transition-colors"><X size={14}/></button>
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-4 bg-navy-900/50 border border-dashed border-navy-700 rounded-xl text-center">
-                   <p className="text-[9px] font-black text-text-secondary/50 uppercase tracking-widest">No evidence provided</p>
+                <div className="p-10 bg-white/[0.01] border border-dashed border-white/5 rounded-2xl text-center">
+                   <p className="text-[9px] font-black text-text-muted opacity-30 uppercase tracking-[0.3em]">Vault empty. No evidence linked.</p>
                 </div>
               )}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 pt-4">
               {submitting && uploadProgress > 0 && uploadProgress < 100 && (
-                <ProgressBar progress={uploadProgress} label="Uploading Evidence" className="mb-2" />
+                <ProgressBar progress={uploadProgress} label="Encrypting Payload" className="mb-2" />
               )}
               {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review") || isEditing) && (
-                <button
+                <Button
+                  variant="gold"
+                  size="lg"
+                  className="w-full font-black text-[10px] uppercase tracking-[0.2em] py-5"
                   onClick={handleSubmit}
-                  disabled={submitting || (!content.trim() && attachments.length === 0) || isTimeUp}
-                  className="w-full bg-brand-gold text-navy-950 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
+                  isLoading={submitting}
+                  disabled={(!content.trim() && attachments.length === 0) || isTimeUp}
                 >
-                  {submitting ? "Analyzing Neural Patterns..." : submission ? "Update Authority Request" : "Complete Authority Request"}
-                </button>
+                  {submitting ? "Processing Neural Integrity..." : submission ? "Update Transmission" : "Finalize Transmission"}
+                </Button>
               )}
             </div>
-          </div>
+          </Card>
 
-          {/* AI Feedback Area */}
-          <div className="card-premium p-6 md:p-8 space-y-6 bg-navy-900/40">
+          {/* AI Intelligence Report */}
+          <Card variant="glass" className="p-8 space-y-8 bg-white/[0.02] border-white/[0.03]">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                 <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20 shadow-glow-gold">
-                    <Sparkles size={20} />
+              <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-brand-gold/10 text-brand-gold rounded-2xl flex items-center justify-center border border-brand-gold/20 shadow-lg shadow-brand-gold/10">
+                    <Sparkles size={24} />
                  </div>
                  <div>
-                    <h2 className="text-lg font-display font-bold text-text-primary tracking-tight">Intelligence Report</h2>
-                    <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest opacity-70">Neural Assessment Complete</p>
+                    <h2 className="text-xl font-black text-text-primary tracking-tight">Intelligence Brief</h2>
+                    <p className="text-[10px] text-text-muted font-black uppercase tracking-[0.2em]">Autonomous Analysis Complete</p>
                  </div>
               </div>
             </div>
 
             {submission?.status === "pending_review" || submission?.status === "assessed" ? (
-              <div className="space-y-6">
-                <div className="p-8 bg-navy-950 border border-navy-700/50 rounded-2xl text-center relative overflow-hidden shadow-inner">
+              <div className="space-y-8">
+                <div className="p-12 bg-black/40 border border-white/5 rounded-[2.5rem] text-center relative overflow-hidden shadow-inner flex flex-col items-center justify-center">
+                   <div className="absolute inset-0 bg-brand-gold/5 pointer-events-none blur-3xl rounded-full translate-y-1/2" />
                    {submission.status === "pending_review" && (
-                     <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
-                        <div className="flex flex-col items-center gap-3">
-                           <Loader2 size={24} className="text-brand-gold animate-spin" />
-                           <p className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Encrypting Review...</p>
+                     <div className="absolute inset-0 bg-bg-main/60 backdrop-blur-md z-10 flex items-center justify-center p-6 text-center">
+                        <div className="space-y-4">
+                           <Loader2 size={32} className="text-brand-gold animate-spin mx-auto" />
+                           <div className="space-y-1">
+                              <p className="text-[11px] font-black text-brand-gold uppercase tracking-[0.3em] leading-none">Security Audit In Progress</p>
+                              <p className="text-[9px] text-text-muted font-bold uppercase tracking-widest leading-none">Verifying Neural Pattern Consistency</p>
+                           </div>
                         </div>
                      </div>
                    )}
-                   <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest mb-2 opacity-50">Operational Grade</div>
+                   <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] mb-4 opacity-50 font-mono">Performance Metric</p>
                    <div className={cn(
-                     "text-6xl md:text-7xl font-display font-black text-brand-gold tabular-nums leading-none tracking-tighter",
-                     submission.aiScore >= 80 ? "text-success" : submission.aiScore >= 50 ? "text-brand-gold" : "text-error"
+                     "text-7xl md:text-8xl font-black text-brand-gold tabular-nums leading-none tracking-tighter flex items-baseline gap-1",
+                     submission.aiScore >= 80 ? "text-emerald-500" : submission.aiScore >= 50 ? "text-brand-gold" : "text-rose-500"
                    )}>
-                      {submission.aiScore}<span className="text-2xl text-text-secondary/20 ml-1">/100</span>
+                      {submission.aiScore}<span className="text-3xl text-text-muted opacity-20 ml-1">/100</span>
                    </div>
                 </div>
 
-                <div className="p-5 bg-navy-950 border border-navy-700/50 rounded-2xl relative overflow-hidden shadow-inner">
-                   <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest mb-3 opacity-50">Neural Summary</div>
-                   <ExpandableText maxHeight={200}>
-                      <div className="markdown-body text-sm text-text-secondary leading-relaxed font-medium italic opacity-90">
+                <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl relative overflow-hidden shadow-inner">
+                   <div className="flex items-center gap-2 mb-4">
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-gold animate-pulse" />
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em]">Dossier Summary</p>
+                   </div>
+                   <ExpandableText maxHeight={250}>
+                      <div className="markdown-body text-sm text-text-secondary leading-relaxed font-medium italic opacity-80 pl-2 border-l border-brand-gold/20">
                         <Markdown>{submission.aiFeedback || ""}</Markdown>
                       </div>
                    </ExpandableText>
                 </div>
 
                 {submission.status === "assessed" && (
-                  <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-navy-700/30">
-                     <div className="flex items-center gap-4">
-                        <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest">
-                           Yield: <span className="text-success text-xs ml-1">🪙 {submission.calculatedReward || 0}</span>
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-6 pt-6 border-t border-white/5">
+                     <div className="flex items-center gap-6">
+                        <div className="space-y-1">
+                           <p className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Economic Yield</p>
+                           <p className="text-lg font-black text-emerald-500 tabular-nums leading-none">🪙 {submission.calculatedReward || 0}</p>
                         </div>
-                        <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest">
-                           Penalty: <span className="text-error text-xs ml-1">🪙 {submission.penaltyAmount || 0}</span>
+                        <div className="w-px h-8 bg-white/5" />
+                        <div className="space-y-1">
+                           <p className="text-[9px] font-black text-text-muted uppercase tracking-widest leading-none">Net Penalties</p>
+                           <p className="text-lg font-black text-rose-500 tabular-nums leading-none">🪙 {submission.penaltyAmount || 0}</p>
                         </div>
                      </div>
 
                      {enrollment?.graceDeadline && Date.now() < enrollment.graceDeadline && (
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          icon={Edit}
                           onClick={() => {
                             setIsEditing(true);
-                            toast.success("Editor unlocked! You are within the grace period.");
+                            toast.success("Editor re-initialized during grace window.", { icon: '🔓' });
                           }}
-                          className="px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-brand-gold border border-navy-700/50 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all"
+                          className="font-black text-[9px] uppercase tracking-widest border border-white/5 px-4"
                         >
-                          Redeploy (Grace Period)
-                        </button>
+                          Modify Deployment
+                        </Button>
                      )}
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2">
+                <div className="grid grid-cols-1 gap-3">
                    {user?.inventory?.includes("reevaluation_pass") && (
-                     <button onClick={handleReevaluate} className="w-full py-2 bg-navy-800/50 text-brand-gold border border-brand-gold/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-navy-800 transition">
-                        Neural Re-scan (Uses Pass)
-                     </button>
+                     <Button 
+                        variant="ghost" 
+                        size="md" 
+                        icon={Sparkles}
+                        onClick={handleReevaluate} 
+                        className="w-full text-brand-gold bg-brand-gold/5 border-brand-gold/10 font-black text-[10px] py-4"
+                     >
+                        Request Neural Re-Scan
+                     </Button>
                    )}
                    {(user?.inventory?.includes("resubmission_ticket") || user?.inventory?.includes("test_retake_pass")) && (
-                     <button onClick={handleResubmit} className="w-full py-2 bg-success/5 text-success border border-success/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-success/10 transition">
-                        Purge & Re-deploy (Uses Ticket)
-                     </button>
+                     <Button 
+                        variant="ghost" 
+                        size="md" 
+                        icon={Zap}
+                        onClick={handleResubmit} 
+                        className="w-full text-emerald-500 bg-emerald-500/5 border-emerald-500/10 font-black text-[10px] py-4"
+                     >
+                        Force Payload Purge
+                     </Button>
                    )}
                 </div>
               </div>
             ) : (
-              <div className="py-12 md:py-16 flex flex-col items-center justify-center text-center px-6 bg-navy-950/30 rounded-2xl border border-dashed border-navy-700/50">
-                <div className="w-16 h-16 bg-navy-950 rounded-full flex items-center justify-center mb-6 text-text-secondary/20 shadow-inner">
-                  <Bot size={32} />
+              <div className="py-20 flex flex-col items-center justify-center text-center px-10 bg-black/20 rounded-[2.5rem] border border-dashed border-white/5">
+                <div className="w-20 h-20 bg-white/[0.02] rounded-full flex items-center justify-center mb-8 text-text-muted/20 shadow-inner">
+                  <Bot size={40} />
                 </div>
-                <h3 className="text-sm font-black text-text-primary uppercase tracking-widest mb-2">Awaiting Intelligence</h3>
-                <p className="text-[11px] text-text-secondary max-w-xs leading-relaxed italic opacity-70">
-                  Analysis will trigger upon completion of mission directives. Premium neural patterns detected.
+                <h3 className="text-sm font-black text-text-primary uppercase tracking-[0.2em] mb-4">Neural Buffer Empty</h3>
+                <p className="text-[11px] text-text-muted max-w-xs leading-relaxed italic font-medium opacity-60">
+                  Assessment intelligence will initialize upon successful transmission of mission directives. Encryption keys pending.
                 </p>
               </div>
             )}
-          </div>
+          </Card>
         </div>
       )}
+
 
 
       {isAdmin && (

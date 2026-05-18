@@ -31,7 +31,7 @@ export const ResourceCollector = () => {
     const checkStatus = () => {
       if (!isMounted.current) return;
       const now = Date.now();
-      const lastClaimed = user.lastCollectionTime || 0;
+      const lastClaimed = user.lastCollectionAt ? new Date(user.lastCollectionAt).getTime() : 0;
       const hoursSinceLastClaim = (now - lastClaimed) / (1000 * 60 * 60);
       
       if (hoursSinceLastClaim >= 12) {
@@ -49,34 +49,16 @@ export const ResourceCollector = () => {
     checkStatus();
     const timer = setInterval(checkStatus, 60000); // Check every minute
     return () => clearInterval(timer);
-  }, [user?.id, user?.lastCollectionTime]);
+  }, [user?.id, user?.lastCollectionAt]);
 
   const handleCollect = async () => {
     if (!user || loading || !canCollect) return;
 
     setLoading(true);
     try {
-      // Tiered Reward Calculation
-      const rollout = Math.random();
-      let coinsAmount = 0;
-      let diamondsAmount = 0;
-      let tierName = "Common";
-
-      if (rollout > 0.95) { // 5% Epic
-          tierName = "Epic";
-          coinsAmount = Math.floor(Math.random() * 11) + 20; // 20-30
-          diamondsAmount = Math.floor(Math.random() * 4) + 2; // 2-5
-      } else if (rollout > 0.80) { // 15% Rare
-          tierName = "Rare";
-          coinsAmount = Math.floor(Math.random() * 7) + 6; // 6-12
-          diamondsAmount = 1;
-      } else { // 80% Common
-          tierName = "Common";
-          coinsAmount = Math.floor(Math.random() * 4) + 2; // 2-5
-          diamondsAmount = 0;
-      }
-
-      walletService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(() => {});
+      const serverResult = await walletService.claimCollectorReward(user.id);
+      
+      const { coins: coinsAmount, diamonds: diamondsAmount, tier: tierName } = serverResult;
 
       updateResources({ 
         coins: (user.coins || 0) + coinsAmount,
@@ -100,7 +82,7 @@ export const ResourceCollector = () => {
       }
     } catch (e: any) {
       if (isMounted.current) {
-        toast.error("Failed to collect resources. Please try again.");
+        toast.error(e.message || "Failed to collect resources.");
         setLoading(false);
       }
     }
@@ -119,10 +101,7 @@ export const ResourceCollector = () => {
 
     setLoading(true);
     try {
-      userService.updateUser(user.id, { 
-        lastCollectionTime: 0, 
-        diamonds: (user.diamonds || 0) - resetCost 
-      }).catch(() => {});
+      await walletService.resetCollector(user.id);
       
       updateResources({ diamonds: (user.diamonds || 0) - resetCost });
       toast.success("Collector Reset! Ready to mine.");
@@ -130,7 +109,7 @@ export const ResourceCollector = () => {
       if (isMounted.current) setLoading(false);
     } catch (e: any) {
       if (isMounted.current) {
-        toast.error("Failed to reset.");
+        toast.error(e.message || "Failed to reset.");
         setLoading(false);
       }
     }

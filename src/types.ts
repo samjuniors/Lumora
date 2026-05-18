@@ -18,8 +18,8 @@ export interface User {
   theme?: string;
   streak?: number;
   lastActive?: string;
-  lastRewardClaimed?: string;
-  lastCollectionTime?: number;
+  lastRewardClaimedAt?: string | number | Date;
+  lastCollectionAt?: string | number | Date;
   lastMissedSweep?: number;
   lastSeenVersion?: string;
   xp?: number;

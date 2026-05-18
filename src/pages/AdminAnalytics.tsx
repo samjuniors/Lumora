@@ -15,10 +15,13 @@ import {
   Clock,
   AlertCircle,
   BarChart3,
-  Bot
+  Bot,
+  X
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ListSkeleton } from '../components/Skeletons';
+import { Card, SectionHeader, Button, Badge } from '../components/CommonUI';
+import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 
 interface StudentStats {
   student: User;
@@ -29,8 +32,6 @@ interface StudentStats {
   lastActive: number;
   submissions: Enrollment[];
 }
-
-import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 
 export const AdminAnalytics = () => {
   const { user } = useAuth();
@@ -189,83 +190,80 @@ export const AdminAnalytics = () => {
         className="space-y-8"
       >
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-4xl font-black text-text-primary tracking-tight flex items-center gap-3">
-            <BarChart3 className="w-10 h-10 text-brand-gold" />
-            Performance Analytics
-          </h1>
-          <p className="text-text-secondary font-medium mt-1">Monitor student progress, grades, and engagement across all missions.</p>
-        </div>
-        
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary w-5 h-5" />
-          <input
-            type="text"
-            placeholder="Search student by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-bg-surface rounded-2xl border border-border-main focus:ring-2 focus:ring-indigo-500 focus:outline-none shadow-sm transition-all"
-          />
-        </div>
-      </div>
+        <SectionHeader 
+          title="Performance Analytics"
+          subtitle="Monitor student progress, grades, and engagement across all missions."
+          icon={BarChart3}
+          className="bg-transparent"
+          action={
+            <div className="relative w-full md:w-96">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search student..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-bg-surface rounded-2xl border border-border-main focus:ring-2 focus:ring-brand-gold/20 focus:outline-none shadow-sm transition-all text-sm font-medium"
+              />
+            </div>
+          }
+        />
 
       {/* AI Insights Card */}
-      <div className="bg-indigo-900 rounded-[2rem] p-8 text-bg-main shadow-xl shadow-indigo-900/20">
+      <Card variant="glass" className="p-8 text-bg-main shadow-xl border-white/5 bg-navy-900/40">
         <div className="flex items-center justify-between mb-6">
            <h3 className="text-xl font-black flex items-center gap-2">
              <Bot className="w-6 h-6 text-brand-gold" />
              AI Performance Insights
            </h3>
-           <button 
+           <Button 
+             variant="gold"
              onClick={() => analyzePerformance(studentStats)}
              disabled={analyzing}
-             className="bg-brand-gold text-bg-main px-6 py-2 rounded-xl font-black shadow-lg hover:bg-brand-gold-hover transition-all disabled:opacity-50"
+             isLoading={analyzing}
            >
-             {analyzing ? 'Analyzing...' : 'Generate Insights'}
-           </button>
+             Generate Insights
+           </Button>
         </div>
         
         {aiAnalysis ? (
-          <div className="bg-indigo-800/50 p-6 rounded-2xl text-indigo-100 font-medium leading-relaxed">
+          <div className="bg-bg-main/10 backdrop-blur-md p-6 rounded-2xl text-indigo-100 font-medium leading-relaxed border border-white/5 whitespace-pre-wrap">
             {aiAnalysis}
           </div>
         ) : (
-          <div className="text-indigo-300 font-medium">Click "Generate Insights" to let Gemini analyze student performance.</div>
+          <div className="text-indigo-300/60 font-medium px-2">Click "Generate Insights" to let Gemini analyze student performance data.</div>
         )}
-      </div>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsOverview.map((stat, idx) => (
-          <motion.div
+          <Card
             key={idx}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            className="bg-bg-surface p-6 rounded-[2rem] border border-border-main shadow-sm flex items-center gap-4"
+            className="p-6 flex items-center gap-4"
+            hover
           >
             <div className={cn("p-4 rounded-2xl", stat.bg)}>
               <stat.icon className={cn("w-6 h-6", stat.color)} />
             </div>
             <div>
-              <p className="text-xs font-black text-text-secondary uppercase tracking-widest">{stat.label}</p>
-              <p className="text-2xl font-black text-text-primary">{stat.value}</p>
+              <p className="text-[10px] font-black text-text-muted uppercase tracking-widest leading-none mb-1">{stat.label}</p>
+              <p className="text-2xl font-black text-text-primary tracking-tight">{stat.value}</p>
             </div>
-          </motion.div>
+          </Card>
         ))}
       </div>
 
       {/* Detailed Leaderboard Table */}
-      <div className="bg-bg-surface rounded-[2.5rem] border border-border-main shadow-xl overflow-hidden">
-        <div className="p-6 md:p-8 border-b border-border-main bg-bg-main flex items-center justify-between">
-          <h2 className="text-xl font-bold text-text-primary flex items-center gap-2">
+      <Card className="overflow-hidden border-border-main/50">
+        <div className="p-6 md:p-8 border-b border-border-main bg-bg-main/30 flex items-center justify-between">
+          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-brand-gold" />
             Detailed Ranking
           </h2>
-          <span className="text-sm font-bold text-text-secondary uppercase tracking-widest">
-            {filteredStats.length} Students List
-          </span>
+          <Badge variant="outline">
+            {filteredStats.length} Students
+          </Badge>
         </div>
         
         <div className="overflow-x-auto">
@@ -329,7 +327,7 @@ export const AdminAnalytics = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Student Details Modal */}
       <AnimatePresence>
@@ -457,18 +455,3 @@ export const AdminAnalytics = () => {
     </AnimatePresence>
   );
 };
-
-const X = ({ className }: { className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M18 6 6 18"/><path d="m6 6 12 12"/>
-  </svg>
-);

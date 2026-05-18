@@ -12,15 +12,15 @@ import { toast } from 'react-hot-toast';
 import { RulesModal } from './RulesModal';
 
 const TIPS = [
-  { text: "Take a 5-minute break every hour!", icon: Coffee, color: "text-brand-gold", bg: "bg-brand-gold/10" },
-  { text: "Drink some water to stay hydrated.", icon: Heart, color: "text-blue-500", bg: "bg-blue-50" },
-  { text: "Each message costs 5 coins. Use them wisely!", icon: Coins, color: "text-amber-500", bg: "bg-brand-gold/10" },
-  { text: "Did you know? Nova grows as you level up!", icon: Trophy, color: "text-purple-500", bg: "bg-purple-50" },
-  { text: "Stuck? Try explaining the problem out loud.", icon: Lightbulb, color: "text-yellow-500", bg: "bg-yellow-50" },
-  { text: "Don't forget to review your notes today.", icon: Zap, color: "text-rose-500", bg: "bg-rose-500/10" },
-  { text: "Focus on progress, not perfection.", icon: Smile, color: "text-emerald-500", bg: "bg-success-green/10" },
-  { text: "Nova's memory is short. Keep chats focused!", icon: Sparkles, color: "text-brand-gold", bg: "bg-brand-gold-secondary-hover" },
-  { text: "Take a deep breath and relax.", icon: Heart, color: "text-teal-500", bg: "bg-teal-50" }
+  { text: "Take a 5-minute break every hour!", icon: Coffee, color: "text-brand-gold", bg: "bg-brand-gold/5" },
+  { text: "Drink some water to stay hydrated.", icon: Heart, color: "text-cyan-500", bg: "bg-cyan-500/5" },
+  { text: "Each message costs 5 coins. Use them wisely!", icon: Coins, color: "text-brand-gold", bg: "bg-brand-gold/5" },
+  { text: "Did you know? Nova grows as you level up!", icon: Trophy, color: "text-fuchsia-500", bg: "bg-fuchsia-500/5" },
+  { text: "Stuck? Try explaining the problem out loud.", icon: Lightbulb, color: "text-amber-500", bg: "bg-amber-500/5" },
+  { text: "Don't forget to review your notes today.", icon: Zap, color: "text-rose-500", bg: "bg-rose-500/5" },
+  { text: "Focus on progress, not perfection.", icon: Smile, color: "text-emerald-500", bg: "bg-emerald-500/5" },
+  { text: "Nova's memory is short. Keep chats focused!", icon: Sparkles, color: "text-brand-gold", bg: "bg-brand-gold/5" },
+  { text: "Take a deep breath and relax.", icon: Heart, color: "text-teal-500", bg: "bg-teal-500/5" }
 ];
 
 export const AIPet = () => {
@@ -212,29 +212,29 @@ export const AIPet = () => {
                   initial={{ opacity: 0, scale: 0.8, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                  className="absolute bottom-full right-0 mb-6 bg-bg-surface text-text-primary border border-border-main px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold z-20 tooltip-triangle-tip flex items-start gap-3 w-56 sm:w-64"
+                  className="absolute bottom-full right-0 mb-6 bg-bg-surface text-text-primary border border-white/5 px-5 py-4 rounded-[1.5rem] shadow-premium text-[11px] font-bold z-20 tooltip-triangle-tip flex items-start gap-3 w-64 sm:w-72"
                 >
                   <motion.div 
                     animate={{ rotate: [0, 15, -15, 0] }} 
                     transition={{ duration: 1, repeat: Infinity, repeatDelay: 2 }}
                     className="shrink-0 pt-0.5"
                   >
-                    <currentTip.icon className={cn("w-5 h-5", currentTip.color || "text-amber-500")} />
+                    <currentTip.icon className={cn("w-5 h-5", currentTip.color || "text-brand-gold")} />
                   </motion.div>
-                  <span className="leading-snug">{currentTip.text}</span>
+                  <span className="leading-relaxed opacity-90">{currentTip.text}</span>
                 </motion.div>
               )}
 
               <motion.button
-                whileHover={{ scale: 1.1 }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleOpen}
                 className={cn(
-                  "relative bg-gradient-to-br text-bg-main p-4 rounded-full shadow-2xl transition-all border-4 border-white flex items-center justify-center",
-                  petStage.color
+                  "relative bg-bg-surface text-brand-gold p-4 rounded-[1.5rem] shadow-premium transition-all border-2 border-white/10 flex items-center justify-center group overflow-hidden",
+                  "hover:bg-brand-gold hover:text-bg-main"
                 )}
               >
-                <div className="absolute inset-0 bg-bg-surface/20 rounded-full blur-sm" />
+                <div className="absolute inset-0 bg-brand-gold/5 group-hover:bg-brand-gold/0 transition-colors" />
                 <motion.div 
                    animate={isWaving ? { rotate: [0, -20, 20, -20, 0] } : {}} 
                    transition={{ duration: 0.4 }}
@@ -248,7 +248,7 @@ export const AIPet = () => {
                     <petStage.icon className="w-8 h-8" />
                   )}
                 </motion.div>
-                <div className="absolute -bottom-2 -left-2 bg-brand-gold-hover text-bg-main text-[10px] h-6 w-6 rounded-full flex items-center justify-center font-black border-2 border-white shadow-lg z-20">
+                <div className="absolute -bottom-1 -left-1 bg-brand-gold text-bg-main text-[9px] h-6 w-6 rounded-lg flex items-center justify-center font-black border-2 border-bg-surface shadow-2xl z-20 tabular-nums">
                   {currentLevel}
                 </div>
               </motion.button>
@@ -260,52 +260,49 @@ export const AIPet = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              className="absolute bottom-0 right-0 sm:right-0 w-[calc(100vw-32px)] sm:w-[380px] h-[550px] max-h-[75vh] bg-bg-surface rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-border-main flex flex-col overflow-hidden origin-bottom-right"
+              className="absolute bottom-0 right-0 sm:right-0 w-[calc(100vw-32px)] sm:w-[400px] h-[600px] max-h-[80vh] bg-bg-surface rounded-[2.5rem] shadow-premium border border-white/5 flex flex-col overflow-hidden origin-bottom-right"
             >
               {/* Header */}
-              <div className={cn("p-5 text-bg-main flex justify-between items-center shrink-0 bg-gradient-to-r", petStage.color)}>
-                <div className="flex items-center gap-3">
-                  <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md border border-white/10">
+              <div className={cn("p-6 text-text-primary flex justify-between items-center shrink-0 border-b border-white/5 bg-white/[0.02]")}>
+                <div className="flex items-center gap-4">
+                  <div className={cn("p-3 rounded-2xl flex items-center justify-center text-bg-main shadow-lg", petStage.color)}>
                     <petStage.icon className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="font-black tracking-tight">{petStage.name}</h3>
-                    <div className="text-[10px] text-white/80 font-bold flex items-center gap-1 uppercase tracking-wider">
-                      <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" /> Level {currentLevel} • Active
+                    <h3 className="font-black tracking-tight text-base uppercase">{petStage.name}</h3>
+                    <div className="text-[9px] text-text-muted font-black flex items-center gap-2 uppercase tracking-[0.2em] opacity-60">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.4)]" /> Level {currentLevel} • Active
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setShowRules(true)}
-                    className="bg-white/10 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1.5 hover:bg-white/20 transition-all text-white border border-white/10 uppercase tracking-widest"
+                    className="p-2.5 rounded-xl text-text-muted hover:text-brand-gold bg-white/[0.05] hover:bg-brand-gold/10 transition-all border border-white/5"
                   >
-                    <BookOpen className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Rules</span>
+                    <BookOpen className="w-4 h-4" />
                   </button>
-                  <div className="bg-white/10 px-2.5 py-1.5 rounded-xl text-[10px] font-black flex items-center gap-1.5 border border-white/10">
-                    <Coins className="w-3.5 h-3.5" /> {user.coins}
-                  </div>
                   <button
                     onClick={handleClose}
-                    className="p-2 hover:bg-white/10 rounded-full transition-all"
+                    className="p-2.5 hover:bg-rose-500/10 hover:text-rose-500 text-text-muted rounded-xl transition-all border border-white/5"
                   >
-                    <X className="w-5 h-5 text-white" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
               {/* Chat Area */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-bg-main bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:24px_24px]">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-white/[0.01] no-scrollbar">
                 {messages.map((msg, idx) => (
                   <div key={idx} className={cn("flex", msg.role === 'user' ? "justify-end" : "justify-start")}>
                     <div className={cn(
-                      "max-w-[85%] rounded-2xl p-4 text-sm whitespace-pre-wrap shadow-sm",
+                      "max-w-[90%] rounded-[1.5rem] p-5 text-[13px] whitespace-pre-wrap shadow-premium border",
                       msg.role === 'user' 
-                        ? "bg-brand-gold-hover text-bg-main rounded-tr-sm font-medium" 
-                        : "bg-bg-surface text-text-primary rounded-tl-sm border border-border-main"
+                        ? "bg-brand-gold text-bg-main rounded-tr-sm font-black uppercase tracking-tight" 
+                        : "bg-white/[0.03] text-text-primary rounded-tl-sm border-white/5 leading-relaxed"
                     )}>
                        {msg.role === 'model' ? (
-                         <div className="markdown-prose max-w-none text-[13px] leading-relaxed break-words">
+                         <div className="markdown-prose max-w-none break-words italic opacity-90">
                             <Markdown>{msg.text}</Markdown>
                          </div>
                        ) : msg.text}
@@ -314,31 +311,40 @@ export const AIPet = () => {
                 ))}
                 {isTyping && (
                   <div className="flex justify-start">
-                    <div className="bg-bg-surface border border-border-main rounded-2xl px-4 py-3 rounded-tl-sm shadow-sm flex items-center gap-2">
-                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="w-2 h-2 bg-indigo-400 rounded-full" />
-                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-2 h-2 bg-brand-gold rounded-full" />
-                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-2 h-2 bg-indigo-400 rounded-full" />
+                    <div className="bg-white/[0.03] border border-white/5 rounded-2xl px-5 py-4 rounded-tl-sm shadow-premium flex items-center gap-3">
+                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1 }} className="w-2 h-2 bg-brand-gold rounded-full" />
+                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-2 h-2 bg-text-muted rounded-full" />
+                       <motion.div animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-2 h-2 bg-brand-gold rounded-full" />
                     </div>
                   </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Input */}
-              <div className="p-4 bg-bg-surface border-t border-border-main shrink-0">
-                <form onSubmit={handleSend} className="flex gap-2">
-                  <div className="relative flex-1">
+              {/* Input Area */}
+              <div className="p-6 bg-white/[0.02] border-t border-white/5 shrink-0">
+                <div className="flex items-center justify-between mb-4 px-2">
+                   <p className="text-[9px] text-text-muted font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
+                     <Coins className="w-3.5 h-3.5 text-brand-gold" /> Cycle Cost: {chatCost}
+                   </p>
+                   <p className="text-[9px] text-text-muted font-black uppercase tracking-[0.2em] flex items-center gap-2 opacity-50">
+                     <span className="tabular-nums">{user.coins}</span> Credits Rem
+                   </p>
+                </div>
+                
+                <form onSubmit={handleSend} className="flex gap-3">
+                  <div className="relative flex-1 group">
                     <input 
                       type="text" 
                       value={inputValue}
                       onChange={(e) => setInputValue(e.target.value)}
-                      placeholder={`Costs ${chatCost} coins...`}
-                      className="w-full bg-bg-main border border-border-main rounded-2xl pl-4 pr-12 py-3.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                      placeholder={`Transmit signal...`}
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-5 pr-14 py-4 text-sm focus:outline-none focus:border-brand-gold/50 transition-all font-medium placeholder:text-text-muted/30 shadow-inner"
                       disabled={isTyping}
                     />
                     <div className={cn(
-                      "absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-black tracking-tighter opacity-50",
-                      inputValue.length > 250 ? "text-amber-500 opacity-100" : "text-text-secondary"
+                      "absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black tracking-widest opacity-40 tabular-nums",
+                      inputValue.length > 250 ? "text-amber-500 opacity-100" : "text-text-muted"
                     )}>
                       {inputValue.length}/300
                     </div>
@@ -346,20 +352,11 @@ export const AIPet = () => {
                   <button 
                     type="submit"
                     disabled={!inputValue.trim() || isTyping}
-                    className="bg-brand-gold-hover hover:bg-brand-gold disabled:opacity-50 disabled:cursor-not-allowed text-bg-main px-4 rounded-2xl transition-all flex items-center justify-center shadow-lg active:scale-95"
+                    className="bg-brand-gold hover:brightness-110 disabled:opacity-50 disabled:grayscale text-bg-main px-6 rounded-2xl transition-all flex items-center justify-center shadow-xl active:scale-95 group/send"
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                   </button>
                 </form>
-                <div className="flex items-center justify-center gap-4 mt-3">
-                   <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest flex items-center gap-1">
-                     <Coins className="w-3 h-3 text-brand-gold" /> {chatCost} COINS
-                   </p>
-                   <div className="w-1 h-1 bg-border-main rounded-full" />
-                   <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest flex items-center gap-1">
-                     <Sparkles className="w-3 h-3 text-indigo-400" /> AI POWERED
-                   </p>
-                </div>
               </div>
             </motion.div>
           )}
