@@ -17,6 +17,7 @@ export const Wallet = () => {
   const { user, updateResources } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [settings, setSettings] = useState<PlatformSettings | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showTransfer, setShowTransfer] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
@@ -46,8 +47,22 @@ export const Wallet = () => {
       setTransactions(all);
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, 'transactions');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (loading && transactions.length === 0) {
+    return (
+      <div className="max-w-5xl mx-auto px-6 py-12 space-y-8 animate-pulse">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="h-60 bg-white/5 rounded-3xl" />
+          <div className="lg:col-span-2 h-60 bg-white/5 rounded-3xl" />
+        </div>
+        <div className="h-96 bg-white/5 rounded-3xl" />
+      </div>
+    );
+  }
 
   return (
     <motion.div 

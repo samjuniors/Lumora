@@ -56,6 +56,8 @@ import { motion, AnimatePresence } from "motion/react";
 import Confetti from "react-confetti";
 import { ExpandableText } from "../components/ExpandableText";
 import { ProgressBar, Card, Button } from "../components/CommonUI";
+import { AssignmentDetailSkeleton } from "../components/Skeletons";
+
 // Note: we're using base64 for simplicity in prototype due to Firebase Storage Rules constraint
 // In production, upload to Storage and use Firebase Functions + Vertex AI for larger max payload.
 
@@ -571,11 +573,8 @@ export const AssignmentDetail = () => {
   };
 
   if (loading)
-    return (
-      <div className="p-12 text-center text-text-secondary font-bold animate-pulse">
-        Loading Mission Data...
-      </div>
-    );
+    return <AssignmentDetailSkeleton />;
+
   if (!assignment)
     return (
       <div className="p-12 text-center text-rose-500 font-bold">

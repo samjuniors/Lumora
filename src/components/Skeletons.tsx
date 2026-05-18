@@ -71,3 +71,89 @@ export function ListSkeleton() {
     </div>
   );
 }
+
+export function AssignmentDetailSkeleton() {
+  return (
+    <div className="max-w-6xl mx-auto space-y-8 animate-pulse p-4 md:p-0">
+      <Skeleton className="h-8 w-48 rounded-xl bg-white/[0.03] border border-white/5" />
+      
+      {/* Header Skeleton */}
+      <div className="bg-white/[0.02] border border-white/[0.03] rounded-[2.5rem] p-8 md:p-10 space-y-6">
+        <div className="flex flex-col lg:flex-row justify-between gap-8">
+          <div className="flex-1 space-y-6">
+            <div className="flex gap-4">
+              <Skeleton className="h-6 w-32 rounded-lg bg-white/5" />
+              <Skeleton className="h-6 w-24 rounded-lg bg-white/5" />
+            </div>
+            <Skeleton className="h-12 md:h-16 w-3/4 rounded-2xl bg-white/5" />
+            <div className="flex gap-4">
+              <Skeleton className="h-8 w-40 rounded-xl bg-white/5" />
+              <Skeleton className="h-8 w-32 rounded-xl bg-white/5" />
+              <Skeleton className="h-8 w-32 rounded-xl bg-white/5" />
+            </div>
+            <div className="space-y-4">
+              <Skeleton className="h-3 w-full bg-white/5" />
+              <Skeleton className="h-3 w-[90%] bg-white/5" />
+              <Skeleton className="h-3 w-2/3 bg-white/5" />
+            </div>
+          </div>
+          <div className="w-full lg:w-72 space-y-4">
+            <Skeleton className="h-8 w-48 rounded-xl bg-white/5" />
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="space-y-2">
+                  <div className="flex justify-between">
+                    <Skeleton className="h-3 w-24 bg-white/5" />
+                    <Skeleton className="h-3 w-12 bg-white/5" />
+                  </div>
+                  <Skeleton className="h-1.5 w-full rounded-full bg-white/5" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div className="bg-white/[0.02] border border-white/[0.03] rounded-[2rem] p-8 space-y-6">
+            <div className="flex justify-between items-center">
+              <Skeleton className="h-10 w-48 rounded-xl bg-white/5" />
+              <Skeleton className="h-10 w-24 rounded-xl bg-white/5" />
+            </div>
+            <Skeleton className="h-80 w-full rounded-2xl bg-white/5" />
+            <div className="space-y-4">
+              <Skeleton className="h-6 w-48 bg-white/5" />
+              <div className="grid grid-cols-2 gap-4">
+                <Skeleton className="h-12 rounded-xl bg-white/5" />
+                <Skeleton className="h-12 rounded-xl bg-white/5" />
+              </div>
+            </div>
+            <Skeleton className="h-14 w-full rounded-2xl bg-brand-gold/10" />
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <div className="bg-white/[0.02] border border-white/[0.03] rounded-[2rem] p-8 space-y-8">
+            <div className="flex gap-4 items-center">
+              <Skeleton className="h-12 w-12 rounded-2xl bg-white/5" />
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-40 bg-white/5" />
+                <Skeleton className="h-4 w-32 bg-white/5" />
+              </div>
+            </div>
+            <Skeleton className="h-48 w-full rounded-[2.5rem] bg-black/20" />
+            <Skeleton className="h-24 w-full rounded-2xl bg-white/5" />
+            <div className="flex flex-col sm:flex-row justify-between items-center pt-6 gap-4">
+               <div className="flex gap-4">
+                 <Skeleton className="h-8 w-16 rounded-xl bg-white/5" />
+                 <Skeleton className="h-8 w-16 rounded-xl bg-white/5" />
+               </div>
+               <Skeleton className="h-10 w-32 rounded-xl bg-white/5" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -16,7 +16,7 @@ import { queryClient } from '../lib/queryClient';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { Assignment, Enrollment } from '../types';
 import { cn } from '../lib/utils';
-import { ListSkeleton } from '../components/Skeletons';
+import { ListSkeleton, AssignmentDetailSkeleton } from '../components/Skeletons';
 
 // Extracted Components
 import { MissionCard } from '../components/assignments/MissionCard';
@@ -179,16 +179,17 @@ export const Assignments = () => {
             </motion.div>
 
             {isLoading ? (
-                <ListSkeleton />
-            ) : viewMode === 'calendar' ? (
-                <AssignmentCalendar 
-                    assignments={assignments} 
-                    enrollments={studentEnrollments}
-                    isStudent={isStudent}
-                    onViewMission={(id) => navigate(`/assignments/${id}`)} 
-                />
+                <div key="skeleton" className="mt-12">
+                   <ListSkeleton />
+                </div>
             ) : (
-                <div className="space-y-12">
+                <motion.div 
+                    key="content"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="space-y-12"
+                >
                     <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
                         {['all', 'active', 'upcoming', 'completed', 'missed', 'retest'].map((s) => (
                             <button
@@ -206,7 +207,14 @@ export const Assignments = () => {
                         ))}
                     </div>
 
-                    {groupedAssignments.length === 0 ? (
+                    {viewMode === 'calendar' ? (
+                        <AssignmentCalendar 
+                            assignments={assignments} 
+                            enrollments={studentEnrollments}
+                            isStudent={isStudent}
+                            onViewMission={(id) => navigate(`/assignments/${id}`)} 
+                        />
+                    ) : groupedAssignments.length === 0 ? (
                         <div className="bg-white/[0.01] rounded-[3rem] py-32 text-center border border-white/5 border-dashed shadow-inner">
                             <motion.div
                                 animate={{ scale: [1, 1.1, 1] }}
@@ -232,10 +240,8 @@ export const Assignments = () => {
                         </div>
                     )}
 
-
-
                     {isStudent && <CompletedMissionsStack />}
-                </div>
+                </motion.div>
             )}
 
 
