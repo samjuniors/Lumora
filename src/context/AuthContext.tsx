@@ -69,6 +69,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [firebaseUser, setFirebaseUser] = useState<AuthUser | null | undefined>(undefined);
   const [clerkUser, setClerkUser] = useState<AuthUser | null | undefined>(CLERK_PUBLISHABLE_KEY ? undefined : null);
 
+  useEffect(() => {
+    // Failsafe to prevent infinite loading if either auth source stalls
+    const failsafe = setTimeout(() => {
+      setFirebaseUser(prev => prev === undefined ? null : prev);
+      setClerkUser(prev => prev === undefined ? null : prev);
+    }, 5000);
+    return () => clearTimeout(failsafe);
+  }, []);
+
   const activeAuthSource = clerkUser ? 'clerk' : (firebaseUser ? 'firebase' : null);
   const activeSessionUser = clerkUser || firebaseUser;
   const isAuthInitialized = firebaseUser !== undefined && clerkUser !== undefined;
