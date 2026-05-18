@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { adminService, assignmentService, submissionService, userService } from '../../services/dbProvider';
 import { Assignment, Submission, Enrollment, User } from '../../types';
 import { ShieldAlert, Plus, Edit2, Trash2, Target, Bell, X, Zap } from 'lucide-react';
 import { format } from 'date-fns';
@@ -31,7 +31,7 @@ export const AssignmentsManager = () => {
         
         setIsSweeping(true);
         try {
-            const { penalizedCount } = await dbService.runPenaltySweep();
+            const { penalizedCount } = await adminService.runPenaltySweep();
             toast.success(`Sweep complete! Applied penalties to entries.`);
             await fetchData();
         } catch (err) {
@@ -46,10 +46,10 @@ export const AssignmentsManager = () => {
         setLoading(true);
         try {
             const [al, sl, el, ul] = await Promise.all([
-                dbService.getAllAssignments(),
-                dbService.getAllSubmissions(),
-                dbService.getAllEnrollments(),
-                dbService.getAllUsers()
+                assignmentService.getAllAssignments(),
+                submissionService.getAllSubmissions(),
+                assignmentService.getAllEnrollments(),
+                userService.getAllUsers()
             ]);
             setAssignments(al.sort((a,b) => b.dueDate - a.dueDate));
             setSubmissions(sl);
@@ -66,7 +66,7 @@ export const AssignmentsManager = () => {
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure? This will delete the mission for ALL students.")) return;
         try {
-            await dbService.deleteAssignment(id);
+            await assignmentService.deleteAssignment(id);
             toast.success("Mission deleted");
             await fetchData();
         } catch(err) {
@@ -160,7 +160,7 @@ export const AssignmentsManager = () => {
                                             if (!confirm("Apply penalties to ALL students who missed this specific mission?")) return;
                                             setLoading(true);
                                             try {
-                                                const { penalizedCount } = await dbService.runPenaltySweep(a.id);
+                                                const { penalizedCount } = await adminService.runPenaltySweep(a.id);
                                                 toast.success(`Applied penalties to ${penalizedCount} students`);
                                                 await fetchData();
                                             } catch (err) {
@@ -177,10 +177,10 @@ export const AssignmentsManager = () => {
                                         </button>
                                         <button 
                                           onClick={async () => {
-                                            const allSubmissions = await dbService.getAllSubmissions();
+                                            const allSubmissions = await submissionService.getAllSubmissions();
                                             const submittedUserIds = allSubmissions.filter(s => s.assignmentId === a.id).map(s => s.studentId);
                                             
-                                            const allUsers = await dbService.getAllUsers();
+                                            const allUsers = await userService.getAllUsers();
                                             const missingStudents = allUsers
                                               .filter(s => s.role === 'student')
                                               .filter(s => !submittedUserIds.includes(s.id))

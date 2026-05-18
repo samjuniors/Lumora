@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService, storageService } from '../services/dbProvider';
+import { storageService, adminService, walletService, userService } from '../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { Transaction, PlatformSettings } from '../types';
 import { ArrowUpRight, ArrowDownLeft, Coins, Plus, X, Smartphone, Clock, Receipt, ArrowLeft, Lock, ArrowRightLeft, Trophy, Crown, ShoppingBag, Settings } from 'lucide-react';
@@ -30,7 +30,7 @@ export const Wallet = () => {
 
   const fetchSettings = async () => {
     try {
-      const settings = await dbService.getPlatformSettings();
+      const settings = await adminService.getPlatformSettings();
       if (settings) {
         setSettings(settings);
       }
@@ -42,7 +42,7 @@ export const Wallet = () => {
   const fetchTransactions = async () => {
     if (!user) return;
     try {
-      const all = await dbService.getUserTransactions(user.id);
+      const all = await walletService.getUserTransactions(user.id);
       setTransactions(all);
     } catch (err) {
       handleFirestoreError(err, OperationType.LIST, 'transactions');
@@ -272,7 +272,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
         screenshotUrl = await storageService.uploadFile(screenshotFile, path, (progress) => setUploadProgress(progress));
       }
 
-      await dbService.createRechargeRequest({
+      await walletService.createRechargeRequest({
         studentId: user!.id,
         studentName: user!.name,
         amount: amount,
@@ -348,13 +348,13 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                     if (!amount || amount <= 0) return;
                     setLoading(true);
                     try {
-                        await dbService.updateUser(user!.id, {
+                        await userService.updateUser(user!.id, {
                             coins: user!.coins + amount,
                             vipExp: (user!.vipExp || 0) + amount,
                             updatedAt: Date.now()
                         });
                         
-                        await dbService.createTransaction({
+                        await walletService.createTransaction({
                             senderId: 'system',
                             receiverId: user!.id,
                             amount: amount,
@@ -531,7 +531,7 @@ const TransferModal = ({ onClose, onComplete }: any) => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
-        const studentsList = await dbService.getUsersByRole('student');
+        const studentsList = await userService.getUsersByRole('student');
         setStudents(studentsList.map(d => ({ id: d.id, name: d.name, email: d.email })));
       } catch (err) {
         handleFirestoreError(err, OperationType.LIST, 'users');
@@ -560,7 +560,7 @@ const TransferModal = ({ onClose, onComplete }: any) => {
 
     setLoading(true);
     try {
-      await dbService.transferCoins(user!.id, selectedStudent.id, val);
+      await walletService.transferCoins(user!.id, selectedStudent.id, val);
       updateResources({ coins: (user?.coins || 0) - val });
       onComplete();
       onClose();
@@ -692,7 +692,7 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
 
     setLoading(true);
     try {
-      await dbService.convertDiamondsToCoins(user!.id, val);
+      await walletService.convertDiamondsToCoins(user!.id, val);
       updateResources({ 
         diamonds: (user?.diamonds || 0) - val,
         coins: (user?.coins || 0) + coinsToAdd 

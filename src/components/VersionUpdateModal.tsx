@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Zap, Check, ArrowRight, Sparkles, X, Star, Bell, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService } from '../services/dbProvider';
 
 export const VersionUpdateModal = () => {
     const { user } = useAuth();
@@ -27,7 +27,7 @@ export const VersionUpdateModal = () => {
         if (user?.id) {
             try {
                 // Also persist to DB to stay synced across sessions
-                await dbService.updateUser(user.id, {
+                await userService.updateUser(user.id, {
                     lastSeenVersion: VERSION,
                     updatedAt: Date.now()
                 });

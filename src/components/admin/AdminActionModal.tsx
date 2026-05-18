@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Send, Coins, ShieldAlert, Gift, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { dbService } from '../../services/dbProvider';
+import { walletService, userService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { User, TransactionType } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -33,7 +33,7 @@ const AdminActionModal = ({
         try {
             if (type === 'coins' || type === 'penalty') {
                 const finalAmt = type === 'penalty' ? -amt : amt;
-                await dbService.createTransaction({
+                await walletService.createTransaction({
                     senderId: type === 'penalty' ? u.id : 'SYSTEM',
                     receiverId: type === 'penalty' ? 'SYSTEM' : u.id,
                     amount: amt,
@@ -42,9 +42,9 @@ const AdminActionModal = ({
                     message: reason || (type === 'penalty' ? "Penalty enforced" : "Manual adjustment"),
                     timestamp: Date.now()
                 });
-                await dbService.updateUser(u.id, { coins: (u.coins || 0) + finalAmt });
+                await userService.updateUser(u.id, { coins: (u.coins || 0) + finalAmt });
             } else if (type === 'diamonds') {
-                await dbService.updateUser(u.id, { diamonds: (u.diamonds || 0) + amt });
+                await userService.updateUser(u.id, { diamonds: (u.diamonds || 0) + amt });
             }
 
             toast.success("Action logged & processed");

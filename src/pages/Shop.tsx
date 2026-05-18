@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService, walletService } from '../services/dbProvider';
 import { ShoppingBag, Zap, Shield, Sparkles, Clock, Check, Palette, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'react-hot-toast';
@@ -179,7 +179,7 @@ export const Shop = () => {
         return;
       }
 
-      await dbService.updateUser(user.id, updates);
+      await userService.updateUser(user.id, updates);
       setUser(prev => prev ? { ...prev, ...updates } : null);
       playSound('success');
     } catch (err) {
@@ -216,7 +216,7 @@ export const Shop = () => {
       if (reward.type === 'diamonds') updates.diamonds = (user.diamonds || 0) + reward.amount;
       
       try {
-        await dbService.updateUser(user.id, updates);
+        await userService.updateUser(user.id, updates);
         setUser(prev => prev ? { ...prev, ...updates } : null);
       } catch (err) {
         toast.error("Failed to sync mystery reward");
@@ -265,9 +265,9 @@ export const Shop = () => {
         userUpdate.coins = user.coins - item.price;
       }
 
-      await dbService.updateUser(user.id, userUpdate);
+      await userService.updateUser(user.id, userUpdate);
 
-      const txId = await dbService.createTransaction({
+      const txId = await walletService.createTransaction({
         senderId: user.id,
         receiverId: 'SYSTEM',
         amount: item.price,

@@ -159,4 +159,6 @@ export class PrismaUserService implements IUserService {
       lastActive: prismaUser.lastActive ? prismaUser.lastActive.toISOString() : undefined,
     };
   }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {}
 }

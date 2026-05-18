@@ -26,7 +26,7 @@ import {
 } from 'recharts';
 import { subDays, format, startOfDay } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { userService, assignmentService, submissionService, walletService, adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 import StatCard from './StatCard';
@@ -76,11 +76,11 @@ export const AnalyticsOverview = () => {
         try {
             setLoading(true);
             const [users, assignments, submissions, transactions, recharges] = await Promise.all([
-                dbService.getAllUsers(),
-                dbService.getAllAssignments(),
-                dbService.getAllSubmissions(),
-                dbService.getAllTransactions(),
-                dbService.getAllRechargeRequests()
+                userService.getAllUsers(),
+                assignmentService.getAllAssignments(),
+                submissionService.getAllSubmissions(),
+                walletService.getAllTransactions(),
+                walletService.getAllRechargeRequests()
             ]);
 
             const totalCoins = users.reduce((acc, u) => acc + (u.coins || 0), 0);
@@ -382,7 +382,7 @@ export const AnalyticsOverview = () => {
                                 const msg = input?.value;
                                 if (!msg || !user) return;
                                 try {
-                                    await dbService.sendBroadcastNotification(msg, user.id);
+                                    await adminService.sendBroadcastNotification(msg, user.id);
                                     toast.success("Broadcast successful!");
                                     input.value = '';
                                 } catch (e) {

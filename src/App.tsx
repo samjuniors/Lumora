@@ -12,7 +12,6 @@ import { AnimatePresence, motion } from "motion/react";
 import { useSwipeable } from "react-swipeable";
 import { usePresence } from "./hooks/usePresence";
 import { AuthProvider, useAuth } from "./context/AuthContext";
-import { dbService } from "./services/dbProvider";
 import { unlockAudio } from "./lib/audio";
 import { Navbar } from "./components/Navbar";
 import { SplashScreen } from "./components/SplashScreen";

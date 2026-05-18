@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Trash2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { adminService, assignmentService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { AssignmentTemplate } from '../../types';
 
@@ -28,7 +28,7 @@ export const TemplatesManager = () => {
     const fetchTemplates = async () => {
         setLoading(true);
         try {
-            const tmpls = await dbService.getAssignmentTemplates();
+            const tmpls = await assignmentService.getAssignmentTemplates();
             setTemplates(tmpls);
         } catch (err: any) {
             console.error(err);
@@ -41,7 +41,7 @@ export const TemplatesManager = () => {
     const handleDelete = async (id: string) => {
         if (!confirm("Delete template?")) return;
         try {
-            await dbService.deleteAssignmentTemplate(id);
+            await assignmentService.deleteAssignmentTemplate(id);
             toast.success("Template deleted");
             await fetchTemplates();
         } catch(err) {
@@ -104,7 +104,7 @@ export const TemplatesManager = () => {
 
         try {
             for (const t of seedTemplates) {
-                await dbService.saveAssignmentTemplate(t.id, t);
+                await adminService.saveAssignmentTemplate(t.id, t);
             }
             toast.success("Industry templates seeded successfully!");
             await fetchTemplates();
@@ -124,7 +124,7 @@ export const TemplatesManager = () => {
                 creatorId: user.id,
                 createdAt: Date.now()
             };
-            await dbService.saveAssignmentTemplate(code, newTmpl);
+            await adminService.saveAssignmentTemplate(code, newTmpl);
             toast.success("Template created!");
             setLabel(''); setTitle(''); setSubject(''); setDescription(''); setInstructions('');
             await fetchTemplates();

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { notificationService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { playNotificationSound } from '../lib/audio';
 import { Bell, Info, CheckCircle, AlertCircle } from 'lucide-react';
@@ -63,7 +63,7 @@ export const NotificationManager: React.FC = () => {
               onClick={async () => {
                 toast.dismiss(t.id);
                 try {
-                  await dbService.markNotificationRead(newestUnread.id);
+                  await notificationService.markNotificationRead(newestUnread.id);
                 } catch (err) {
                   console.error("Failed to mark as read:", err);
                 }

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { KeyRound, Filter, X, CheckCircle, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { InviteCode, Role } from '../../types';
 import { cn } from '../../lib/utils';
@@ -20,7 +20,7 @@ export const InviteCodesManager = () => {
 
     const fetchCodes = async () => {
         try {
-            const codes = await dbService.getAllInviteCodes();
+            const codes = await adminService.getAllInviteCodes();
             setCodes(codes);
         } catch (err) {
             console.error(err);
@@ -48,7 +48,7 @@ export const InviteCodesManager = () => {
                 createdAt: Date.now(),
                 updatedAt: Date.now()
             };
-            await dbService.saveInviteCode(finalCode, newCode);
+            await adminService.saveInviteCode(finalCode, newCode);
             setNewCodeName('');
             setNewMaxUses('1');
             await fetchCodes();
@@ -64,7 +64,7 @@ export const InviteCodesManager = () => {
     const handleDelete = async (code: InviteCode) => {
         if (!confirm(`Delete code ${code.code}?`)) return;
         try {
-            await dbService.deleteInviteCode(code.code);
+            await adminService.deleteInviteCode(code.code);
             await fetchCodes();
         } catch(err) {
             console.error(err);

@@ -3,7 +3,7 @@ import { BADGES } from '../lib/badges';
 import { useAuth } from '../context/AuthContext';
 import { Trophy, CheckCircle, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
-import { dbService } from '../services/dbProvider';
+import { submissionService, assignmentService, userService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { Submission, Enrollment } from '../types';
 
@@ -18,8 +18,8 @@ export const BadgeList = () => {
     const fetchData = async () => {
       try {
         const [subList, enrList] = await Promise.all([
-          dbService.getSubmissionsByStudent(user.id),
-          dbService.getEnrollmentsByStudent(user.id)
+          submissionService.getSubmissionsByStudent(user.id),
+          assignmentService.getEnrollmentsByStudent(user.id)
         ]);
         setSubmissions(subList);
         setEnrollments(enrList);
@@ -36,7 +36,7 @@ export const BadgeList = () => {
     if (!user) return;
     try {
       const newBadges = [...(user.badgesClaimed || []), badgeId];
-      await dbService.updateUser(user.id, {
+      await userService.updateUser(user.id, {
         badgesClaimed: newBadges
       });
       setUser({ ...user, badgesClaimed: newBadges });

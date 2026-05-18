@@ -9,7 +9,7 @@ import { SendCoinsModal } from './SendCoinsModal';
 import { INFINITE_ACHIEVEMENTS } from './Achievements';
 import { getLetterGrade } from '../lib/gradeUtils';
 import { BADGES } from '../lib/badges';
-import { dbService } from '../services/dbProvider';
+import { userService } from '../services/dbProvider';
 import { useAuth } from '../context/AuthContext';
 import { PresenceDot } from './PresenceDot';
 
@@ -43,9 +43,9 @@ export const UserProfileModal = ({
     if (!loading) setLoading(true);
     try {
       if (!newFollowingState) {
-        await dbService.unfollowUser(currentUser.id, profileUser.id);
+        await userService.unfollowUser(currentUser.id, profileUser.id);
       } else {
-        await dbService.followUser(currentUser.id, profileUser.id);
+        await userService.followUser(currentUser.id, profileUser.id);
       }
     } catch (error) {
       console.error("Follow error:", error);

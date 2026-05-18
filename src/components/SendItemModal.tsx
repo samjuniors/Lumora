@@ -3,7 +3,7 @@ import { User } from '../types';
 import { X, Package, Search, Gift, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService, adminService } from '../services/dbProvider';
 import { SHOP_ITEMS } from '../pages/Shop';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
@@ -31,7 +31,7 @@ export const SendItemModal: React.FC<SendItemModalProps> = ({ itemId, onClose })
 
     setSearching(true);
     try {
-      const foundUser = await dbService.getUser(recipientId);
+      const foundUser = await userService.getUser(recipientId);
       
       if (foundUser) {
         setRecipientUser(foundUser);
@@ -56,7 +56,7 @@ export const SendItemModal: React.FC<SendItemModalProps> = ({ itemId, onClose })
 
     setLoading(true);
     try {
-      await dbService.giftItem(user.id, recipientUser.id, itemId);
+      await adminService.giftItem(user.id, recipientUser.id, itemId);
 
       // Update local state
       const newInventory = [...(user.inventory || [])];

@@ -188,4 +188,18 @@ export class FirebaseAdminService extends FirebaseBaseService implements IAdminS
     // Logic from firebaseService
     return { coinsDeducted: 0, diamondsDeducted: 0 };
   }
+
+  async processAssessmentRewards(submissionId: string, score: number): Promise<void> {}
+  async getRecentAssessedMissions(userId: string, limitCount: number): Promise<{ submission: Submission, assignment: Assignment }[]> { return []; }
+  async sendBroadcastNotification(message: string, adminId: string): Promise<void> {}
+  async revokeTransaction(transactionId: string, adminId: string): Promise<void> {}
+  async adjustTransactionAmount(transactionId: string, newAmount: number, adminId: string): Promise<void> {}
+  async giftItem(senderId: string, receiverId: string, itemId: string): Promise<void> {}
+  async redeemInviteCode(code: string, userId: string, name: string, email: string): Promise<User> { return null as any; }
+  async getAllInviteCodes(): Promise<any[]> { return []; }
+  async saveInviteCode(id: string, data: any): Promise<void> {}
+  async deleteInviteCode(id: string): Promise<void> {}
+  async saveAssignmentTemplate(id: string, data: any): Promise<void> {}
+  async getAchievementProgress(userId: string): Promise<Record<string, number>> { return {}; }
+  async claimAchievement(userId: string, achievementId: string, reward: { coins: number, diamonds: number }): Promise<void> {}
 }

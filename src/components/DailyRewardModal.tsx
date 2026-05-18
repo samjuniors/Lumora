@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Gift, Sparkles, X, Star, Coins, Zap, Clock, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { walletService } from '../services/dbProvider';
 import { useSound } from '../hooks/useSound';
 import confetti from 'canvas-confetti';
 import { toast } from 'react-hot-toast';
@@ -102,7 +102,7 @@ export const DailyRewardModal = () => {
       const reward = generateReward();
       
       // Background claim, don't await so we don't hang if quota exceeded
-      dbService.claimDailyReward(user.id, { type: reward.type, value: reward.value }).catch(e => {
+      walletService.claimDailyReward(user.id, { type: reward.type, value: reward.value }).catch(e => {
         console.warn("Background claim failed", e);
       });
 

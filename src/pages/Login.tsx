@@ -11,7 +11,7 @@ import { SignIn, SignUp } from '@clerk/clerk-react';
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export const Login = () => {
-  const { user, authUser, logOut, isAdmin, setUser, signInWithEmail, signUpWithEmail, signInWithProvider, verifyInviteCode } = useAuth();
+  const { user, authUser, loading: authLoading, logOut, isAdmin, setUser, signInWithEmail, signUpWithEmail, signInWithProvider, verifyInviteCode } = useAuth();
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -20,6 +20,7 @@ export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  if (authLoading) return <div className="fixed inset-0 z-50 bg-bg-main" />;
   if (user) return <Navigate to="/dashboard" replace />;
 
   const handleVerifyInvite = async (e: React.FormEvent) => {

@@ -102,6 +102,3 @@ export const notificationService = DbProvider.getNotificationService();
 export const adminService = DbProvider.getAdminService();
 export const syndicateService = DbProvider.getSyndicateService();
 export const storageService = DbProvider.getStorageService();
-
-// Temporary backward compatibility
-export { dbService } from './firebaseServiceSingleton';

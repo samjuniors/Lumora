@@ -7,7 +7,7 @@ import { chatWithAI } from '../services/aiService';
 import Markdown from 'react-markdown';
 import { cn, getUserLevelAndXP } from '../lib/utils';
 import { useSound } from '../hooks/useSound';
-import { dbService } from '../services/dbProvider';
+import { walletService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { RulesModal } from './RulesModal';
 
@@ -130,7 +130,7 @@ export const AIPet = () => {
     
     // Deduct coins first optimistically
     if (isStudent) {
-      dbService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction').catch(err => {
+      walletService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction').catch(err => {
         console.warn("Background coin spend failed (quota limit?): ", err);
       });
       

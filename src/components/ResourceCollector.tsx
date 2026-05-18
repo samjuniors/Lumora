@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { walletService, userService } from '../services/dbProvider';
 import { Gem, Coins, Pickaxe, Sparkles } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { cn } from '../lib/utils';
@@ -76,7 +76,7 @@ export const ResourceCollector = () => {
           diamondsAmount = 0;
       }
 
-      dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(() => {});
+      walletService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(() => {});
 
       updateResources({ 
         coins: (user.coins || 0) + coinsAmount,
@@ -119,7 +119,7 @@ export const ResourceCollector = () => {
 
     setLoading(true);
     try {
-      dbService.updateUser(user.id, { 
+      userService.updateUser(user.id, { 
         lastCollectionTime: 0, 
         diamonds: (user.diamonds || 0) - resetCost 
       }).catch(() => {});

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings as SettingsIcon, Save, Phone, CreditCard, Link as LinkIcon, ShieldCheck } from 'lucide-react';
-import { dbService } from '../../services/dbProvider';
+import { adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 
 export const SettingsManager = () => {
@@ -16,7 +16,7 @@ export const SettingsManager = () => {
         const fetchSettings = async () => {
             setLoading(true);
             try {
-                const s = await dbService.getPlatformSettings();
+                const s = await adminService.getPlatformSettings();
                 if (s) setSettings({
                     mobileNumber: s.mobileNumber || '',
                     payeeName: s.payeeName || '',
@@ -35,7 +35,7 @@ export const SettingsManager = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            await dbService.updatePlatformSettings(settings);
+            await adminService.updatePlatformSettings(settings);
             toast.success("Platform protocols updated");
         } catch (err) {
             toast.error("Protocol update failed");

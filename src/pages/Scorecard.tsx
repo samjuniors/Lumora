@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService, assignmentService, submissionService } from '../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { Assignment, Submission, User } from '../types';
 import { ArrowLeft, Award, BookOpen, Target, Activity, LayoutGrid, ChevronDown, ChevronUp, Clock, AlertTriangle, CheckCircle, Trophy } from 'lucide-react';
@@ -130,7 +130,7 @@ export const Scorecard = () => {
       try {
         await Promise.race([
           (async () => {
-            const studentData = await dbService.getUser(viewingUserId);
+            const studentData = await userService.getUser(viewingUserId);
             setTargetStudent(studentData);
 
             if (!studentData) {
@@ -138,7 +138,7 @@ export const Scorecard = () => {
               return;
             }
 
-            const allAssignments = await dbService.getAllAssignments();
+            const allAssignments = await assignmentService.getAllAssignments();
             
             const relevantAssignments = allAssignments.filter(a => {
                if (studentData.createdAt && a.dueDate < studentData.createdAt) return false;
@@ -147,12 +147,12 @@ export const Scorecard = () => {
             });
             setAssignments(relevantAssignments);
 
-            const studentSubmissions = await dbService.getSubmissionsByStudent(viewingUserId);
+            const studentSubmissions = await submissionService.getSubmissionsByStudent(viewingUserId);
             setSubmissions(studentSubmissions);
 
             try {
               // Rank calculation might be slow, try to fetch but don't blow up scorecard if it fails
-              const allStudents = await dbService.getUsersByRole('student');
+              const allStudents = await userService.getUsersByRole('student');
               const sorted = allStudents.sort((a, b) => (b.lifetimeDiamonds || 0) - (a.lifetimeDiamonds || 0));
               const rank = sorted.findIndex(s => s.id === viewingUserId) + 1;
               setGlobalRank(rank > 0 ? rank : null);

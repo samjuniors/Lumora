@@ -4,7 +4,7 @@ import { X, Wallet, Clock, ArrowUpRight, Gift, Coins, Edit2, Loader2 } from 'luc
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { walletService, adminService, userService } from '../../services/dbProvider';
 import { User, Transaction } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -18,7 +18,7 @@ export const TransactionAuditModal = ({ u, onClose }: { u: User, onClose: () => 
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const txs = await dbService.getUserTransactions(u.id);
+                const txs = await walletService.getUserTransactions(u.id);
                 setHistory(txs);
             } catch (err: any) {
                 console.error(err);
@@ -34,7 +34,7 @@ export const TransactionAuditModal = ({ u, onClose }: { u: User, onClose: () => 
         if (!window.confirm("Are you sure you want to revoke this transaction? This will reverse the coin balances and mark the transaction as revoked. (Audit trail is preserved)")) return;
         
         try {
-            await dbService.revokeTransaction(tx.id, currentAdmin?.id || 'admin');
+            await adminService.revokeTransaction(tx.id, currentAdmin?.id || 'admin');
             setHistory(prev => prev.map(t => t.id === tx.id ? { ...t, status: 'revoked' } : t));
             toast.success("Transaction revoked and balances reversed.");
         } catch (err) {
@@ -187,7 +187,7 @@ export const TransactionAuditModal = ({ u, onClose }: { u: User, onClose: () => 
                                                                         return;
                                                                     }
                                                                     try {
-                                                                        await dbService.adjustTransactionAmount(tx.id, newAmount, currentAdmin?.id || 'admin');
+                                                                        await adminService.adjustTransactionAmount(tx.id, newAmount, currentAdmin?.id || 'admin');
                                                                         setHistory(prev => prev.map(t => t.id === tx.id ? { ...t, amount: newAmount } : t));
                                                                         setEditingTx(null);
                                                                         setEditAmount('');

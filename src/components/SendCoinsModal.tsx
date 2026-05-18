@@ -3,7 +3,7 @@ import { User } from '../types';
 import { X, Coins, ShieldAlert } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { walletService } from '../services/dbProvider';
 import { getUserLevelAndXP } from '../lib/utils';
 import { motion } from 'motion/react';
 
@@ -42,7 +42,7 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
 
     setLoading(true);
     try {
-      await dbService.transferCoins(user.id, recipient.id, amount);
+      await walletService.transferCoins(user.id, recipient.id, amount);
 
       const taxAmount = Math.floor(amount * 0.3);
       const receiveAmount = amount - taxAmount;

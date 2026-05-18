@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { adminService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { Award, CheckCircle, Flame, Star, Sparkles, TrendingUp, ArrowUpCircle, ShoppingCart, Zap, CalendarDays } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -96,7 +96,7 @@ export const Achievements = () => {
 
     const fetchProgress = async () => {
       try {
-        const p = await dbService.getAchievementProgress(user.id);
+        const p = await adminService.getAchievementProgress(user.id);
         setProgress(p);
       } catch (err) {
         console.error("Failed to fetch achievements progress:", err);
@@ -113,7 +113,7 @@ export const Achievements = () => {
     setClaiming(exactClaimId);
     
     try {
-      await dbService.claimAchievement(user.id, exactClaimId, reward);
+      await adminService.claimAchievement(user.id, exactClaimId, reward);
       
       const newAchievements = [...(user.achievements || []), exactClaimId];
       setUser({ ...user, achievements: newAchievements, coins: user.coins + Math.round(reward.coins), diamonds: (user.diamonds || 0) + reward.diamonds });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { dbService } from '../services/dbProvider';
+import { submissionService, assignmentService } from '../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { useAuth } from '../context/AuthContext';
 import { XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
@@ -21,8 +21,8 @@ export const ScoreChart = ({ userId }: ScoreChartProps) => {
     const fetchScores = async () => {
       try {
         const [allStudentSubmissions, allAssignments] = await Promise.all([
-          dbService.getSubmissionsByStudent(targetId),
-          dbService.getAllAssignments()
+          submissionService.getSubmissionsByStudent(targetId),
+          assignmentService.getAllAssignments()
         ]);
         
         const subs = allStudentSubmissions

@@ -102,17 +102,19 @@ if (typeof window !== 'undefined') {
   }, 30000); // 30s for faster visibility during active use
 }
 
-export async function pgFetch(url: string, options: any = {}, retries = 2) {
+export async function pgFetch(url: string, options: any = {}, retries = 1) {
   let lastError: any;
   const start = performance.now();
   
   for (let attempt = 0; attempt <= retries; attempt++) {
-    const timeoutMs = 2500 * (attempt + 1); // Increase timeout on retry
+    const timeoutMs = 1500 * (attempt + 1); // Increase timeout on retry
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeoutMs);
     
     try {
       const response = await fetch(url, { ...options, signal: controller.signal });
+      clearTimeout(id);
+      
       const latency = (performance.now() - start).toFixed(1);
       
       if (!response.ok) {
@@ -133,6 +135,7 @@ export async function pgFetch(url: string, options: any = {}, retries = 2) {
       const data = await response.json();
       return { data, latency, success: true };
     } catch (error: any) {
+      clearTimeout(id);
       lastError = error;
       // If it's a client error (not timeout/network/5xx), break immediately
       if (error.name !== 'AbortError' && !(error.message && error.message.startsWith('Status 5'))) {
@@ -141,7 +144,7 @@ export async function pgFetch(url: string, options: any = {}, retries = 2) {
       
       if (attempt < retries) {
         // Exponential backoff
-        await new Promise(res => setTimeout(res, 200 * Math.pow(2, attempt)));
+        await new Promise(res => setTimeout(res, 150 * Math.pow(2, attempt)));
       }
     } finally {
       clearTimeout(id);
@@ -149,6 +152,6 @@ export async function pgFetch(url: string, options: any = {}, retries = 2) {
   }
 
   const latency = (performance.now() - start).toFixed(1);
-  const reason = lastError.name === 'AbortError' ? 'Timeout' : (lastError.message || String(lastError));
+  const reason = lastError?.name === 'AbortError' ? 'Timeout' : (lastError?.message || String(lastError));
   throw { reason, latency };
 }

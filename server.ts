@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import path from "path";
 import multer from "multer";
+import compression from "compression";
 import { GoogleGenAI } from "@google/genai";
 import webpush from "web-push";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
@@ -33,7 +34,15 @@ async function startServer() {
   const app = express();
   const PORT = Number(process.env.PORT) || 3000;
 
+  app.use(compression());
   app.use(express.json());
+  
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && req.path.startsWith('/api/')) {
+      res.setHeader('Cache-Control', 'no-store, max-age=0');
+    }
+    next();
+  });
   
   const upload = multer({
     storage: multer.memoryStorage(),

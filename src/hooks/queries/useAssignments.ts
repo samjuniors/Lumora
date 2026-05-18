@@ -12,23 +12,50 @@ export const assignmentKeys = {
 export function useAssignments() {
   return useQuery({
     queryKey: assignmentKeys.lists(),
-    queryFn: () => assignmentService.getAllAssignments(),
+    queryFn: async () => {
+       try {
+         // Race with timeout to prevent indefinite hanging
+         const timeoutPromise = new Promise<Assignment[]>((_, reject) => setTimeout(() => reject(new Error("Timeout fetching assignments")), 8000));
+         return await Promise.race([assignmentService.getAllAssignments(), timeoutPromise]);
+       } catch (err) {
+         console.warn("[Safe Query] Assignments fetch failed:", err);
+         return [];
+       }
+    },
+    staleTime: 60000,
+    retry: 1
   });
 }
 
 export function useAssignment(id: string) {
   return useQuery({
     queryKey: assignmentKeys.detail(id),
-    queryFn: () => assignmentService.getAssignment(id),
+    queryFn: async () => {
+      try {
+        const timeoutPromise = new Promise<Assignment | null>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+        return await Promise.race([assignmentService.getAssignment(id), timeoutPromise]);
+      } catch (err) {
+        return null;
+      }
+    },
     enabled: !!id,
+    retry: 1
   });
 }
 
 export function useStudentEnrollments(userId: string | undefined) {
   return useQuery({
     queryKey: assignmentKeys.enrollments(userId || ''),
-    queryFn: () => assignmentService.getEnrollmentsByStudent(userId!),
+    queryFn: async () => {
+      try {
+        const timeoutPromise = new Promise<Enrollment[]>((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+        return await Promise.race([assignmentService.getEnrollmentsByStudent(userId!), timeoutPromise]);
+      } catch (err) {
+        return [];
+      }
+    },
     enabled: !!userId,
+    retry: 1
   });
 }
 

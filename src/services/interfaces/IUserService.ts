@@ -15,4 +15,5 @@ export interface IUserService {
   subscribeToStudents(callback: (users: User[]) => void): () => void;
   followUser(followerId: string, targetId: string): Promise<void>;
   unfollowUser(followerId: string, targetId: string): Promise<void>;
+  updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void>;
 }

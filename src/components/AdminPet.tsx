@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { MessageSquare, Sparkles, X, Send, Bot, HelpCircle } from 'lucide-react';
 import { generateMissionTemplate } from '../services/aiService';
 import { toast } from 'react-hot-toast';
-import { dbService } from '../services/dbProvider';
+import { adminService, assignmentService } from '../services/dbProvider';
 
 export const AdminPet: React.FC = () => {
   const { user, isAdmin } = useAuth();
@@ -37,7 +37,7 @@ export const AdminPet: React.FC = () => {
   const saveTemplate = async () => {
     if (!lastTemplate) return;
     try {
-      await dbService.createAssignmentTemplate({
+      await assignmentService.createAssignmentTemplate({
         ...lastTemplate,
         label: `AI: ${lastTemplate.name}`,
         subject: 'General',

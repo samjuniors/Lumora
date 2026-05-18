@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, TrendingUp, Shield, Crown } from 'lucide-react';
-import { dbService } from '../../services/dbProvider';
+import { userService } from '../../services/dbProvider';
 import { User } from '../../types';
 import { cn } from '../../lib/utils';
 
@@ -12,7 +12,7 @@ const LeaderboardManager = () => {
         const fetchLeaderboard = async () => {
             setLoading(true);
             try {
-                const all = await dbService.getAllUsers();
+                const all = await userService.getAllUsers();
                 const students = all.filter(u => u.role === 'student');
                 students.sort((a,b) => (b.coins || 0) - (a.coins || 0));
                 setGlobalLeaderboard(students.slice(0, 50));

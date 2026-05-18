@@ -4,7 +4,7 @@ import { X, Wallet, Clock, ArrowUpRight, Coins, Eye, Image as ImageIcon, ThumbsU
 import { format } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { walletService } from '../../services/dbProvider';
 import { RechargeRequest } from '../../types';
 import { cn } from '../../lib/utils';
 import { RewardLegend } from './RewardLegend';
@@ -36,7 +36,7 @@ const RechargesList = () => {
     const fetchRequests = async () => {
         setLoading(true);
         try {
-            const reqs = await dbService.getAllRechargeRequests();
+            const reqs = await walletService.getAllRechargeRequests();
             setRequests(reqs);
         } catch (err: any) {
             console.error(err);
@@ -49,7 +49,7 @@ const RechargesList = () => {
     const handleApprove = async (req: RechargeRequest) => {
         setProcessing(true);
         try {
-            await dbService.approveRechargeRequest(req.id, user?.id || 'admin');
+            await walletService.approveRechargeRequest(req.id, user?.id || 'admin');
             toast.success("Recharge approved!");
             setSelectedRequest(null);
             fetchRequests();
@@ -65,7 +65,7 @@ const RechargesList = () => {
         if (!confirm("Reject this request?")) return;
         setProcessing(true);
         try {
-            await dbService.rejectRechargeRequest(req.id, user?.id || 'admin');
+            await walletService.rejectRechargeRequest(req.id, user?.id || 'admin');
             toast.success("Request rejected");
             setSelectedRequest(null);
             fetchRequests();

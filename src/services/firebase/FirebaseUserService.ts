@@ -411,4 +411,6 @@ export class FirebaseUserService extends FirebaseBaseService implements IUserSer
     await updateDoc(doc(db, 'users', userId), { luminaId: lid });
     return lid;
   }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {}
 }

@@ -7,7 +7,7 @@ import {
     Sparkles 
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { dbService } from '../../services/dbProvider';
+import { userService, adminService, assignmentService } from '../../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../../lib/errorHandling';
 import { Assignment, Role } from '../../types';
 import { useAuth } from '../../context/AuthContext';
@@ -50,8 +50,8 @@ export const EditAssignmentModal = ({ assignment, onClose, onUpdated }: EditAssi
     useEffect(() => {
         const fetchStudentsAndPreReg = async () => {
             try {
-                const registered = await dbService.getUsersByRole('student');
-                const preRegPending = await dbService.getPreRegisteredUsers();
+                const registered = await userService.getUsersByRole('student');
+                const preRegPending = await adminService.getPreRegisteredUsers();
                 
                 const registeredLite = registered.map(d => ({ id: d.id, name: d.name, email: d.email }));
                 const preRegLite = preRegPending
@@ -110,7 +110,7 @@ export const EditAssignmentModal = ({ assignment, onClose, onUpdated }: EditAssi
                 updatedAt: Date.now()
             };
             
-            await dbService.updateAssignment(assignment.id, updatedData);
+            await assignmentService.updateAssignment(assignment.id, updatedData);
 
             if (sendEmail) {
                 try {
@@ -135,7 +135,7 @@ export const EditAssignmentModal = ({ assignment, onClose, onUpdated }: EditAssi
         if (!window.confirm("Are you sure you want to delete this mission? This cannot be undone.")) return;
         setLoading(true);
         try {
-            await dbService.updateAssignment(assignment.id, { status: 'archived', updatedAt: Date.now() });
+            await assignmentService.updateAssignment(assignment.id, { status: 'archived', updatedAt: Date.now() });
             toast.success("Mission archived");
             onUpdated();
             onClose();

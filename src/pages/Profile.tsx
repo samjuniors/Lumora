@@ -7,7 +7,7 @@ import {
   Copy, Upload, LogOut, Clock, BookOpen, ChevronRight, AlertCircle, Share2, Info, Gift,
   Users, UserPlus, Heart, Search, Trophy
 } from 'lucide-react';
-import { dbService, storageService } from '../services/dbProvider';
+import { storageService, userService, assignmentService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { SHOP_ITEMS } from './Shop';
 import { cn, getUserLevelAndXP, getShortId, getVIPLevel } from '../lib/utils';
@@ -94,7 +94,7 @@ export const Profile = () => {
         const fetchSocialData = async () => {
           setLoadingSocial(true);
           try {
-            const allUsers = await dbService.getUsers();
+            const allUsers = await userService.getUsers();
             setFollowers(allUsers.filter(u => user.followerIds?.includes(u.id)));
             setFollowing(allUsers.filter(u => user.followingIds?.includes(u.id)));
           } catch (err) {
@@ -107,7 +107,7 @@ export const Profile = () => {
         
         const fetchMissionStats = async () => {
             try {
-                const enrs = await dbService.getEnrollmentsByStudent(user.id);
+                const enrs = await assignmentService.getEnrollmentsByStudent(user.id);
                 
                 setMissionStats({
                     active: enrs.filter(e => e.status === 'active').length,
@@ -147,7 +147,7 @@ export const Profile = () => {
         bannerColor: editBanner.trim(),
         updatedAt: Date.now()
       };
-      await dbService.updateUser(user.id, updateData);
+      await userService.updateUser(user.id, updateData);
       setUser(prev => prev ? { ...prev, ...updateData } : null);
       toast.success('Profile updated successfully');
       setIsEditing(false);
@@ -161,7 +161,7 @@ export const Profile = () => {
   const handleSaveAvatar = async (avatar: string) => {
     if (!user) return;
     try {
-      await dbService.updateUser(user.id, { avatar, updatedAt: Date.now() });
+      await userService.updateUser(user.id, { avatar, updatedAt: Date.now() });
       setUser(prev => prev ? { ...prev, avatar, updatedAt: Date.now() } : null);
       toast.success('Avatar updated!');
     } catch (err: any) {
@@ -226,7 +226,7 @@ export const Profile = () => {
         return; // Don't consume if it's passive
       }
 
-      await dbService.updateUser(user.id, updateData);
+      await userService.updateUser(user.id, updateData);
     } catch (e) {
       toast.error('Use failed');
     }
@@ -593,7 +593,7 @@ export const Profile = () => {
                            ) : (
                              <button 
                                onClick={() => {
-                                 dbService.followUser(user.id, f.id);
+                                 userService.followUser(user.id, f.id);
                                  toast.success(`Connected with ${f.name}`);
                                }} 
                                className="text-[8px] font-black uppercase text-bg-main tracking-widest bg-brand-gold px-3 py-1.5 rounded-lg hover:scale-105 transition-all shadow-lg shadow-brand-gold/10"

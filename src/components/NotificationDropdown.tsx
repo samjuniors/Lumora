@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { notificationService } from '../services/dbProvider';
 import { Bell, Check, Trash2, Info, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { Link } from 'react-router-dom';
@@ -33,7 +33,7 @@ export const NotificationDropdown = () => {
   const markAllRead = async () => {
     if (!user || notifications.length === 0) return;
     try {
-      await dbService.markAllNotificationsRead(user.id);
+      await notificationService.markAllNotificationsRead(user.id);
       refetch();
       toast.success('All marked as read');
     } catch (err) {
@@ -47,7 +47,7 @@ export const NotificationDropdown = () => {
     if (!window.confirm('Clear all notifications? This cannot be undone.')) return;
     
     try {
-      await dbService.clearAllNotifications(user.id);
+      await notificationService.clearAllNotifications(user.id);
       refetch();
       toast.success('All notifications cleared');
     } catch (err) {
@@ -59,7 +59,7 @@ export const NotificationDropdown = () => {
   const deleteNotif = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
-      await dbService.deleteNotification(id);
+      await notificationService.deleteNotification(id);
       refetch();
     } catch (err) {
       console.error(err);
@@ -69,7 +69,7 @@ export const NotificationDropdown = () => {
   const markRead = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     try {
-      await dbService.markNotificationRead(id);
+      await notificationService.markNotificationRead(id);
       refetch();
     } catch (err) {
       console.error(err);

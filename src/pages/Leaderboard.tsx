@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService, submissionService } from '../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { User, Submission } from '../types';
 import { Trophy, Medal, Crown, Sparkles, Send, GraduationCap, Flame, Target, Gem } from 'lucide-react';
@@ -159,8 +159,8 @@ export const Leaderboard = () => {
       setLoading(true);
       try {
         const [updatedUsers, updatedSubmissions] = await Promise.all([
-          dbService.getAllUsers(), // Already cached in service now
-          dbService.getAllAssessedSubmissions()
+          userService.getAllUsers(), // Already cached in service now
+          submissionService.getAllAssessedSubmissions()
         ]);
         
         setUsers(updatedUsers.filter(u => u.role === 'student'));

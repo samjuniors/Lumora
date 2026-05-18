@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { User } from '../types';
-import { dbService } from '../services/dbProvider';
+import { userService, notificationService } from '../services/dbProvider';
 import { getCleanInventory } from '../lib/utils';
 
 export const useMaintenance = (user: User | null) => {
@@ -12,7 +12,7 @@ export const useMaintenance = (user: User | null) => {
       try {
         // Balance cleanup - ensure minimum coins is 0
         if ((user.coins || 0) < 0) {
-          await dbService.updateUser(user.id, { coins: 0 });
+          await userService.updateUser(user.id, { coins: 0 });
         }
 
         if (!isMounted) return;
@@ -20,7 +20,7 @@ export const useMaintenance = (user: User | null) => {
         // Inventory cleanup - only if needed
         const cleanInv = getCleanInventory(user);
         if (cleanInv.length !== (user.inventory?.length || 0)) {
-          await dbService.updateUser(user.id, { inventory: cleanInv });
+          await userService.updateUser(user.id, { inventory: cleanInv });
         }
 
         if (!isMounted) return;
@@ -33,7 +33,7 @@ export const useMaintenance = (user: User | null) => {
 
         if (!lastNotified || now - parseInt(lastNotified) > ONE_DAY) {
           localStorage.setItem(storageKey, now.toString());
-          await dbService.createNotification({
+          await notificationService.createNotification({
             userId: user.id,
             title: `Welcome back, ${user.name}!`,
             message: "Ready for today's research missions?",

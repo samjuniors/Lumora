@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { adminService } from '../services/dbProvider';
 import { Submission, Assignment } from '../types';
 import { BookOpen, CheckCircle, ChevronRight, ChevronDown, X, Trophy } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -29,7 +29,7 @@ export const CompletedMissionsStack = () => {
 
     const fetchCompletedMissions = async () => {
       try {
-        const missionData = await dbService.getRecentAssessedMissions(user.id, 5);
+        const missionData = await adminService.getRecentAssessedMissions(user.id, 5);
         setMissions(missionData);
       } catch (err: any) {
         console.error(err);

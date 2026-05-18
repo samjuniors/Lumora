@@ -8,7 +8,7 @@ import {
     Camera 
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { dbService } from '../../services/dbProvider';
+import { userService, adminService, assignmentService, notificationService } from '../../services/dbProvider';
 import { handleFirestoreError, OperationType } from '../../lib/errorHandling';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
@@ -66,8 +66,8 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
     useEffect(() => {
         const fetchStudentsAndTemplates = async () => {
             try {
-                const registered = await dbService.getUsersByRole('student');
-                const preRegPending = await dbService.getPreRegisteredUsers();
+                const registered = await userService.getUsersByRole('student');
+                const preRegPending = await adminService.getPreRegisteredUsers();
                 
                 const registeredLite = registered.map(d => ({ id: d.id, name: d.name, email: d.email }));
                 const preRegLite = preRegPending
@@ -83,7 +83,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                 
                 setStudents(combined);
 
-                const dbTmpls = await dbService.getAssignmentTemplates();
+                const dbTmpls = await assignmentService.getAssignmentTemplates();
                 setDbTemplates(dbTmpls as any);
             } catch (err: any) {
                 handleFirestoreError(err, OperationType.LIST, 'users/templates');
@@ -291,14 +291,14 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
             }
             
             const promises = assignmentsToCreate.map(a => {
-                return dbService.createAssignment(a as any).catch(e => handleFirestoreError(e, OperationType.WRITE, `assignments/batch` ));
+                return assignmentService.createAssignment(a as any).catch(e => handleFirestoreError(e, OperationType.WRITE, `assignments/batch` ));
             });
             
             await Promise.all(promises);
 
-            const studentSnap = await dbService.getUsersByRole('student');
+            const studentSnap = await userService.getUsersByRole('student');
             const notificationPromises = studentSnap.map(studentDoc => {
-                return dbService.createNotification({
+                return notificationService.createNotification({
                     userId: studentDoc.id,
                     title: "New Mission Blast! 🚀",
                     message: `A new mission "${title}" has been launched. Check it out!`,

@@ -1,4 +1,4 @@
-import { dbService } from './dbProvider';
+import { userService } from './dbProvider';
 
 export async function queueEmailNotification(to: string | string[], subject: string, html: string, text?: string) {
   try {
@@ -40,7 +40,7 @@ export async function queueEmailNotification(to: string | string[], subject: str
 
 export async function notifyStudentsOfNewAssignment(title: string, description: string, allowedStudents?: string[]) {
   try {
-    const students = await dbService.getUsersByRole('student');
+    const students = await userService.getUsersByRole('student');
     let studentEmails: string[] = [];
     
     if (allowedStudents && allowedStudents.length > 0) {

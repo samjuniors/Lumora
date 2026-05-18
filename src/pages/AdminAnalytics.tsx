@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService, assignmentService } from '../services/dbProvider';
 import { Assignment, Enrollment, User } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -64,9 +64,9 @@ export const AdminAnalytics = () => {
     setLoading(true);
     try {
       const [studentsList, assignmentsList, enrollmentsList] = await Promise.all([
-        dbService.getUsersByRole('student'),
-        dbService.getAllAssignments(),
-        dbService.getAllEnrollments()
+        userService.getUsersByRole('student'),
+        assignmentService.getAllAssignments(),
+        assignmentService.getAllEnrollments()
       ]);
 
       setStudents(studentsList);

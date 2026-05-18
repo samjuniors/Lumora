@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { dbService } from '../services/dbProvider';
+import { userService } from '../services/dbProvider';
 
 export const usePresence = (userId: string | undefined) => {
   useEffect(() => {
@@ -10,7 +10,7 @@ export const usePresence = (userId: string | undefined) => {
     const updateStatus = (status: 'online' | 'idle' | 'offline') => {
       if (currentStatus === status && status !== 'online') return; // Don't spam if status matches
       currentStatus = status;
-      dbService.updatePresence(userId, status).catch(console.warn);
+      userService.updatePresence(userId, status).catch(console.warn);
     };
 
     // Initial heartbeat
@@ -19,7 +19,7 @@ export const usePresence = (userId: string | undefined) => {
     // Heartbeat every 20 minutes while active (Emergency Quota Fix)
     let heartbeatInterval = setInterval(() => {
        if (currentStatus === 'online') {
-          dbService.updatePresence(userId, 'online').catch(console.warn);
+          userService.updatePresence(userId, 'online').catch(console.warn);
        }
     }, 20 * 60 * 1000);
 

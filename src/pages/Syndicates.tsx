@@ -17,7 +17,7 @@ import {
   Users2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { syndicateService, userService } from '../services/dbProvider';
 import { Syndicate, User } from '../types';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
@@ -44,7 +44,7 @@ export const Syndicates = () => {
     const fetchData = async () => {
         setLoading(true);
         try {
-            const all = await dbService.getAllSyndicates();
+            const all = await syndicateService.getAllSyndicates();
             setSyndicates(all);
             if (user?.syndicateId) {
                 const my = all.find(s => s.id === user.syndicateId);
@@ -89,8 +89,8 @@ export const Syndicates = () => {
                 updatedAt: Date.now()
             };
 
-            const sid = await dbService.createSyndicate(syndicateData);
-            await dbService.updateUser(user.id, { 
+            const sid = await syndicateService.createSyndicate(syndicateData);
+            await userService.updateUser(user.id, { 
                 syndicateId: sid,
                 coins: user.coins - costCoins,
                 diamonds: (user.diamonds || 0) - costDiamonds,
@@ -123,11 +123,11 @@ export const Syndicates = () => {
 
         try {
             const updatedMembers = [...syndicate.memberIds, user.id];
-            await dbService.updateSyndicate(syndicate.id, { 
+            await syndicateService.updateSyndicate(syndicate.id, { 
                 memberIds: updatedMembers,
                 updatedAt: Date.now()
             });
-            await dbService.updateUser(user.id, { 
+            await userService.updateUser(user.id, { 
                 syndicateId: syndicate.id,
                 updatedAt: Date.now()
             });

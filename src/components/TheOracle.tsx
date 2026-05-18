@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Brain, Target, Compass, Gem, ChevronRight, Loader2, BookMarked, Info, Lock, Shield, Cpu, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { dbService } from '../services/dbProvider';
+import { userService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -29,7 +29,7 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
 
     try {
       const newCoins = user.coins - UNLOCK_FEE;
-      await dbService.updateUser(user.id, { 
+      await userService.updateUser(user.id, { 
         isOracleUnlocked: true,
         coins: newCoins,
         updatedAt: Date.now()
@@ -78,7 +78,7 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
-      await dbService.updateUser(user.id, { 
+      await userService.updateUser(user.id, { 
         academicRoadmap: data.text,
         diamonds: newDiamondCount
       });

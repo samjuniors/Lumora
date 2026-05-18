@@ -19,7 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { submissionService, userService, adminService, assignmentService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { Submission, User, AssignmentTemplate } from '../../types';
 import { cn } from '../../lib/utils';
@@ -47,9 +47,9 @@ export const ReviewsManager = () => {
         setLoading(true);
         try {
             const [subs, allUsers, tmpls] = await Promise.all([
-                dbService.getAllSubmissions(),
-                dbService.getAllUsers(),
-                dbService.getAssignmentTemplates()
+                submissionService.getAllSubmissions(),
+                userService.getAllUsers(),
+                assignmentService.getAssignmentTemplates()
             ]);
             
             subs.sort((a,b) => b.submittedAt - a.submittedAt);
@@ -73,7 +73,7 @@ export const ReviewsManager = () => {
     const handleReject = async (sub: Submission) => {
         if (!confirm("Permanently incinerate this attempt? No coins returned. Student must re-submit.")) return;
         try {
-            await dbService.updateSubmission(sub.id, { 
+            await submissionService.updateSubmission(sub.id, { 
                 status: 'rejected',
                 reviewedAt: Date.now(),
                 reviewedBy: user!.id
@@ -110,7 +110,7 @@ export const ReviewsManager = () => {
             if (result.error) throw new Error(result.error);
 
             // Update submission status
-            await dbService.updateSubmission(sub.id, {
+            await submissionService.updateSubmission(sub.id, {
                 status: 'assessed',
                 aiScore: result.score,
                 aiFeedback: result.feedback,
@@ -119,7 +119,7 @@ export const ReviewsManager = () => {
             });
 
             // Reward calculation logic (handled via cloud function or service)
-            await dbService.processAssessmentRewards(sub.id, result.score);
+            await adminService.processAssessmentRewards(sub.id, result.score);
 
             toast.success("AI Assessment Complete. Rewards Distributed.", { id: toastId });
             await fetchSubmissions();

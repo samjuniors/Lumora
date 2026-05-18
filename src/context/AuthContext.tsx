@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { authService, userService, adminService, dbService } from '../services/dbProvider';
+import { authService, userService, adminService } from '../services/dbProvider';
 import { User } from '../types';
 import { isSuperAdmin, isAdmin, isStudent } from '../lib/permissions';
 import { ClerkSync } from './ClerkSync';
@@ -151,7 +151,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     if (activeSessionUser) {
       console.info(`[AuthContext:Diagnostic] Hydrating Firestore profile using source: ${activeSessionUser.source || 'unknown'} for UID: ${activeSessionUser.uid}`);
+      
+      let initialLoadTimeout: any = setTimeout(() => {
+        if (isMounted.current) {
+          console.warn("[AuthContext:Diagnostic] Session hydration timed out. Generating fallback profile to unblock runtime.");
+          const isDefaultAdmin = isSuperAdmin({ email: activeSessionUser.email || '' } as User);
+          setUser({
+            id: activeSessionUser.uid,
+            email: activeSessionUser.email || '',
+            name: activeSessionUser.displayName || activeSessionUser.email?.split('@')[0] || 'User',
+            role: isDefaultAdmin ? 'superadmin' : 'student',
+            coins: isDefaultAdmin ? 1000 : 50,
+            diamonds: isDefaultAdmin ? 500 : 50,
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+            achievements: [],
+            inventory: [],
+            streak: 0,
+            vipExp: 0,
+            vipLevel: 0,
+            xp: 0
+          });
+          setLoading(false);
+        }
+      }, 7000); // 7-second max block
+
       unsubscribeSnapshot.current = userService.subscribeToUser(activeSessionUser.uid, (data) => {
+        if (initialLoadTimeout) {
+          clearTimeout(initialLoadTimeout);
+          initialLoadTimeout = null;
+        }
+
         if (!isMounted.current) return;
         
         if (data) {
@@ -193,7 +223,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 activeSessionUser.displayName || activeSessionUser.email?.split('@')[0] || 'User'
               );
               
-              if (claimed) return;
+              if (claimed) {
+                if (isMounted.current) {
+                  setUser(claimed);
+                  setLoading(false);
+                }
+                return;
+              }
 
               const isDefaultAdmin = isSuperAdmin({ email: activeSessionUser.email || '' } as User);
               
@@ -215,6 +251,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               };
 
               await userService.createUser(activeSessionUser.uid, newUser);
+              
+              if (isMounted.current) {
+                setUser(newUser);
+                setLoading(false);
+              }
 
               // Background SQL synchronization (Non-blocking migration step)
               fetch('/api/sync/user', {
@@ -294,7 +335,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const verifyInviteCode = async (code: string) => {
     if (!authUser) throw new Error("Not authenticated");
-    const newUser = await dbService.redeemInviteCode(
+    const newUser = await adminService.redeemInviteCode(
         code.trim(),
         authUser.uid,
         authUser.displayName || authUser.email?.split('@')[0] || 'Unnamed user',
