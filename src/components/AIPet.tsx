@@ -24,7 +24,7 @@ const TIPS = [
 ];
 
 export const AIPet = () => {
-  const { user, updateResources } = useAuth();
+  const { user, updateResources, isStudent } = useAuth();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const isRankPage = location.pathname.includes('leaderboard');
@@ -51,7 +51,6 @@ export const AIPet = () => {
   }, []);
 
   const { currentLevel } = useMemo(() => getUserLevelAndXP(user), [user]);
-  const isStudent = user?.role === 'student';
 
   const petStageLevel = useMemo(() => {
     if (currentLevel < 5) return 0;
@@ -94,7 +93,7 @@ export const AIPet = () => {
 
   // Wave or show tip every now and then to grab attention
   useEffect(() => {
-    if (!isOpen && user?.role === 'student') {
+    if (!isOpen && isStudent) {
       const interval = setInterval(() => {
         if (Math.random() > 0.5) {
           setIsWaving(true);
@@ -122,7 +121,7 @@ export const AIPet = () => {
       return;
     }
 
-    if (user.role === 'student' && !window.confirm(`Chatting with Nova costs ${chatCost} coins. Are you sure?`)) {
+    if (isStudent && !window.confirm(`Chatting with Nova costs ${chatCost} coins. Are you sure?`)) {
         return;
     }
 
@@ -130,7 +129,7 @@ export const AIPet = () => {
     setInputValue('');
     
     // Deduct coins first optimistically
-    if (user.role === 'student') {
+    if (isStudent) {
       dbService.spendCoins(user.id, chatCost, 'spend', 'AI Ace Interaction').catch(err => {
         console.warn("Background coin spend failed (quota limit?): ", err);
       });

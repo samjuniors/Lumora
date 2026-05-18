@@ -10,12 +10,12 @@ import { motion } from 'motion/react';
 export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClose: () => void }) => {
   const [amount, setAmount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+  const { user, isStudent, isAdmin } = useAuth();
   
   if (!user) return null;
   
   const { currentLevel } = getUserLevelAndXP(user);
-  const isEligible = user.role !== 'student' || currentLevel >= 3;
+  const isEligible = !isStudent || currentLevel >= 3;
 
   const handleSend = async () => {
     if (!user) return;
@@ -27,11 +27,11 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
       toast.error('Amount must be positive');
       return;
     }
-    if (user.coins < amount && user.role !== 'admin' && user.role !== 'superadmin') {
+    if (user.coins < amount && !isAdmin) {
       toast.error('Insufficient coins');
       return;
     }
-    if (amount > 500 && user.role === 'student') {
+    if (amount > 500 && isStudent) {
       toast.error('You can only send up to 500 coins at a time.');
       return;
     }
@@ -76,7 +76,7 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
 
         <p className="text-text-secondary mb-6">
           You are sending coins to <strong className="text-text-primary">{recipient.name}</strong>.
-          {user?.role === 'student' && ` Your current balance is ${user.coins} coins.`}
+          {isStudent && ` Your current balance is ${user.coins} coins.`}
         </p>
         
         {!isEligible && (
@@ -99,7 +99,7 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
             className="w-full px-4 py-3 bg-bg-main border border-border-main rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-bold text-lg disabled:opacity-50"
             placeholder="0"
             min="1"
-            max={user?.role === 'student' ? Math.min(user.coins, 500) : 100000}
+            max={isStudent ? Math.min(user.coins, 500) : 100000}
           />
         </div>
 
@@ -112,7 +112,7 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
           </button>
           <button
             onClick={handleSend}
-            disabled={loading || amount <= 0 || !isEligible || (user?.role === 'student' && amount > user.coins)}
+            disabled={loading || amount <= 0 || !isEligible || (isStudent && amount > user.coins)}
             className="flex-1 px-4 py-3 bg-brand-gold-hover text-bg-main rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
           >
              {loading ? 'Sending...' : 'Send Coins'}

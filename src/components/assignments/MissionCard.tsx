@@ -13,6 +13,8 @@ import { cn } from '../../lib/utils';
 import { Assignment } from '../../types';
 import { getAssignmentStatus, getStatusConfig } from '../../lib/assignmentUtils';
 
+import { useAuth } from '../../context/AuthContext';
+
 interface MissionCardProps {
     assignment: Assignment;
     user: any;
@@ -22,7 +24,8 @@ interface MissionCardProps {
 
 export const MissionCard = ({ assignment, user, enrollments = [], onEdit }: MissionCardProps) => {
     const navigate = useNavigate();
-    const status = getAssignmentStatus(assignment, enrollments, user?.role, user?.id);
+    const { isAdmin, isStudent } = useAuth();
+    const status = getAssignmentStatus(assignment, enrollments, isStudent, user?.id);
     const config = getStatusConfig(status, assignment.isBonus);
     
     return (
@@ -79,7 +82,7 @@ export const MissionCard = ({ assignment, user, enrollments = [], onEdit }: Miss
             <div className="mt-auto flex items-center justify-between gap-4">
                 <p className="text-xs text-text-secondary font-medium line-clamp-1 flex-1">{assignment.description}</p>
                 <div className="flex items-center gap-2">
-                    {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    {isAdmin && (
                         <button 
                             onClick={(e) => { e.stopPropagation(); onEdit?.(assignment); }}
                             className="p-2 bg-navy-800 hover:bg-navy-700 text-text-secondary hover:text-brand-gold rounded-lg transition-colors border border-navy-700"

@@ -1,10 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import path from "path";
+import multer from "multer";
 import { GoogleGenAI } from "@google/genai";
 import webpush from "web-push";
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // VAPID keys for push notifications lazily
 let vapidConfigured = false;
@@ -29,6 +29,11 @@ async function startServer() {
   const PORT = Number(process.env.PORT) || 3000;
 
   app.use(express.json());
+  
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 15 * 1024 * 1024 }, // 15MB limit
+  });
 
   let aiClient: GoogleGenAI | null = null;
 
@@ -51,13 +56,14 @@ async function startServer() {
     if (!s3Client && process.env.R2_ACCESS_KEY_ID) {
       s3Client = new S3Client({
         region: "auto",
-        endpoint: process.env.R2_ENDPOINT,
+        endpoint: process.env.R2_ENDPOINT?.trim().replace(/\/$/, ""),
         credentials: {
-          accessKeyId: process.env.R2_ACCESS_KEY_ID!,
-          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+          accessKeyId: process.env.R2_ACCESS_KEY_ID!.trim(),
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!.trim(),
         },
         requestChecksumCalculation: "WHEN_REQUIRED",
-        responseChecksumValidation: "WHEN_REQUIRED"
+        responseChecksumValidation: "WHEN_REQUIRED",
+        forcePathStyle: true
       });
     }
     return s3Client;
@@ -279,30 +285,34 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
   });
 
   // Storage R2 Routes
-  app.post("/api/storage/presign", async (req, res) => {
+  app.post("/api/storage/upload", upload.single('file'), async (req, res) => {
     try {
       const s3 = getS3();
       if (!s3 || !process.env.R2_BUCKET_NAME) {
         return res.status(503).json({ error: "Storage Service Offline or Misconfigured" });
       }
-      
-      const { fileName, fileType, path } = req.body;
-      const key = `${path}/${Date.now()}_${fileName}`;
-      const bucket = process.env.R2_BUCKET_NAME;
+
+      if (!req.file) {
+        return res.status(400).json({ error: "No file provided" });
+      }
+
+      const { path } = req.body;
+      const key = `${path}/${Date.now()}_${req.file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const bucket = process.env.R2_BUCKET_NAME!.trim();
 
       const command = new PutObjectCommand({
         Bucket: bucket,
         Key: key,
-        ContentType: fileType,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
       });
 
-      // Disable checksums to avoid signature errors when frontend uploads files to Cloudflare R2
-      const url = await getSignedUrl(s3, command, { expiresIn: 3600, signableHeaders: new Set() });
-      const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${key}`;
-
-      res.json({ uploadUrl: url, publicUrl });
+      await s3.send(command);
+      
+      const publicUrl = `${process.env.VITE_R2_PUBLIC_URL!.trim()}/${key}`;
+      res.json({ publicUrl, key });
     } catch (err: any) {
-      console.error("[Storage Presign] Error:", err);
+      console.error("[Storage Upload] Error:", err);
       res.status(500).json({ error: err.message });
     }
   });

@@ -1,6 +1,10 @@
 import {StrictMode, Component, ReactNode} from 'react';
 import {createRoot} from 'react-dom/client';
+import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
+
+// Import your Publishable Key
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || '';
 import './index.css';
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -32,12 +36,22 @@ class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean,
   }
 }
 
-createRoot(document.getElementById('root')!).render(
+const appContent = (
   <StrictMode>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-  </StrictMode>,
+  </StrictMode>
+);
+
+createRoot(document.getElementById('root')!).render(
+  PUBLISHABLE_KEY ? (
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      {appContent}
+    </ClerkProvider>
+  ) : (
+    appContent
+  )
 );
 
 if ('serviceWorker' in navigator) {

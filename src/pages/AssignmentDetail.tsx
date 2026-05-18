@@ -21,8 +21,6 @@ import {
   submissionService,
   storageService
 } from "../services/dbProvider";
-import { db } from "../services/firebase";
-import { doc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/errorHandling";
 import { Assignment, Submission, Enrollment, Attachment } from "../types";
 import { assessSubmission } from "../services/aiService";
@@ -64,7 +62,7 @@ import { ProgressBar } from "../components/CommonUI";
 export const AssignmentDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, updateResources, setUser } = useAuth();
+  const { user, updateResources, setUser, isStudent, isAdmin } = useAuth();
   const { playSound } = useSound();
 
   // Queries
@@ -72,19 +70,19 @@ export const AssignmentDetail = () => {
   const { data: studentEnrollments = [], isLoading: isEnrollmentsLoading } = useStudentEnrollments(user?.id);
   const { data: studentSubmissions = [], isLoading: isSubmissionsLoading } = useStudentSubmissions(user?.id);
   
-  const { data: adminSubmissions = [], isLoading: isAdminSubmissionsLoading } = useAssignmentSubmissions(user?.role !== 'student' ? id : undefined);
-  const { data: adminEnrollments = [], isLoading: isAdminEnrollmentsLoading } = useAssignmentEnrollments(user?.role !== 'student' ? id : undefined);
+  const { data: adminSubmissions = [], isLoading: isAdminSubmissionsLoading } = useAssignmentSubmissions(!isStudent ? id : undefined);
+  const { data: adminEnrollments = [], isLoading: isAdminEnrollmentsLoading } = useAssignmentEnrollments(!isStudent ? id : undefined);
 
   // Derived state
   const enrollment = useMemo(() => {
-    if (user?.role !== 'student' || !studentEnrollments) return null;
+    if (!isStudent || !studentEnrollments) return null;
     return studentEnrollments.find(e => e.assignmentId === id) || null;
-  }, [studentEnrollments, user, id]);
+  }, [studentEnrollments, isStudent, id]);
 
   const submission = useMemo(() => {
-    if (user?.role !== 'student' || !studentSubmissions) return null;
+    if (!isStudent || !studentSubmissions) return null;
     return studentSubmissions.filter(s => s.assignmentId === id).sort((a,b) => b.submittedAt - a.submittedAt)[0] || null;
-  }, [studentSubmissions, user, id]);
+  }, [studentSubmissions, isStudent, id]);
 
   // Mutations
   const enrollMutation = useEnrollMutation();
@@ -119,8 +117,8 @@ export const AssignmentDetail = () => {
   const isMounted = useRef(true);
 
   const loading = isAssignmentLoading || 
-                  (user?.role === 'student' && (isEnrollmentsLoading || isSubmissionsLoading)) ||
-                  (user?.role !== 'student' && (isAdminSubmissionsLoading || isAdminEnrollmentsLoading));
+                  (isStudent && (isEnrollmentsLoading || isSubmissionsLoading)) ||
+                  (!isStudent && (isAdminSubmissionsLoading || isAdminEnrollmentsLoading));
 
   useEffect(() => {
     if (!loading && submission && isFirstLoad.current) {
@@ -709,7 +707,7 @@ export const AssignmentDetail = () => {
                   </span>
                 )}
                 <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{assignment.subject || 'Strategic Objective'}</span>
-                {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                {isAdmin && (
                   <button 
                     onClick={() => navigate('/assignments', { state: { editId: assignment.id } })}
                     className="flex items-center gap-1 text-brand-gold hover:text-white transition font-bold text-[10px] uppercase tracking-wider ml-2"
@@ -763,7 +761,7 @@ export const AssignmentDetail = () => {
         </div>
       </motion.div>
 
-      {user?.role === "student" && !enrollment && (
+      {isStudent && !enrollment && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -822,7 +820,7 @@ export const AssignmentDetail = () => {
         </motion.div>
       )}
 
-      {user?.role === "student" && enrollment && (
+      {isStudent && enrollment && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Editor Area */}
           <div className="card-premium p-6 md:p-8 space-y-6">
@@ -994,7 +992,7 @@ export const AssignmentDetail = () => {
       )}
 
 
-      {(user?.role === "admin" || user?.role === "superadmin") && (
+      {isAdmin && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

@@ -1,28 +1,17 @@
 import { IStorageService } from '../interfaces/IStorageService';
 import { Attachment } from '../../types';
 import { toast } from 'react-hot-toast';
-import { ref, deleteObject } from 'firebase/storage';
-import { storage } from '../firebase';
 
 export class CloudflareR2StorageService implements IStorageService {
   private r2PublicUrl = import.meta.env.VITE_R2_PUBLIC_URL;
 
   async uploadFile(file: File, path: string, onProgress?: (progress: number) => void): Promise<string> {
     try {
-      const response = await fetch('/api/storage/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileName: file.name, fileType: file.type, path }),
-      });
-
-      if (!response.ok) {
-         const errorData = await response.json();
-         throw new Error(errorData.error || 'Failed to get upload URL');
-      }
-
-      const { uploadUrl, publicUrl } = await response.json();
-
       return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('path', path);
+
         const xhr = new XMLHttpRequest();
         
         xhr.upload.addEventListener('progress', (event) => {
@@ -34,18 +23,27 @@ export class CloudflareR2StorageService implements IStorageService {
 
         xhr.addEventListener('load', () => {
           if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(publicUrl);
+            try {
+              const response = JSON.parse(xhr.responseText);
+              resolve(response.publicUrl);
+            } catch(e) {
+              reject(new Error('Invalid response from server'));
+            }
           } else {
-            reject(new Error(`Upload failed with status ${xhr.status}`));
+            let errMsg = 'Upload failed';
+            try {
+              errMsg = JSON.parse(xhr.responseText).error || errMsg;
+            } catch(e) {}
+            reject(new Error(`${errMsg} (status ${xhr.status})`));
           }
         });
 
         xhr.addEventListener('error', () => reject(new Error('Network error during upload')));
         xhr.addEventListener('abort', () => reject(new Error('Upload aborted')));
 
-        xhr.open('PUT', uploadUrl);
-        xhr.setRequestHeader('Content-Type', file.type);
-        xhr.send(file);
+        xhr.open('POST', '/api/storage/upload');
+        // Do NOT set Content-Type header manually when sending FormData
+        xhr.send(formData);
       });
     } catch (error: any) {
       console.error('Error uploading to R2:', error);
@@ -90,10 +88,8 @@ export class CloudflareR2StorageService implements IStorageService {
         });
 
         if (!response.ok) throw new Error('Failed to delete from R2');
-      } else if (url.includes('firebasestorage.googleapis.com')) {
-        // Firebase deletion (legacy)
-        const storageRef = ref(storage, url);
-        await deleteObject(storageRef);
+      } else {
+        console.warn('Unknown storage provider or legacy URL encountered during deletion:', url);
       }
     } catch (error: any) {
       console.error('Error deleting file:', error);

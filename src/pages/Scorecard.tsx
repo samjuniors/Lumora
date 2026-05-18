@@ -96,7 +96,7 @@ const ScorecardAssessmentItem = ({ item }: { item: any }) => {
 
 export const Scorecard = () => {
   const { studentId } = useParams();
-  const { user } = useAuth();
+  const { user, isStudent } = useAuth();
   const navigate = useNavigate();
   
   const [targetStudent, setTargetStudent] = useState<User | null>(null);
@@ -115,7 +115,7 @@ export const Scorecard = () => {
       return; 
     }
 
-    if (!studentId && user?.role !== 'student') {
+    if (!studentId && !isStudent) {
       setLoading(false);
       return;
     }
@@ -267,7 +267,7 @@ export const Scorecard = () => {
     };
   }, [assignments, submissions]);
 
-  if (!studentId && user?.role !== 'student') {
+  if (!studentId && !isStudent) {
     return (
       <div className="flex flex-col h-[80vh] items-center justify-center p-8 text-center space-y-4">
         <Target className="w-16 h-16 text-indigo-200" />
@@ -295,7 +295,7 @@ export const Scorecard = () => {
       animate={{ opacity: 1 }}
       className="max-w-6xl mx-auto px-4 pb-8 space-y-6 md:space-y-8 pt-4 md:pt-0"
     >
-      <button onClick={() => navigate(user?.role === 'student' ? '/profile' : '/admin')} className="flex items-center gap-2 text-text-secondary hover:text-white transition font-bold bg-navy-900 border border-navy-700/50 hover:bg-navy-800 w-fit px-4 py-2 rounded-xl shadow-soft group">
+      <button onClick={() => navigate(isStudent ? '/profile' : '/admin')} className="flex items-center gap-2 text-text-secondary hover:text-white transition font-bold bg-navy-900 border border-navy-700/50 hover:bg-navy-800 w-fit px-4 py-2 rounded-xl shadow-soft group">
          <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Back
       </button>
 

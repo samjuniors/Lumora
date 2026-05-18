@@ -27,7 +27,7 @@ import { AssignmentCalendar } from '../components/AssignmentCalendar';
 import { CompletedMissionsStack } from '../components/CompletedMissionsStack';
 
 export const Assignments = () => {
-    const { user } = useAuth();
+    const { user, isStudent, isAdmin } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -40,7 +40,7 @@ export const Assignments = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('campaign');
 
-    const isLoading = isAssignmentsLoading || (user?.role === 'student' && isEnrollmentsLoading);
+    const isLoading = isAssignmentsLoading || (isStudent && isEnrollmentsLoading);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -58,7 +58,7 @@ export const Assignments = () => {
 
     // Student global filtering logic
     const visibleAssignments = useMemo(() => {
-        if (user?.role !== 'student') return assignments;
+        if (!isStudent) return assignments;
         
         return assignments.filter(a => {
             if (a.isGlobal === true) return true;
@@ -79,7 +79,7 @@ export const Assignments = () => {
         const start = a.startDate || 0;
         const hasStarted = now >= start;
 
-        if (user?.role === 'student') {
+        if (isStudent) {
             const enr = studentEnrollments.find(e => e.assignmentId === a.id);
             const isFinished = enr && (enr.status === 'submitted' || enr.status === 'graded');
             if (isFinished) return 'completed';
@@ -155,7 +155,7 @@ export const Assignments = () => {
                         </button>
                     </div>
 
-                    {(user?.role === 'admin' || user?.role === 'superadmin') && (
+                    {isAdmin && (
                         <button 
                             onClick={() => setShowCreateModal(true)}
                             className="bg-brand-gold text-navy-950 px-4 md:px-5 py-2.5 rounded-xl font-bold text-[10px] uppercase tracking-wider flex items-center gap-2 shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all"
@@ -204,7 +204,7 @@ export const Assignments = () => {
                                     key={group.id}
                                     group={group}
                                     enrollments={studentEnrollments}
-                                    userRole={user?.role}
+                                    isStudent={isStudent}
                                     userId={user?.id}
                                     onEdit={setEditingAssignment}
                                 />
@@ -213,7 +213,7 @@ export const Assignments = () => {
                     )}
 
 
-                    {user?.role === 'student' && <CompletedMissionsStack />}
+                    {isStudent && <CompletedMissionsStack />}
                 </div>
             )}
 

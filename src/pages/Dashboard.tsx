@@ -47,7 +47,7 @@ import {
 import { useAssignments, useStudentEnrollments } from "../hooks/queries/useAssignments";
 
 export const Dashboard = () => {
-  const { user, updateResources } = useAuth();
+  const { user, updateResources, isStudent, isAdmin } = useAuth();
   
   const { data: assignments = [], isLoading: isAssignmentsLoading } = useAssignments();
   const { data: studentEnrollments = [], isLoading: isEnrollmentsLoading } = useStudentEnrollments(user?.id);
@@ -71,7 +71,7 @@ export const Dashboard = () => {
     setPlatformEvents(events);
   }, []);
 
-  if (user?.role === "admin" || user?.role === "superadmin") {
+  if (isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
@@ -134,7 +134,7 @@ export const Dashboard = () => {
   }, [user?.id]);
 
   const visibleAssignments = useMemo(() => {
-    if (user?.role !== 'student') return assignments;
+    if (!isStudent) return assignments;
     return assignments.filter(a => {
       if (a.isGlobal) return true;
       return a.allowedStudents?.includes(user!.id) || (user!.email && a.allowedStudents?.includes(user!.email.toLowerCase()));
@@ -315,7 +315,8 @@ export const Dashboard = () => {
                 key={group.name}
                 group={group}
                 enrollments={studentEnrollments}
-                userRole={user?.role}
+                isStudent={isStudent}
+                userId={user?.id}
               />
             ))}
           </div>

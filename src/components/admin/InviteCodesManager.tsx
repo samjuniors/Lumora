@@ -8,7 +8,7 @@ import { InviteCode, Role } from '../../types';
 import { cn } from '../../lib/utils';
 
 export const InviteCodesManager = () => {
-    const { user } = useAuth();
+    const { user, isSuperAdmin } = useAuth();
     const [codes, setCodes] = useState<InviteCode[]>([]);
     const [loading, setLoading] = useState(false);
     
@@ -112,8 +112,8 @@ export const InviteCodesManager = () => {
                                 className="w-full px-5 py-3.5 bg-bg-main border border-border-main text-text-primary rounded-[18px] outline-none focus:bg-bg-surface focus:border-brand-gold transition-all appearance-none font-bold"
                             >
                                 <option value="student" className="bg-bg-surface text-text-primary">Student</option>
-                                {user?.role === 'superadmin' && <option value="admin" className="bg-bg-surface text-text-primary">Admin</option>}
-                                {user?.role === 'superadmin' && <option value="superadmin" className="bg-bg-surface text-text-primary">Superadmin</option>}
+                                {isSuperAdmin && <option value="admin" className="bg-bg-surface text-text-primary">Admin</option>}
+                                {isSuperAdmin && <option value="superadmin" className="bg-bg-surface text-text-primary">Superadmin</option>}
                             </select>
                             <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-secondary/80">
                                 <Filter className="w-4 h-4" />

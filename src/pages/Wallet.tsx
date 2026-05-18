@@ -206,7 +206,7 @@ export const Wallet = () => {
 };
 
 const RechargeModal = ({ onClose, onComplete, settings }: any) => {
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const [amount, setAmount] = useState<number | ''>(100);
   const [step, setStep] = useState(1);
   const [utr, setUtr] = useState('');
@@ -309,7 +309,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                  <p className="mt-0.5 text-text-secondary">Coins allow you to enroll in premium assignments, bypass penalties, and support the platform.</p>
                </div>
             </div>
-            {!hasPaymentMethod && user?.role !== 'superadmin' && (
+            {!hasPaymentMethod && !isSuperAdmin && (
                <div className="bg-error/10 text-error p-3 rounded-lg text-sm mb-4 border border-error/20">Payment details are not configured by the admin yet.</div>
             )}
             <p className="text-text-secondary text-sm font-medium">Select a recharge package</p>
@@ -343,7 +343,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                  </span>
               </div>
             </div>
-            {user?.role === 'superadmin' ? (
+            {isSuperAdmin ? (
                 <button disabled={!amount || amount <= 0 || loading} onClick={async () => {
                     if (!amount || amount <= 0) return;
                     setLoading(true);

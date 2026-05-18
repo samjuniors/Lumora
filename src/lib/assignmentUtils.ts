@@ -11,7 +11,7 @@ export interface MissionState {
 export const getAssignmentStatus = (
   assignment: Assignment,
   enrollments: Enrollment[],
-  userRole?: string,
+  isStudent?: boolean,
   userId?: string
 ): MissionStatus => {
   const now = Date.now();
@@ -19,7 +19,7 @@ export const getAssignmentStatus = (
   const start = assignment.startDate || 0;
   const hasStarted = now >= start;
 
-  if (userRole === 'student' && userId) {
+  if (isStudent && userId) {
     const enr = enrollments.find(e => e.assignmentId === assignment.id && e.studentId === userId);
     const isFinished = enr && (enr.status === 'submitted' || enr.status === 'graded');
     if (isFinished) return 'completed';

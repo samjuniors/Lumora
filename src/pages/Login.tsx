@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { LogIn, Key, AlertCircle, Sparkles, User as UserIcon, Mail, Lock } from 'lucide-react';
-import { dbService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../components/Logo';
 import { handleAsyncError } from '../lib/errorHandling';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
-import { auth, appleProvider, googleProvider } from '../services/firebase';
+import { SignIn, SignUp } from '@clerk/clerk-react';
+
+const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 export const Login = () => {
-  const { user, firebaseUser, logOut, isAdmin, setUser } = useAuth();
+  const { user, authUser, logOut, isAdmin, setUser, signInWithEmail, signUpWithEmail, signInWithProvider, verifyInviteCode } = useAuth();
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -24,20 +24,13 @@ export const Login = () => {
 
   const handleVerifyInvite = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteCode.trim() || !firebaseUser) return;
+    if (!inviteCode.trim() || !authUser) return;
     
     setLoading(true);
     setErrorMsg('');
     
     try {
-        const newUser = await dbService.redeemInviteCode(
-            inviteCode.trim(),
-            firebaseUser.uid,
-            firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Unnamed user',
-            firebaseUser.email || ''
-        );
-
-        setUser(newUser);
+        await verifyInviteCode(inviteCode);
         toast.success("Welcome aboard!");
     } catch (err: any) {
       setErrorMsg(err.message || 'Failed to process invite code');
@@ -52,9 +45,9 @@ export const Login = () => {
     setLoading(true);
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmail(email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        await signUpWithEmail(email, password);
       }
     } catch (err: any) {
       if (err.code === 'auth/operation-not-allowed') {
@@ -70,10 +63,10 @@ export const Login = () => {
     }
   };
 
-  const handleProviderSignIn = async (provider: any) => {
+  const handleProviderSignIn = async (providerName: 'google' | 'apple') => {
     setErrorMsg('');
     try {
-      await signInWithPopup(auth, provider);
+      await signInWithProvider(providerName);
     } catch (error: any) {
       if (error?.code === 'auth/operation-not-allowed') {
         setErrorMsg('This provider is not enabled in Firebase. Please enable it in the Firebase Console (Authentication > Sign-in method).');
@@ -104,7 +97,7 @@ export const Login = () => {
           transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
           className="bg-bg-surface/80 backdrop-blur-xl p-8 rounded-3xl border border-border-main shadow-2xl"
         >
-          {firebaseUser && !user ? (
+          {authUser && !user ? (
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -116,6 +109,27 @@ export const Login = () => {
               <h2 className="text-2xl font-bold text-text-primary tracking-tight">Setting up your profile...</h2>
               <p className="text-text-secondary text-sm mt-2 font-medium">Please wait while we initialize your account.</p>
             </motion.div>
+          ) : CLERK_PUBLISHABLE_KEY ? (
+            <div className="flex justify-center flex-col items-center max-w-sm">
+                <h2 className="text-2xl font-bold text-text-primary tracking-tight text-center mb-6">{isLogin ? 'Welcome back' : 'Create an account'}</h2>
+               {isLogin ? (
+                  <SignIn routing="hash" fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard" />
+               ) : (
+                  <SignUp routing="hash" fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard" />
+               )}
+               <div className="text-center mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setErrorMsg('');
+                  }}
+                  className="text-sm text-text-secondary hover:text-text-primary transition-colors font-medium"
+                >
+                  {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
+                </button>
+              </div>
+            </div>
           ) : (
             <motion.div 
               initial={{ opacity: 0 }}
@@ -196,7 +210,7 @@ export const Login = () => {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => handleProviderSignIn(googleProvider)}
+                  onClick={() => handleProviderSignIn('google')}
                   className="flex items-center justify-center gap-2 bg-bg-main border border-border-main text-text-primary px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:bg-bg-surface-hover shadow-sm"
                 >
                   <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />

@@ -19,14 +19,14 @@ interface DailyReward {
 }
 
 export const DailyRewardModal = () => {
-  const { user } = useAuth();
+  const { user, isStudent } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimedReward, setClaimedReward] = useState<DailyReward | null>(null);
   const { playSound } = useSound();
 
   useEffect(() => {
-    if (user?.role !== 'student') return;
+    if (!isStudent || !user) return;
     
     const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
     const year = nowIST.getFullYear();

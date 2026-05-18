@@ -7,14 +7,13 @@ import { toast } from 'react-hot-toast';
 import { dbService } from '../services/dbProvider';
 
 export const AdminPet: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<string | null>(null);
   const [lastTemplate, setLastTemplate] = useState<any | null>(null);
 
-  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
 
   if (!isAdmin) return null;
 

@@ -10,24 +10,24 @@ import { getAssignmentStatus, getStatusConfig } from '../lib/assignmentUtils';
 interface AssignmentGroupCardProps { 
   group: { id?: string, name: string, items: Assignment[] }; 
   enrollments: Enrollment[]; 
-  userRole?: string; 
+  isStudent?: boolean; 
   userId?: string;
   onEdit?: (a: Assignment) => void;
 }
 
-export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group, enrollments, userRole, userId, onEdit }) => {
+export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group, enrollments, isStudent, userId, onEdit }) => {
   const navigate = useNavigate();
   const now = Date.now();
   
   const sortedItems = [...group.items].sort((a, b) => (a.startDate || a.dueDate) - (b.startDate || b.dueDate));
 
   const getMissionState = (a: Assignment) => {
-    const status = getAssignmentStatus(a, enrollments, userRole, userId);
+    const status = getAssignmentStatus(a, enrollments, isStudent, userId);
     
-    if (userRole === 'student' && userId) {
+    if (isStudent && userId) {
       const index = sortedItems.findIndex(item => item.id === a.id);
       if (index > 0) {
-        const prevStatus = getAssignmentStatus(sortedItems[index-1], enrollments, userRole, userId);
+        const prevStatus = getAssignmentStatus(sortedItems[index-1], enrollments, isStudent, userId);
         if (prevStatus !== 'completed' && prevStatus !== 'missed') {
           return { status, locked: true };
         }
