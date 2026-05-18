@@ -1,8 +1,28 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSound } from "../hooks/useSound";
-import { dbService } from "../services/dbProvider";
+import { 
+  useAssignment, 
+  useStudentEnrollments, 
+  useStudentSubmissions,
+  useAssignmentSubmissions,
+  useAssignmentEnrollments,
+  useEnrollMutation,
+  useSubmissionMutation,
+  assignmentKeys,
+  submissionKeys
+} from '../hooks/queries/useAssignments';
+import { queryClient } from '../lib/queryClient';
+import { 
+  userService, 
+  assignmentService,
+  walletService,
+  submissionService,
+  storageService
+} from "../services/dbProvider";
+import { db } from "../services/firebase";
+import { doc } from "firebase/firestore";
 import { handleFirestoreError, OperationType } from "../lib/errorHandling";
 import { Assignment, Submission, Enrollment, Attachment } from "../types";
 import { assessSubmission } from "../services/aiService";
@@ -37,6 +57,7 @@ import Markdown from "react-markdown";
 import { motion, AnimatePresence } from "motion/react";
 import Confetti from "react-confetti";
 import { ExpandableText } from "../components/ExpandableText";
+import { ProgressBar } from "../components/CommonUI";
 // Note: we're using base64 for simplicity in prototype due to Firebase Storage Rules constraint
 // In production, upload to Storage and use Firebase Functions + Vertex AI for larger max payload.
 
@@ -46,21 +67,41 @@ export const AssignmentDetail = () => {
   const { user, updateResources, setUser } = useAuth();
   const { playSound } = useSound();
 
-  const [assignment, setAssignment] = useState<Assignment | null>(null);
-  const [enrollment, setEnrollment] = useState<Enrollment | null>(null);
-  const [submission, setSubmission] = useState<Submission | null>(null);
-  const [adminSubmissions, setAdminSubmissions] = useState<Submission[]>([]);
-  const [adminEnrollments, setAdminEnrollments] = useState<Enrollment[]>([]);
+  // Queries
+  const { data: assignment, isLoading: isAssignmentLoading } = useAssignment(id || '');
+  const { data: studentEnrollments = [], isLoading: isEnrollmentsLoading } = useStudentEnrollments(user?.id);
+  const { data: studentSubmissions = [], isLoading: isSubmissionsLoading } = useStudentSubmissions(user?.id);
+  
+  const { data: adminSubmissions = [], isLoading: isAdminSubmissionsLoading } = useAssignmentSubmissions(user?.role !== 'student' ? id : undefined);
+  const { data: adminEnrollments = [], isLoading: isAdminEnrollmentsLoading } = useAssignmentEnrollments(user?.role !== 'student' ? id : undefined);
+
+  // Derived state
+  const enrollment = useMemo(() => {
+    if (user?.role !== 'student' || !studentEnrollments) return null;
+    return studentEnrollments.find(e => e.assignmentId === id) || null;
+  }, [studentEnrollments, user, id]);
+
+  const submission = useMemo(() => {
+    if (user?.role !== 'student' || !studentSubmissions) return null;
+    return studentSubmissions.filter(s => s.assignmentId === id).sort((a,b) => b.submittedAt - a.submittedAt)[0] || null;
+  }, [studentSubmissions, user, id]);
+
+  // Mutations
+  const enrollMutation = useEnrollMutation();
+  const submissionMutation = useSubmissionMutation();
+
   const [inspectingSubmission, setInspectingSubmission] =
     useState<Submission | null>(null);
 
   const [content, setContent] = useState("");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [enrolling, setEnrolling] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [isDoubleDown, setIsDoubleDown] = useState(false);
 
+  const [isEditing, setIsEditing] = useState(false);
   const [timeLeftStr, setTimeLeftStr] = useState<string>("");
   const [isTimeUp, setIsTimeUp] = useState(false);
 
@@ -73,6 +114,28 @@ export const AssignmentDetail = () => {
 
   const [tabSwitches, setTabSwitches] = useState(0);
   const [pasteCount, setPasteCount] = useState(0);
+
+  const isFirstLoad = useRef(true);
+  const isMounted = useRef(true);
+
+  const loading = isAssignmentLoading || 
+                  (user?.role === 'student' && (isEnrollmentsLoading || isSubmissionsLoading)) ||
+                  (user?.role !== 'student' && (isAdminSubmissionsLoading || isAdminEnrollmentsLoading));
+
+  useEffect(() => {
+    if (!loading && submission && isFirstLoad.current) {
+      setContent(submission.content || "");
+      if (submission.attachments) setAttachments(submission.attachments);
+      isFirstLoad.current = false;
+    }
+  }, [loading, submission]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -111,7 +174,7 @@ export const AssignmentDetail = () => {
 
     const endTime = enrollment.graceDeadline
       ? enrollment.graceDeadline
-      : enrollment.enrolledAt + assignment.timeLimitMinutes * 60 * 1000;
+      : enrollment.enrolledAt + (assignment?.timeLimitMinutes || 0) * 60 * 1000;
 
     const interval = setInterval(() => {
       const now = Date.now();
@@ -134,47 +197,10 @@ export const AssignmentDetail = () => {
   }, [enrollment, assignment, submission]);
 
   useEffect(() => {
-    fetchData();
-  }, [id, user?.id, user?.role]);
-
-  const fetchData = async () => {
-    if (!id || !user) return;
-    try {
-      const ass = await dbService.getAssignment(id);
-      if (ass)
-        setAssignment(ass);
-      else {
-        navigate("/assignments");
-        return;
-      }
-
-      if (user.role === "student") {
-        const enrollments = await dbService.getEnrollmentsByStudent(user.id);
-        const enr = enrollments.find(e => e.assignmentId === id);
-        if (enr) {
-          setEnrollment(enr);
-        }
-
-        const subs = await dbService.getSubmissionsByStudent(user.id);
-        const sub = subs.filter(s => s.assignmentId === id).sort((a,b) => b.submittedAt - a.submittedAt)[0];
-        if (sub) {
-          setSubmission(sub);
-          setContent(sub.content);
-          if (sub.attachments) setAttachments(sub.attachments);
-        }
-      } else {
-        const allEnrollments = await dbService.getAllEnrollments();
-        setAdminEnrollments(allEnrollments.filter(e => e.assignmentId === id));
-
-        const allSubs = await dbService.getSubmissionsByAssignment(id);
-        setAdminSubmissions(allSubs);
-      }
-    } catch (err) {
-      handleFirestoreError(err, OperationType.LIST, `assignment_detail_${id}`);
-    } finally {
-      setLoading(false);
+    if (!loading && !assignment) {
+      navigate("/assignments");
     }
-  };
+  }, [loading, assignment, navigate]);
 
   const consumeItem = async (itemId: string): Promise<boolean> => {
     if (!user || !user.inventory || !user.inventory.includes(itemId))
@@ -185,7 +211,7 @@ export const AssignmentDetail = () => {
       const index = newInventory.indexOf(itemId);
       newInventory.splice(index, 1);
 
-      await dbService.updateUser(user.id, {
+      await userService.updateUser(user.id, {
         inventory: newInventory,
       });
       // Update local state by reference
@@ -235,19 +261,19 @@ export const AssignmentDetail = () => {
     setEnrolling(true);
     try {
       if (totalFee > 0) {
-        await dbService.updateUser(user.id, {
+        await userService.updateUser(user.id, {
           coins: user.coins - totalFee,
           updatedAt: Date.now()
         });
 
-        await dbService.createTransaction({
+        await walletService.createTransaction({
           senderId: user.id,
           receiverId: "SYSTEM",
           amount: totalFee,
           type:
             isLateToEnroll && !consumedLatePass
               ? "late_enrollment_fee"
-              : (isDoubleDown ? "spend" : "enrollment_fee"), // Use spend for double down for now or add new type
+              : (isDoubleDown ? "spend" : "enrollment_fee"),
           status: "completed",
           message: isDoubleDown ? "High-Stakes Double Down Enrollment" : undefined,
           timestamp: Date.now(),
@@ -264,13 +290,11 @@ export const AssignmentDetail = () => {
         updatedAt: Date.now(),
       };
       
-      const enrollId = await dbService.createEnrollment(newEnroll);
-      const fullEnroll = { id: enrollId, ...newEnroll };
+      await enrollMutation.mutateAsync(newEnroll);
       
       if (totalFee > 0) {
         updateResources({ coins: user.coins - totalFee });
       }
-      setEnrollment(fullEnroll);
     } catch (err: any) {
       handleFirestoreError(err, OperationType.WRITE, `enrollments/${user.id}`);
     } finally {
@@ -282,56 +306,37 @@ export const AssignmentDetail = () => {
     const files = e.target.files;
     if (!files) return;
 
-    Array.from(files).forEach((file: File) => {
+    const newFiles = Array.from(files).filter(file => {
       const isImage = file.type.startsWith("image/");
-      if (!isImage && file.size > 500 * 1024) {
-        toast.error(`${file.name} is too large. Max 500KB for non-images.`);
-        return;
-      }
-      if (isImage && file.size > 5 * 1024 * 1024) {
-        toast.error(`${file.name} is too large. Max 5MB for images.`);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const result = event.target?.result as string;
-        if (result) {
-          if (isImage) {
-            const img = new Image();
-            img.onload = () => {
-              const canvas = document.createElement("canvas");
-              let w = img.width;
-              let h = img.height;
-              const maxD = 1200;
-              if (w > maxD || h > maxD) {
-                if (w > h) { h = Math.round((h * maxD) / w); w = maxD; }
-                else { w = Math.round((w * maxD) / h); h = maxD; }
-              }
-              canvas.width = w; canvas.height = h;
-              const ctx = canvas.getContext("2d");
-              ctx?.drawImage(img, 0, 0, w, h);
-              const compressedResult = canvas.toDataURL("image/jpeg", 0.6);
-              setAttachments((prev) => [
-                ...prev,
-                { name: file.name, type: "image/jpeg", url: compressedResult },
-              ]);
-            };
-            img.src = result;
-          } else {
-            setAttachments((prev) => [
-              ...prev,
-              { name: file.name, type: file.type, url: result },
-            ]);
-          }
-        }
-      };
-      reader.readAsDataURL(file);
+      return storageService.validateFile(file, {
+        maxSize: isImage ? 5 * 1024 * 1024 : 500 * 1024,
+        allowedTypes: isImage ? ['image/*'] : ['application/pdf', 'video/*']
+      });
     });
+
+    setPendingFiles(prev => [...prev, ...newFiles]);
+    
+    // For immediate UI feedback, we can show placeholders or local previews if we wanted, 
+    // but for now let's just show the file names in the list.
+    const newAttachments: Attachment[] = newFiles.map(file => ({
+      name: file.name,
+      type: file.type,
+      url: URL.createObjectURL(file) // temporary local URL for preview
+    }));
+    
+    setAttachments(prev => [...prev, ...newAttachments]);
   };
 
   const removeAttachment = (index: number) => {
+    const attToRemove = attachments[index];
+    if (attToRemove.url.startsWith('blob:')) {
+       URL.revokeObjectURL(attToRemove.url);
+    }
+    
     setAttachments((prev) => prev.filter((_, i) => i !== index));
+    // Also remove from pending if it was there
+    const fileName = attToRemove.name;
+    setPendingFiles(prev => prev.filter(f => f.name !== fileName));
   };
 
   const handleSubmit = async () => {
@@ -364,12 +369,12 @@ export const AssignmentDetail = () => {
         }
         
         // deduct 30 coins
-        await dbService.updateUser(user!.id, {
+        await userService.updateUser(user!.id, {
           coins: user!.coins - 30,
           updatedAt: Date.now()
         });
         
-        await dbService.createTransaction({
+        await walletService.createTransaction({
           senderId: user!.id,
           receiverId: "SYSTEM",
           amount: 30,
@@ -386,25 +391,27 @@ export const AssignmentDetail = () => {
     }
 
     setSubmitting(true);
+    setUploadProgress(0);
     try {
+      // 1. Upload pending files
+      let finalAttachments = attachments.filter(a => !a.url.startsWith('blob:'));
+      if (pendingFiles.length > 0) {
+        const uploaded = await storageService.uploadAttachments(
+          pendingFiles, 
+          `submissions/${user!.id}/${assignment.id}`,
+          (progress) => setUploadProgress(progress)
+        );
+        finalAttachments = [...finalAttachments, ...uploaded];
+      }
+
+      // 2. Assess with AI
       const { score, feedback } = await assessSubmission(
         assignment.description,
         assignment.instructions || "",
         content,
-        attachments,
+        finalAttachments,
         assignment.rubric,
       );
-
-      let finalAttachments = attachments;
-      let totalSizeStr = finalAttachments.reduce((sum, att) => sum + (att.url?.length || 0), 0);
-      if (totalSizeStr > 800 * 1024) {
-        finalAttachments = finalAttachments.map(att => {
-          if (att.url.length > 200 * 1024) {
-             return { ...att, url: "[Attachment too large to save. Preview omitted.]" };
-          }
-          return att;
-        });
-      }
 
       const subData: Omit<Submission, 'id'> = {
         assignmentId: assignment.id,
@@ -412,7 +419,8 @@ export const AssignmentDetail = () => {
         content,
         attachments: finalAttachments,
         aiScore: score,
-        aiFeedback: feedback,
+        aiFeedback: typeof feedback === 'string' ? feedback : (feedback as any).overallFeedback || "",
+        feedback: typeof feedback === 'object' ? (feedback as any) : undefined,
         status: "pending_review",
         tabSwitches,
         pasteCount,
@@ -420,19 +428,17 @@ export const AssignmentDetail = () => {
         updatedAt: Date.now(),
       };
 
-      if (submission?.id) {
-          await dbService.updateSubmission(submission.id, subData);
-          setSubmission({ id: submission.id, ...subData });
-      } else {
-          const newSubId = await dbService.createSubmission(subData);
-          setSubmission({ id: newSubId, ...subData });
-      }
+      await submissionMutation.mutateAsync({
+        id: submission?.id,
+        ...subData
+      });
 
-      await dbService.updateEnrollment(enrollment.id, {
+      // Also update enrollment status
+      await assignmentService.updateEnrollment(enrollment.id, {
         status: "submitted",
         updatedAt: Date.now()
       });
-      setEnrollment((prev) => (prev ? { ...prev, status: "submitted" } : null));
+      queryClient.invalidateQueries({ queryKey: assignmentKeys.enrollments(user!.id) });
 
       playSound('click');
       toast.success("Assignment submitted for review! A Super Admin will verify it shortly.", { icon: '⏳' });
@@ -468,14 +474,16 @@ export const AssignmentDetail = () => {
         updatedAt: Date.now(),
       };
 
-      await dbService.updateSubmission(submission.id, {
+      await submissionService.updateSubmission(submission.id, {
         aiScore: score,
         aiFeedback: feedback,
         updatedAt: Date.now(),
       });
-      setSubmission(updatedSub);
+      
+      queryClient.invalidateQueries({ queryKey: submissionKeys.byStudent(user!.id) });
+      queryClient.invalidateQueries({ queryKey: submissionKeys.byAssignment(assignment.id) });
+      queryClient.invalidateQueries({ queryKey: submissionKeys.detail(submission.id) });
 
-      // Optionally give reward again if score jumped to >= 50, but let's keep it simple.
       playSound('success');
       toast.success("Re-evaluated successfully!");
     } catch (e: any) {
@@ -499,15 +507,20 @@ export const AssignmentDetail = () => {
 
     setSubmitting(true);
     try {
-      await dbService.deleteSubmission(submission.id);
+      await submissionService.deleteSubmission(submission.id);
       const newGraceDeadline = Math.max(Date.now() + 24 * 60 * 60 * 1000, enrollment.graceDeadline || 0);
-      await dbService.updateEnrollment(enrollment.id, {
+      await assignmentService.updateEnrollment(enrollment.id, {
         status: "active",
         graceDeadline: newGraceDeadline,
         updatedAt: Date.now()
       });
-      setSubmission(null);
-      setEnrollment(prev => prev ? { ...prev, status: "active", graceDeadline: newGraceDeadline } : null);
+      
+      queryClient.invalidateQueries({ queryKey: submissionKeys.byStudent(user!.id) });
+      queryClient.invalidateQueries({ queryKey: assignmentKeys.enrollments(user!.id) });
+      
+      isFirstLoad.current = true; // Allow re-loading content from scratch if needed (though it was deleted)
+      setContent("");
+      setAttachments([]);
       toast.success("Submission cleared! You have 24 hours to re-submit without late penalties.");
     } catch (e: any) {
       handleFirestoreError(e, OperationType.DELETE, `submissions/${submission.id}`);
@@ -538,14 +551,15 @@ export const AssignmentDetail = () => {
         updatedAt: Date.now(),
       };
 
-      const newSubId = await dbService.createSubmission(subData);
-      setSubmission({ id: newSubId, ...subData });
-
-      await dbService.updateEnrollment(enrollment.id, {
+      const newSubId = await submissionService.createSubmission(subData);
+      
+      await assignmentService.updateEnrollment(enrollment.id, {
         status: "submitted",
         updatedAt: Date.now()
       });
-      setEnrollment((prev) => (prev ? { ...prev, status: "submitted" } : null));
+      
+      queryClient.invalidateQueries({ queryKey: submissionKeys.byStudent(user!.id) });
+      queryClient.invalidateQueries({ queryKey: assignmentKeys.enrollments(user!.id) });
 
       playSound('click');
       toast.success("Practical Pass used! Awaiting Admin approval.");
@@ -672,77 +686,74 @@ export const AssignmentDetail = () => {
 
       <button
         onClick={() => navigate("/assignments")}
-        className="flex items-center gap-2 text-brand-gold hover:text-white transition text-xs font-bold uppercase tracking-widest bg-navy-900 border border-navy-700 w-fit px-4 py-2 rounded-xl"
+        className="flex items-center gap-2 text-text-secondary hover:text-brand-gold transition text-[10px] font-bold uppercase tracking-widest bg-navy-900 border border-navy-700/50 w-fit px-3 py-1.5 rounded-lg"
       >
-        <ArrowLeft size={14} /> Back to Missions
+        <ArrowLeft size={12} /> Return to Mission Hub
       </button>
 
       {/* Assignment Header */}
       <motion.div
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1, duration: 0.4 }}
-        className={cn(
-          "bg-navy-900 rounded-[2.5rem] border border-brand-gold/20 shadow-glow-gold overflow-hidden relative",
-          assignment.isBonus && "ring-1 ring-brand-gold/40"
-        )}
+        className="bg-navy-900 rounded-[2rem] border border-navy-700/50 shadow-soft overflow-hidden relative"
       >
-        <div className="absolute top-0 right-0 w-96 h-96 bg-brand-gold/5 rounded-full blur-[90px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         
-        <div className="p-8 md:p-12 relative z-10">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-10">
+        <div className="p-6 md:p-8 relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center gap-2 mb-4">
                 {assignment.isBonus && (
-                  <span className="bg-brand-gold text-navy-950 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-widest shadow-glow-gold">
-                    Special Operation
+                  <span className="bg-brand-gold text-navy-950 text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest shadow-glow-gold">
+                    Classified
                   </span>
                 )}
+                <span className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">{assignment.subject || 'Strategic Objective'}</span>
                 {(user?.role === 'admin' || user?.role === 'superadmin') && (
                   <button 
                     onClick={() => navigate('/assignments', { state: { editId: assignment.id } })}
-                    className="flex items-center gap-1.5 text-brand-gold hover:text-white transition font-bold text-[10px] uppercase tracking-wider"
+                    className="flex items-center gap-1 text-brand-gold hover:text-white transition font-bold text-[10px] uppercase tracking-wider ml-2"
                   >
-                    <Edit size={12} /> Configure Template
+                    <Edit size={12} /> Config
                   </button>
                 )}
               </div>
 
               <h1 className={cn(
-                "text-3xl md:text-5xl font-display font-bold tracking-tight mb-6",
+                "text-2xl md:text-4xl font-display font-bold tracking-tight mb-4",
                 assignment.isBonus ? "text-brand-gold" : "text-white"
               )}>
                 {assignment.title}
               </h1>
 
-              <div className="flex flex-wrap gap-3 mb-8">
-                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
-                  <Calendar size={14} className="text-brand-gold" />
-                  <span>Due {format(assignment.dueDate, "MMM d, h:mm a")}</span>
+              <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
+                  <Calendar size={12} className="text-brand-gold" />
+                  <span>Due {format(assignment.dueDate, "MMM d, p")}</span>
                 </div>
-                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
-                  <span>Stake: <span className="text-brand-gold font-bold">🪙 {finalEntryFee}</span></span>
+                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
+                  <span>Stake: <span className="text-brand-gold">🪙 {finalEntryFee}</span></span>
                 </div>
-                <div className="flex items-center gap-2 bg-navy-950 border border-navy-700/50 px-4 py-2 rounded-xl text-xs font-medium text-text-muted">
-                  <span>Yield: <span className="text-emerald-400 font-bold">🪙 {finalBonusReward}</span></span>
+                <div className="flex items-center gap-1.5 bg-navy-950 border border-navy-700/50 px-3 py-1.5 rounded-lg text-[10px] font-bold text-text-secondary uppercase tracking-tight">
+                  <span>Yield: <span className="text-success">🪙 {finalBonusReward}</span></span>
                 </div>
               </div>
 
-              <div className="text-text-muted leading-relaxed max-w-2xl font-medium">
-                <ExpandableText text={assignment.description} maxLength={300} />
+              <div className="text-text-secondary text-sm md:text-base leading-relaxed font-medium max-w-2xl">
+                <ExpandableText text={assignment.description} maxLength={250} />
               </div>
             </div>
 
-            <div className="w-full md:w-72 space-y-4">
-                <div className="p-6 bg-navy-950 rounded-[2rem] border border-brand-gold/10 shadow-inner">
-                    <h4 className="text-[10px] font-bold text-text-muted uppercase tracking-widest mb-4 flex items-center gap-2">
-                      <Target size={12} className="text-brand-gold" /> Critical Rubric
+            <div className="w-full md:w-64 shrink-0">
+                <div className="p-5 bg-navy-950 rounded-2xl border border-navy-700/50 shadow-inner">
+                    <h4 className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Target size={12} className="text-brand-gold" /> Success Criteria
                     </h4>
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                         {assignment.rubric?.map((r, i) => (
-                            <div key={i} className="flex items-center justify-between gap-3">
-                                <span className="text-xs text-white font-medium truncate">{r.name}</span>
-                                <span className="text-[11px] font-bold text-brand-gold shrink-0 tabular-nums">{r.weight}%</span>
+                            <div key={i} className="flex items-center justify-between gap-3 text-[11px]">
+                                <span className="text-text-primary font-bold truncate">{r.name}</span>
+                                <span className="text-brand-gold font-black tabular-nums">{r.weight}%</span>
                             </div>
                         ))}
                     </div>
@@ -756,57 +767,55 @@ export const AssignmentDetail = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-navy-900 border border-brand-gold/10 p-8 md:p-12 rounded-[2.5rem] text-center max-w-xl mx-auto shadow-2xl relative overflow-hidden"
+          className="bg-navy-900 border border-navy-700/50 p-6 md:p-10 rounded-[2rem] text-center max-w-lg mx-auto shadow-xl relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-brand-gold/[0.02] to-transparent pointer-events-none" />
-          <div className="w-16 h-16 bg-navy-950 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-navy-800 shadow-inner ring-1 ring-white/5">
-            <Lock size={32} className="text-text-muted/30" />
+          <div className="w-12 h-12 bg-navy-950 rounded-xl flex items-center justify-center mx-auto mb-6 border border-navy-800">
+            <Lock size={20} className="text-text-muted opacity-50" />
           </div>
-          <h3 className="text-2xl font-display font-bold text-white tracking-tight mb-3">Initiate Operation</h3>
-          <p className="text-sm text-text-muted mb-10 leading-relaxed font-medium">
-            This operation requires a strategic commitment of <span className="text-brand-gold font-bold">🪙 {finalEntryFee}</span>.
-            Successful completion yields up to <span className="text-emerald-400 font-bold">🪙 {finalBonusReward}</span>.
+          <h3 className="text-xl font-display font-bold text-white tracking-tight mb-2">Initiate Deployment</h3>
+          <p className="text-xs text-text-secondary mb-8 leading-relaxed font-bold uppercase tracking-widest opacity-70">
+            Requires Strategic commitment of <span className="text-brand-gold">🪙 {finalEntryFee}</span>
           </p>
 
-          <div className="mb-10 p-5 bg-navy-950 border border-navy-800 rounded-[2rem] flex items-center justify-between gap-6 shadow-inner">
-             <div className="flex items-center gap-4">
-                <div className={cn("p-2.5 rounded-xl transition-all duration-500", isDoubleDown ? "bg-error text-white shadow-glow-error" : "bg-navy-800 text-text-muted/30")}>
-                   <Zap size={20} className={isDoubleDown ? "animate-pulse" : ""} />
+          <div className="mb-8 p-4 bg-navy-950 border border-navy-800 rounded-xl flex items-center justify-between gap-4">
+             <div className="flex items-center gap-3">
+                <div className={cn("p-2 rounded-lg transition-all", isDoubleDown ? "bg-error text-white shadow-glow-error" : "bg-navy-800 text-text-secondary")}>
+                   <Zap size={16} />
                 </div>
                 <div className="text-left">
-                   <h4 className="text-[11px] font-bold text-white uppercase tracking-widest leading-none mb-1.5">Double Down</h4>
-                   <p className="text-[9px] text-text-muted font-bold uppercase tracking-tight">2.5x Revenue | 2x Liability</p>
+                   <h4 className="text-[9px] font-black text-white uppercase tracking-widest mb-0.5">Double Down</h4>
+                   <p className="text-[8px] text-text-secondary font-black uppercase tracking-tight">2.5x Yield | 2x Risk</p>
                 </div>
              </div>
              <button 
                onClick={() => setIsDoubleDown(!isDoubleDown)}
-               className={cn("w-12 h-7 rounded-full relative transition-all duration-300", isDoubleDown ? "bg-error" : "bg-navy-700")}
+               className={cn("w-10 h-5 rounded-full relative transition-all", isDoubleDown ? "bg-error" : "bg-navy-700")}
              >
                <motion.div 
-                 animate={{ x: isDoubleDown ? 22 : 4 }}
-                 className="absolute top-1.5 w-4 h-4 bg-white rounded-full shadow-md"
+                 animate={{ x: isDoubleDown ? 22 : 2 }}
+                 className="absolute top-1 w-3 h-3 bg-white rounded-full shadow-sm"
                />
              </button>
           </div>
 
           <div className="space-y-4">
             {hasNotStarted ? (
-              <div className="bg-navy-950 text-text-muted text-xs font-bold p-5 rounded-2xl flex items-center justify-center gap-3 border border-navy-800 italic">
-                <Clock size={16} /> Operation Commences: {format(assignment.startDate!, "MMM d, h:mm a")}
+              <div className="bg-navy-950 text-text-secondary text-[10px] font-black uppercase tracking-widest p-4 rounded-xl flex items-center justify-center gap-2 border border-navy-800 italic">
+                <Clock size={14} /> Begins {format(assignment.startDate!, "MMM d, p")}
               </div>
             ) : (
                 <button
                 onClick={handleEnroll}
                 disabled={enrolling || user.coins < finalEntryFee}
-                className="w-full bg-brand-gold text-navy-950 py-4 rounded-xl font-bold text-sm uppercase tracking-widest shadow-glow-gold hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50"
+                className="w-full bg-brand-gold text-navy-950 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
               >
-                {enrolling ? "Establishing Link..." : `Authorize Deployment • 🪙 ${finalEntryFee}`}
+                {enrolling ? "Linking..." : `Authorize Deployment`}
               </button>
             )}
 
             {user.coins < finalEntryFee && (
-              <p className="text-error text-[11px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 mt-2">
-                <ShieldAlert size={14} /> Intelligence: Insufficient Liquidity
+              <p className="text-error text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 mt-2">
+                <ShieldAlert size={12} /> Insufficient Balance
               </p>
             )}
           </div>
@@ -819,14 +828,14 @@ export const AssignmentDetail = () => {
           <div className="card-premium p-6 md:p-8 space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20">
+                <div className="w-10 h-10 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center border border-navy-700">
                     <FileText size={20} />
                 </div>
-                <h2 className="text-xl font-display font-bold text-text-primary tracking-tight">Mission Console</h2>
+                <h2 className="text-lg font-display font-bold text-text-primary tracking-tight">Mission Console</h2>
               </div>
               {timeLeftStr && (
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-error/10 text-error rounded-lg border border-error/20 font-mono text-sm font-bold">
-                  <Clock size={14} />
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-error/10 text-error rounded-lg border border-error/20 font-mono text-xs font-bold">
+                  <Clock size={12} />
                   <span>{timeLeftStr}</span>
                 </div>
               )}
@@ -835,30 +844,30 @@ export const AssignmentDetail = () => {
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              disabled={submitting || submission?.status === "assessed" || submission?.status === "pending_review" || isTimeUp}
-              className="w-full min-h-[350px] p-5 text-sm md:text-base border border-navy-700 rounded-xl bg-navy-900 text-text-primary focus:border-brand-gold/50 focus:ring-1 focus:ring-brand-gold/50 outline-none transition-all resize-none shadow-inner leading-relaxed font-medium"
+              disabled={submitting || ((submission?.status === "assessed" || submission?.status === "pending_review") && !isEditing) || isTimeUp}
+              className="w-full min-h-[300px] p-5 text-sm border border-navy-700 rounded-xl bg-navy-950/50 text-text-primary focus:border-brand-gold/50 outline-none transition-all resize-none leading-relaxed font-medium"
               placeholder="Inject assessment response..."
             />
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest">Evidence Attachments</h4>
+                <h4 className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Evidence Units</h4>
                 {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
                    <div className="flex items-center gap-2">
                       <input type="file" multiple ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,application/pdf,video/*" />
-                      <button onClick={() => fileInputRef.current?.click()} className="text-[10px] font-bold text-brand-gold hover:text-white transition uppercase tracking-wider">
-                         Add File
+                      <button onClick={() => fileInputRef.current?.click()} className="text-[9px] font-black text-brand-gold hover:text-white transition uppercase tracking-widest">
+                         Upload Matrix
                       </button>
                    </div>
                 )}
               </div>
 
               {attachments.length > 0 ? (
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                   {attachments.map((att, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-navy-900 border border-navy-700 p-2 rounded-lg group">
+                    <div key={idx} className="flex items-center gap-2 bg-navy-900 border border-navy-700 p-2 rounded-lg">
                       <div className="shrink-0 text-brand-gold">{att.type.startsWith("image") ? <ImageIcon size={14}/> : <FileIcon size={14}/>}</div>
-                      <span className="text-[10px] font-medium text-text-secondary truncate flex-1">{att.name}</span>
+                      <span className="text-[10px] font-bold text-text-secondary truncate flex-1 uppercase tracking-tighter">{att.name}</span>
                       {!submission || (submission.status !== "assessed" && submission.status !== "pending_review") && !isTimeUp && (
                         <button onClick={() => removeAttachment(idx)} className="text-text-secondary hover:text-error transition"><X size={12}/></button>
                       )}
@@ -867,80 +876,115 @@ export const AssignmentDetail = () => {
                 </div>
               ) : (
                 <div className="p-4 bg-navy-900/50 border border-dashed border-navy-700 rounded-xl text-center">
-                   <p className="text-[10px] font-bold text-text-secondary/50 uppercase tracking-widest">No evidence provided</p>
+                   <p className="text-[9px] font-black text-text-secondary/50 uppercase tracking-widest">No evidence provided</p>
                 </div>
               )}
             </div>
 
-            {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review")) && (
-              <button
-                onClick={handleSubmit}
-                disabled={submitting || (!content.trim() && attachments.length === 0) || isTimeUp}
-                className="w-full bg-brand-gold text-navy-950 py-3 rounded-xl font-bold text-xs uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
-              >
-                {submitting ? "Analyzing Neural Patterns..." : "Complete Mission Authority"}
-              </button>
-            )}
+            <div className="space-y-4">
+              {submitting && uploadProgress > 0 && uploadProgress < 100 && (
+                <ProgressBar progress={uploadProgress} label="Uploading Evidence" className="mb-2" />
+              )}
+              {(!submission || (submission.status !== "assessed" && submission.status !== "pending_review") || isEditing) && (
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting || (!content.trim() && attachments.length === 0) || isTimeUp}
+                  className="w-full bg-brand-gold text-navy-950 py-3.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-glow-gold hover:translate-y-[-1px] active:translate-y-[0px] transition-all disabled:opacity-50"
+                >
+                  {submitting ? "Analyzing Neural Patterns..." : submission ? "Update Authority Request" : "Complete Authority Request"}
+                </button>
+              )}
+            </div>
           </div>
 
           {/* AI Feedback Area */}
-          <div className="card-premium p-6 md:p-8 space-y-6 bg-navy-900/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20 shadow-soft">
-                  <Bot size={22} />
+          <div className="card-premium p-6 md:p-8 space-y-6 bg-navy-900/40">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                 <div className="w-10 h-10 bg-brand-gold/10 text-brand-gold rounded-xl flex items-center justify-center border border-brand-gold/20 shadow-glow-gold">
+                    <Sparkles size={20} />
+                 </div>
+                 <div>
+                    <h2 className="text-lg font-display font-bold text-text-primary tracking-tight">Intelligence Report</h2>
+                    <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest opacity-70">Neural Assessment Complete</p>
+                 </div>
               </div>
-              <h2 className="text-xl font-display font-bold text-text-primary tracking-tight">Intelligence Feedback</h2>
             </div>
 
             {submission?.status === "pending_review" || submission?.status === "assessed" ? (
               <div className="space-y-6">
-                <div className="p-8 bg-navy-900 border border-navy-700 rounded-2xl text-center relative overflow-hidden shadow-soft">
+                <div className="p-8 bg-navy-950 border border-navy-700/50 rounded-2xl text-center relative overflow-hidden shadow-inner">
                    {submission.status === "pending_review" && (
-                     <div className="absolute inset-0 bg-navy-900/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
-                        <div className="flex flex-col items-center gap-2">
+                     <div className="absolute inset-0 bg-navy-950/80 backdrop-blur-sm z-10 flex items-center justify-center p-4">
+                        <div className="flex flex-col items-center gap-3">
                            <Loader2 size={24} className="text-brand-gold animate-spin" />
-                           <p className="text-[10px] font-bold text-brand-gold uppercase tracking-widest">Encrypting Review</p>
+                           <p className="text-[10px] font-black text-brand-gold uppercase tracking-widest">Encrypting Review...</p>
                         </div>
                      </div>
                    )}
-                   <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-2 opacity-50">Operational Grade</div>
+                   <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest mb-2 opacity-50">Operational Grade</div>
                    <div className={cn(
-                     "text-6xl md:text-7xl font-display font-bold tracking-tighter",
+                     "text-6xl md:text-7xl font-display font-black text-brand-gold tabular-nums leading-none tracking-tighter",
                      submission.aiScore >= 80 ? "text-success" : submission.aiScore >= 50 ? "text-brand-gold" : "text-error"
                    )}>
-                      {submission.aiScore}<span className="text-2xl text-text-secondary/30 ml-1">/100</span>
+                      {submission.aiScore}<span className="text-2xl text-text-secondary/20 ml-1">/100</span>
                    </div>
                 </div>
 
-                <div className="p-5 bg-navy-900 border border-navy-700 rounded-2xl relative overflow-hidden">
-                   <div className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-3 opacity-50">Strategic Analysis</div>
+                <div className="p-5 bg-navy-950 border border-navy-700/50 rounded-2xl relative overflow-hidden shadow-inner">
+                   <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest mb-3 opacity-50">Neural Summary</div>
                    <ExpandableText maxHeight={200}>
-                      <div className="markdown-body text-sm text-text-secondary leading-relaxed font-medium italic">
+                      <div className="markdown-body text-sm text-text-secondary leading-relaxed font-medium italic opacity-90">
                         <Markdown>{submission.aiFeedback || ""}</Markdown>
                       </div>
                    </ExpandableText>
                 </div>
 
+                {submission.status === "assessed" && (
+                  <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-navy-700/30">
+                     <div className="flex items-center gap-4">
+                        <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                           Yield: <span className="text-success text-xs ml-1">🪙 {submission.calculatedReward || 0}</span>
+                        </div>
+                        <div className="text-[9px] font-black text-text-secondary uppercase tracking-widest">
+                           Penalty: <span className="text-error text-xs ml-1">🪙 {submission.penaltyAmount || 0}</span>
+                        </div>
+                     </div>
+
+                     {enrollment?.graceDeadline && Date.now() < enrollment.graceDeadline && (
+                        <button
+                          onClick={() => {
+                            setIsEditing(true);
+                            toast.success("Editor unlocked! You are within the grace period.");
+                          }}
+                          className="px-3 py-1.5 bg-navy-800 hover:bg-navy-700 text-brand-gold border border-navy-700/50 rounded-lg font-bold text-[9px] uppercase tracking-widest transition-all"
+                        >
+                          Redeploy (Grace Period)
+                        </button>
+                     )}
+                  </div>
+                )}
+
                 <div className="flex flex-col gap-2">
                    {user?.inventory?.includes("reevaluation_pass") && (
-                     <button onClick={handleReevaluate} className="w-full py-2 bg-navy-800 text-cyan-400 border border-cyan-500/10 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-navy-700 transition">
+                     <button onClick={handleReevaluate} className="w-full py-2 bg-navy-800/50 text-brand-gold border border-brand-gold/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-navy-800 transition">
                         Neural Re-scan (Uses Pass)
                      </button>
                    )}
                    {(user?.inventory?.includes("resubmission_ticket") || user?.inventory?.includes("test_retake_pass")) && (
-                     <button onClick={handleResubmit} className="w-full py-2 bg-navy-800 text-success border border-success/10 rounded-lg text-[10px] font-bold uppercase tracking-wider hover:bg-navy-700 transition">
+                     <button onClick={handleResubmit} className="w-full py-2 bg-success/5 text-success border border-success/10 rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-success/10 transition">
                         Purge & Re-deploy (Uses Ticket)
                      </button>
                    )}
                 </div>
               </div>
             ) : (
-              <div className="py-12 md:py-20 flex flex-col items-center justify-center text-center px-6 bg-navy-900/50 rounded-2xl border border-dashed border-navy-700">
-                <div className="w-16 h-16 bg-navy-900 rounded-full flex items-center justify-center mb-6 text-text-secondary/20">
-                  <Bot size={40} />
+              <div className="py-12 md:py-16 flex flex-col items-center justify-center text-center px-6 bg-navy-950/30 rounded-2xl border border-dashed border-navy-700/50">
+                <div className="w-16 h-16 bg-navy-950 rounded-full flex items-center justify-center mb-6 text-text-secondary/20 shadow-inner">
+                  <Bot size={32} />
                 </div>
-                <h3 className="text-lg font-bold text-text-primary mb-2">Awaiting Intelligence</h3>
-                <p className="text-xs text-text-secondary max-w-xs leading-relaxed italic">
+                <h3 className="text-sm font-black text-text-primary uppercase tracking-widest mb-2">Awaiting Intelligence</h3>
+                <p className="text-[11px] text-text-secondary max-w-xs leading-relaxed italic opacity-70">
                   Analysis will trigger upon completion of mission directives. Premium neural patterns detected.
                 </p>
               </div>
@@ -1097,11 +1141,31 @@ export const AssignmentDetail = () => {
 
               <div>
                 <h4 className="text-sm font-black text-brand-gold mb-4 uppercase tracking-widest flex items-center gap-2">
-                  <Bot className="w-4 h-4" /> AI Feedback Analysis
+                  <Bot className="w-4 h-4" /> Strategic Assessment
                 </h4>
-                <div className="markdown-body">
-                  <Markdown>{inspectingSubmission.aiFeedback}</Markdown>
-                </div>
+                
+                {inspectingSubmission.feedback ? (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {inspectingSubmission.feedback.rubricFeedback.map((rf: any, i: number) => (
+                        <div key={i} className="p-4 bg-navy-950 border border-navy-800 rounded-xl">
+                          <div className="flex justify-between items-center mb-2">
+                            <h5 className="text-[10px] font-black text-text-secondary uppercase tracking-widest">{rf.criterion}</h5>
+                            <span className="text-[11px] font-black text-brand-gold">{rf.score}%</span>
+                          </div>
+                          <p className="text-xs text-text-primary leading-relaxed">{rf.feedback}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 bg-navy-950 border border-brand-gold/10 rounded-xl italic text-sm text-text-primary">
+                      {inspectingSubmission.feedback.overallFeedback}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="markdown-body text-sm">
+                    <Markdown>{inspectingSubmission.aiFeedback}</Markdown>
+                  </div>
+                )}
               </div>
             </div>
             <div className="p-6 bg-bg-main flex items-center justify-between">

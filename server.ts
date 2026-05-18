@@ -3,6 +3,8 @@ import express from "express";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
 import webpush from "web-push";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // VAPID keys for push notifications lazily
 let vapidConfigured = false;
@@ -42,6 +44,23 @@ async function startServer() {
       });
     }
     return aiClient;
+  }
+
+  let s3Client: S3Client | null = null;
+  function getS3() {
+    if (!s3Client && process.env.R2_ACCESS_KEY_ID) {
+      s3Client = new S3Client({
+        region: "auto",
+        endpoint: process.env.R2_ENDPOINT,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY!,
+        },
+        requestChecksumCalculation: "WHEN_REQUIRED",
+        responseChecksumValidation: "WHEN_REQUIRED"
+      });
+    }
+    return s3Client;
   }
 
   // API routes
@@ -129,23 +148,30 @@ Special Instructions from Teacher:
 "${instructions || defaultInstructions}"
 
 ${rubric && rubric.length > 0 ? `EVALUATION RUBRIC:
-You must score the submission based on the following criteria and their weights (treat them as percentages of the final score):
+You must score the submission based on the following criteria and their weights:
 ${rubric.map((r: any) => `- ${r.name} (${r.weight}%): ${r.description}`).join('\n')}
-Calculate the final score by summing the weighted scores of each criterion.
 ` : ''}
+
 Student's written submission:
 "${studentContent}"
 
-Task: Give a score out of 100 and a detailed, constructive feedback. Follow this JSON format strictly:
+Task: Give a score out of 100 and detailed structured feedback. 
+Follow this JSON format strictly:
 {
   "score": 85,
-  "feedback": "Detailed feedback with markdown..."
+  "feedback": {
+    "overallFeedback": "Summary of performance...",
+    "rubricFeedback": [
+       {
+         "criterion": "Criterion Name",
+         "score": 90,
+         "feedback": "Feedback for this specific criterion..."
+       }
+    ]
+  }
 }
 
-CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
-- You must format your feedback using Markdown.
-- Use bolding, italics, bullet points, and headers to make the feedback highly readable and engaging.
-- If an EVALUATION RUBRIC is provided, explicitly highlight how the submission performed on each specific criteria using headers (e.g., ### [Criterion Name]). Ensure the feedback breaks down the score based on the rubric.`
+If no rubric is provided, create 1-2 logical criteria based on the assignment description for the rubricFeedback array.`
       }];
 
       if (attachments && attachments.length > 0) {
@@ -248,6 +274,65 @@ CRITICAL FORMATTING INSTRUCTIONS FOR FEEDBACK:
       res.json({ text: response.text });
     } catch (err: any) {
       console.error("[AI Economy] Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // Storage R2 Routes
+  app.post("/api/storage/presign", async (req, res) => {
+    try {
+      const s3 = getS3();
+      if (!s3 || !process.env.R2_BUCKET_NAME) {
+        return res.status(503).json({ error: "Storage Service Offline or Misconfigured" });
+      }
+      
+      const { fileName, fileType, path } = req.body;
+      const key = `${path}/${Date.now()}_${fileName}`;
+      const bucket = process.env.R2_BUCKET_NAME;
+
+      const command = new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        ContentType: fileType,
+      });
+
+      // Disable checksums to avoid signature errors when frontend uploads files to Cloudflare R2
+      const url = await getSignedUrl(s3, command, { expiresIn: 3600, signableHeaders: new Set() });
+      const publicUrl = `${process.env.VITE_R2_PUBLIC_URL}/${key}`;
+
+      res.json({ uploadUrl: url, publicUrl });
+    } catch (err: any) {
+      console.error("[Storage Presign] Error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/storage/delete", async (req, res) => {
+    try {
+      const s3 = getS3();
+      if (!s3 || !process.env.R2_BUCKET_NAME) {
+        return res.status(503).json({ error: "Storage Service Offline or Misconfigured" });
+      }
+      
+      const { url } = req.body;
+      const bucket = process.env.R2_BUCKET_NAME;
+      const publicUrlBase = process.env.VITE_R2_PUBLIC_URL;
+      
+      if (!publicUrlBase || !url.startsWith(publicUrlBase)) {
+        return res.status(400).json({ error: "Invalid or missing R2 Public URL base" });
+      }
+
+      const key = url.replace(`${publicUrlBase}/`, "");
+
+      const command = new DeleteObjectCommand({
+        Bucket: bucket,
+        Key: key,
+      });
+
+      await s3.send(command);
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Storage Delete] Error:", err);
       res.status(500).json({ error: err.message });
     }
   });

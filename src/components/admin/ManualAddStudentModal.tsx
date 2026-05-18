@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Mail, User as UserIcon, Coins } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { dbService } from '../../services/dbProvider';
+import { adminService } from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 
 const ManualAddStudentModal = ({ onClose, onComplete }: { onClose: () => void, onComplete: () => void }) => {
@@ -14,16 +14,14 @@ const ManualAddStudentModal = ({ onClose, onComplete }: { onClose: () => void, o
         e.preventDefault();
         setLoading(true);
         try {
-            // This bypasses normal invite flow - adds user to a whitelist/pre-reg collection
-            const { collection, doc, setDoc } = await import('firebase/firestore');
-            const { db: fireDb } = await import('../../services/firebase');
-            
-            await setDoc(doc(collection(fireDb, 'pre_registered_users'), email.toLowerCase()), {
+            await adminService.savePreRegisteredUser(email.toLowerCase(), {
+                id: email.toLowerCase(),
                 email: email.toLowerCase(),
                 name,
-                startingCoins: parseInt(startingCoins),
+                coins: parseInt(startingCoins),
                 role: 'student',
-                addedAt: Date.now()
+                status: 'pending',
+                createdAt: Date.now()
             });
 
             toast.success("Occupant whitelisted! They can sign in now.");

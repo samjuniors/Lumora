@@ -75,19 +75,15 @@ export class FirebaseService implements IDatabaseService {
   }
 
   async getAllUsers(): Promise<User[]> {
-    const now = Date.now();
-    if (this.usersCache && (now - this.usersCache.timestamp) < this.CACHE_TTL) {
-      return this.usersCache.data;
-    }
-    try {
-      const snap = await getDocs(collection(db, 'users'));
-      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
-      this.usersCache = { data, timestamp: now };
-      return data;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'users');
-      return [];
-    }
+    return this.fetchWithCache(
+      'all_users',
+      300000,
+      async () => {
+        const snap = await getDocs(collection(db, 'users'));
+        return snap.docs.map(d => ({ ...d.data(), id: d.id } as User));
+      },
+      { type: OperationType.LIST, path: 'users' }
+    );
   }
 
   async getUsers(): Promise<User[]> {
@@ -204,16 +200,37 @@ export class FirebaseService implements IDatabaseService {
     }
   }
 
-  private assignmentCache: { data: Assignment[], timestamp: number } | null = null;
-  private usersCache: { data: User[], timestamp: number } | null = null;
-  private CACHE_TTL = 30000; // 30 seconds
   private lastWriteTimes: Map<string, number> = new Map();
   private lastWriteData: Map<string, string> = new Map();
   private writeCounts: Map<string, number> = new Map();
+  private cache: Map<string, { data: any, timestamp: number }> = new Map();
   private totalWrites = 0;
-  private MAX_SESSION_WRITES = 500; // Hard stop for a single session to prevent runaway loops from burning daily quota
+  private MAX_SESSION_WRITES = 500;
   private activeListeners = 0;
   private totalListenersCreated = 0;
+
+  private async fetchWithCache<T>(
+    cacheKey: string,
+    ttl: number,
+    fetchFn: () => Promise<T>,
+    errorMeta: { type: OperationType, path: string }
+  ): Promise<T> {
+    const now = Date.now();
+    const cached = this.cache.get(cacheKey);
+    
+    if (cached && (now - cached.timestamp) < ttl) {
+      return cached.data;
+    }
+
+    try {
+      const data = await fetchFn();
+      this.cache.set(cacheKey, { data, timestamp: now });
+      return data;
+    } catch (error) {
+      handleFirestoreError(error, errorMeta.type, errorMeta.path);
+      return [] as any; // Assuming list typed for most cached ops
+    }
+  }
 
   private LOG_WRITE(path: string, data?: any) {
     this.totalWrites++;
@@ -221,7 +238,7 @@ export class FirebaseService implements IDatabaseService {
     this.writeCounts.set(path, count);
     
     // Detailed profiling for quota monitoring
-    if (this.totalWrites % 5 === 0 || count > 20) {
+    if (this.totalWrites % 10 === 0 || count > 30) {
       const dataPreview = data ? JSON.stringify(data).substring(0, 50) + '...' : 'no-data';
       console.log(`[Firestore Quota Monitor] Total Writes: ${this.totalWrites}/${this.MAX_SESSION_WRITES}, Active Listeners: ${this.activeListeners}`);
       console.log(`[Firestore Path Analysis] Path: ${path} (Count: ${count}). Data: ${dataPreview}`);
@@ -231,7 +248,7 @@ export class FirebaseService implements IDatabaseService {
       console.error(`[CRITICAL] SESSION WRITE CAP REACHED (${this.MAX_SESSION_WRITES}). Blocking further writes to protect daily quota.`);
     }
 
-    if (count > 50) {
+    if (count > 100) {
       console.warn(`[CRITICAL] Runaway write detected on path: ${path}. Hits: ${count}`);
     }
   }
@@ -239,16 +256,16 @@ export class FirebaseService implements IDatabaseService {
   private TRACK_LISTENER(path: string) {
     this.activeListeners++;
     this.totalListenersCreated++;
-    console.log(`[Firestore Analytics] New Listener on ${path}. Total Active: ${this.activeListeners}, Lifetime: ${this.totalListenersCreated}`);
+    // console.debug(`[Firestore Analytics] New Listener on ${path}. Total Active: ${this.activeListeners}, Lifetime: ${this.totalListenersCreated}`);
     
     // If we have too many active listeners, it's a sign of a leak
-    if (this.activeListeners > 15) {
+    if (this.activeListeners > 20) {
       console.warn(`[Firestore Analytics] High number of active listeners detected: ${this.activeListeners}. Possible leak!`);
     }
 
     const cleanup = () => {
       this.activeListeners--;
-      console.log(`[Firestore Analytics] Listener closed on ${path}. Total Active: ${this.activeListeners}`);
+      // console.debug(`[Firestore Analytics] Listener closed on ${path}. Total Active: ${this.activeListeners}`);
     };
     return cleanup;
   }
@@ -310,20 +327,16 @@ export class FirebaseService implements IDatabaseService {
   }
 
   async getAllAssignments(): Promise<Assignment[]> {
-    const now = Date.now();
-    if (this.assignmentCache && (now - this.assignmentCache.timestamp) < this.CACHE_TTL) {
-      return this.assignmentCache.data;
-    }
-    try {
-      const q = query(collection(db, 'assignments'), orderBy('createdAt', 'desc'));
-      const snap = await getDocs(q);
-      const data = snap.docs.map(d => ({ ...d.data(), id: d.id } as Assignment));
-      this.assignmentCache = { data, timestamp: now };
-      return data;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'assignments');
-      return [];
-    }
+    return this.fetchWithCache(
+      'all_assignments',
+      120000,
+      async () => {
+        const q = query(collection(db, 'assignments'), orderBy('createdAt', 'desc'));
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ...d.data(), id: d.id } as Assignment));
+      },
+      { type: OperationType.LIST, path: 'assignments' }
+    );
   }
 
   async createAssignment(data: Omit<Assignment, 'id'>): Promise<string> {
@@ -374,19 +387,21 @@ export class FirebaseService implements IDatabaseService {
   }
 
   async getAllAssessedSubmissions(): Promise<Submission[]> {
-    try {
-      const q = query(
-        collection(db, 'submissions'),
-        where('status', '==', 'assessed'),
-        orderBy('submittedAt', 'desc'),
-        fsLimit(200)
-      );
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ ...d.data(), id: d.id } as Submission));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.LIST, 'assessed_submissions');
-      return [];
-    }
+    return this.fetchWithCache(
+      'assessed_submissions',
+      180000,
+      async () => {
+        const q = query(
+          collection(db, 'submissions'),
+          where('status', '==', 'assessed'),
+          orderBy('submittedAt', 'desc'),
+          fsLimit(200)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ...d.data(), id: d.id } as Submission));
+      },
+      { type: OperationType.LIST, path: 'assessed_submissions' }
+    );
   }
 
   async processAssessmentRewards(submissionId: string, score: number): Promise<void> {

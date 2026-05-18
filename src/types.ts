@@ -141,6 +141,8 @@ export interface Attachment {
   url: string;
   type: string;
   name: string;
+  size?: number;
+  uploadedAt?: number;
 }
 
 export type SubmissionStatus = 'pending' | 'assessed' | 'evaluating' | 'pending_review' | 'rejected' | 'revoked';
@@ -153,6 +155,16 @@ export interface Submission {
   attachments?: Attachment[];
   aiScore: number;
   aiFeedback: string;
+  feedback?: {
+    overallFeedback: string;
+    rubricFeedback: {
+       criterion: string;
+       score: number;
+       feedback: string;
+    }[];
+  };
+  calculatedReward?: number;
+  penaltyAmount?: number;
   status: SubmissionStatus;
   tabSwitches?: number;
   pasteCount?: number;

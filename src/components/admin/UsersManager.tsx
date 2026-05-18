@@ -17,7 +17,12 @@ import {
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { useAuth } from '../../context/AuthContext';
-import { dbService } from '../../services/dbProvider';
+import { 
+    userService, 
+    assignmentService, 
+    submissionService,
+    adminService 
+} from '../../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { User, Role } from '../../types';
 import { cn } from '../../lib/utils';
@@ -166,9 +171,9 @@ const UserActionModal = ({
             setLoading(true);
             try {
                 const [subs, enrs, templates] = await Promise.all([
-                    dbService.getSubmissionsByStudent(u.id),
-                    dbService.getEnrollmentsByStudent(u.id),
-                    dbService.getAssignmentTemplates()
+                    submissionService.getSubmissionsByStudent(u.id),
+                    assignmentService.getEnrollmentsByStudent(u.id),
+                    assignmentService.getAssignmentTemplates()
                 ]);
 
                 const aMap: any = {};
@@ -329,7 +334,7 @@ const UserActionModal = ({
                                                 return;
                                             }
                                             try {
-                                                await dbService.deleteUser(u.id);
+                                                await userService.deleteUser(u.id);
                                                 toast.success("User eliminated from the system");
                                                 onClose();
                                                 window.location.reload(); 
@@ -376,7 +381,7 @@ export const UsersManager = () => {
     const fetchUsers = async () => {
         setLoading(true);
         try {
-            const all = await dbService.getAllUsers();
+            const all = await userService.getAllUsers();
             all.sort((a,b) => {
                 if (b.coins !== a.coins) return b.coins - a.coins;
                 if ((b.diamonds || 0) !== (a.diamonds || 0)) return (b.diamonds || 0) - (a.diamonds || 0);
@@ -385,10 +390,8 @@ export const UsersManager = () => {
             setUsers(all);
 
             try {
-                const { collection, getDocs } = await import('firebase/firestore');
-                const { db: fireDb } = await import('../../services/firebase');
-                const snap = await getDocs(collection(fireDb, 'pre_registered_users'));
-                setPreRegistered(snap.docs.map(d => ({ ...d.data(), id: d.id })));
+                const preRegSnap = await adminService.getPreRegisteredUsers();
+                setPreRegistered(preRegSnap);
             } catch (e) {
                 console.warn("Could not fetch pre_registered_users", e);
             }
@@ -404,7 +407,7 @@ export const UsersManager = () => {
         if (!window.confirm("This will reset all negative coin balances to 0 across the entire system. Continue?")) return;
         setLoading(true);
         try {
-            const all = await dbService.getAllUsers();
+            const all = await userService.getAllUsers();
             const negatives = all.filter(u => (u.coins || 0) < 0);
             
             if (negatives.length === 0) {
@@ -414,7 +417,7 @@ export const UsersManager = () => {
             
             let count = 0;
             for (const u of negatives) {
-                await dbService.updateUser(u.id, { coins: 0 });
+                await userService.updateUser(u.id, { coins: 0 });
                 count++;
             }
             
@@ -439,7 +442,7 @@ export const UsersManager = () => {
         setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
         
         try {
-            await dbService.updateUser(userId, {
+            await userService.updateUser(userId, {
                 role: newRole,
                 updatedAt: Date.now()
             });

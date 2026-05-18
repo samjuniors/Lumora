@@ -9,7 +9,7 @@ import { Logo } from './Logo';
 import { motion, AnimatePresence } from 'motion/react';
 
 export const Navbar = () => {
-  const { user, logOut } = useAuth();
+  const { user, logOut, isAdmin } = useAuth();
   const location = useLocation();
   const [showInvite, setShowInvite] = React.useState(false);
 
@@ -58,7 +58,7 @@ export const Navbar = () => {
 
             {/* Center: Navigation Links */}
             <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
-              {(user.role === 'admin' || user.role === 'superadmin') ? (
+              {isAdmin ? (
                 <>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
                   <NavLink to="/admin?tab=assignments" icon={Target}>Tasks</NavLink>
@@ -88,7 +88,7 @@ export const Navbar = () => {
                 </button>
                 
                 <div className="flex items-center gap-2 sm:gap-3 border-l border-white/10 pl-3 sm:pl-4">
-                  {(user.role === 'admin' || user.role === 'superadmin') && (
+                  {isAdmin && (
                     <div className="hidden sm:flex items-center gap-1">
                       <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/10 rounded-lg" title="Invites">
                         <UserPlus className="h-4 w-4" />
@@ -120,7 +120,7 @@ export const Navbar = () => {
       {/* Mobile Bottom Navigation - Compact premium app style */}
       <div className="fixed bottom-0 left-0 right-0 z-[120] md:hidden px-4 pb-6">
         <div className="glass-dark rounded-2xl shadow-2xl flex items-center justify-around h-16 w-full max-w-md mx-auto px-2 border-white/10 relative">
-          {(user.role === 'admin' || user.role === 'superadmin') ? (
+          {isAdmin ? (
             <>
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />

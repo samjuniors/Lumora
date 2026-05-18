@@ -25,7 +25,7 @@ import { AssignmentsManager } from '../components/admin/AssignmentsManager';
 import { AdminAnalytics } from './AdminAnalytics';
 
 export const AdminPanel = () => {
-    const { user } = useAuth();
+    const { user, isAdmin, isSuperAdmin } = useAuth();
     const [searchParams, setSearchParams] = useSearchParams();
     const initialTab = (searchParams.get('tab') as any) || 'users';
     const [tab, setTabState] = useState<'overview'|'analytics'|'assignments'|'reviews'|'invites'|'users'|'recharges'|'settings'|'templates'|'leaderboard'>(initialTab);
@@ -44,7 +44,7 @@ export const AdminPanel = () => {
         }
     }, [searchParams, tab]);
 
-    if (!user || !['admin', 'superadmin'].includes(user.role)) {
+    if (!user || !isAdmin) {
         return <Navigate to="/dashboard" replace />;
     }
 
@@ -91,7 +91,7 @@ export const AdminPanel = () => {
                             {t.label}
                         </button>
                     ))}
-                    {user.role === 'superadmin' && (
+                    {isSuperAdmin && (
                         <button
                             onClick={() => setTab('settings')}
                             className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black transition-all text-xs uppercase tracking-widest ${
@@ -109,7 +109,7 @@ export const AdminPanel = () => {
                 {/* Mobile Tab Navigation (Horizontal Scroll) */}
                 <div className="lg:hidden flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4 sticky top-0 z-40 bg-bg-main/80 backdrop-blur-md">
                     {ALL_TABS.map((t) => (
-                        (t.id !== 'settings' || user.role === 'superadmin') && (
+                        (t.id !== 'settings' || isSuperAdmin) && (
                             <button
                                 key={t.id}
                                 onClick={() => setTab(t.id)}
@@ -147,7 +147,7 @@ export const AdminPanel = () => {
                     {tab === 'users' && <UsersManager />}
                     {tab === 'recharges' && <RechargesManager />}
                     {tab === 'invites' && <InviteCodesManager />}
-                    {tab === 'settings' && user.role === 'superadmin' && <SettingsManager />}
+                    {tab === 'settings' && isSuperAdmin && <SettingsManager />}
                 </motion.div>
             </div>
         </div>

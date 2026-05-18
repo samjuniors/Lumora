@@ -165,6 +165,17 @@
   .safe-pt {
     padding-top: env(safe-area-inset-top);
   }
+
+  .pb-safe-bottom {
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  .pt-safe-top-nav {
+     padding-top: calc(64px + env(safe-area-inset-top));
+     @media (min-width: 768px) {
+        padding-top: calc(80px + env(safe-area-inset-top));
+     }
+  }
 }
 
 /* Custom Component Defaults */

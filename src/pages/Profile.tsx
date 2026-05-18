@@ -7,7 +7,7 @@ import {
   Copy, Upload, LogOut, Clock, BookOpen, ChevronRight, AlertCircle, Share2, Info, Gift,
   Users, UserPlus, Heart, Search, Trophy
 } from 'lucide-react';
-import { dbService } from '../services/dbProvider';
+import { dbService, storageService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { SHOP_ITEMS } from './Shop';
 import { cn, getUserLevelAndXP, getShortId, getVIPLevel } from '../lib/utils';
@@ -238,20 +238,26 @@ export const Profile = () => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image is too large (max 5MB)');
-      return;
-    }
+    const isValid = storageService.validateFile(file, {
+      maxSize: 5 * 1024 * 1024,
+      allowedTypes: ['image/*']
+    });
+
+    if (!isValid) return;
 
     if (isAvatar) setUploadingAvatar(true);
     else setUploadingBanner(true);
 
     try {
-      const base64Str = await compressImage(file, isAvatar ? 400 : 1200);
-      if (isAvatar) setEditAvatar(base64Str);
-      else setEditBanner(base64Str);
+      const path = `users/${user.id}/${isAvatar ? 'avatar' : 'banner'}_${Date.now()}`;
+      const url = await storageService.uploadFile(file, path);
+      
+      if (isAvatar) setEditAvatar(url);
+      else setEditBanner(url);
+      
+      toast.success(`${isAvatar ? 'Avatar' : 'Banner'} uploaded!`);
     } catch (err) {
-      toast.error('Failed to process image');
+      toast.error('Failed to upload image');
     } finally {
       if (isAvatar) setUploadingAvatar(false);
       else setUploadingBanner(false);

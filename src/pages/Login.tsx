@@ -11,7 +11,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithP
 import { auth, appleProvider, googleProvider } from '../services/firebase';
 
 export const Login = () => {
-  const { user, firebaseUser, setUser, logOut } = useAuth();
+  const { user, firebaseUser, logOut, isAdmin, setUser } = useAuth();
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -19,32 +19,6 @@ export const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Auto-check for pre-registration if authenticated but no profile
-  React.useEffect(() => {
-    const checkPreRegistration = async () => {
-        if (firebaseUser && !user) {
-            try {
-                setLoading(true);
-                const claimedUser = await dbService.checkAndClaimPreRegistration(
-                    firebaseUser.email!, 
-                    firebaseUser.uid, 
-                    firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Unnamed user'
-                );
-                
-                if (claimedUser) {
-                    setUser(claimedUser);
-                    toast.success("Welcome! Your account was pre-authorized.");
-                }
-            } catch (err) {
-                handleAsyncError(err, "Pre-registration check failed");
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
-    checkPreRegistration();
-  }, [firebaseUser, user]);
 
   if (user) return <Navigate to="/dashboard" replace />;
 

@@ -18,44 +18,67 @@ import { Navbar } from "./components/Navbar";
 import { SplashScreen } from "./components/SplashScreen";
 import { DailyRewardModal } from "./components/DailyRewardModal";
 import { NotificationManager } from "./components/NotificationManager";
-const AIPet = React.lazy(() => import("./components/AIPet").then(m => ({ default: m.AIPet })));
-const AdminPet = React.lazy(() => import("./components/AdminPet").then(m => ({ default: m.AdminPet })));
+// Lazy load components/pages with retry logic for robustness
+const lazyRetry = (componentImport: any) => 
+  React.lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.error("Lazy load failed, retrying...", error);
+      // Retry once after a delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      return await componentImport();
+    }
+  });
+
+const AIPet = lazyRetry(() => import("./components/AIPet").then(m => ({ default: m.AIPet })));
+const AdminPet = lazyRetry(() => import("./components/AdminPet").then(m => ({ default: m.AdminPet })));
 import { VersionUpdateModal } from "./components/VersionUpdateModal";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 import { InstallPrompt } from "./components/InstallPrompt";
 import { getCleanInventory } from "./lib/utils";
 
 // Lazy load pages for performance
-const Login = React.lazy(() => import("./pages/Login").then(m => ({ default: m.Login })));
-const Dashboard = React.lazy(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
-const Assignments = React.lazy(() => import("./pages/Assignments").then(m => ({ default: m.Assignments })));
-const AssignmentDetail = React.lazy(() => import("./pages/AssignmentDetail").then(m => ({ default: m.AssignmentDetail })));
-const Wallet = React.lazy(() => import("./pages/Wallet").then(m => ({ default: m.Wallet })));
-const Leaderboard = React.lazy(() => import("./pages/Leaderboard").then(m => ({ default: m.Leaderboard })));
-const AdminPanel = React.lazy(() => import("./pages/Admin").then(m => ({ default: m.AdminPanel })));
-const AdminAnalytics = React.lazy(() => import("./pages/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
-const Scorecard = React.lazy(() => import("./pages/Scorecard").then(m => ({ default: m.Scorecard })));
-const Shop = React.lazy(() => import("./pages/Shop").then(m => ({ default: m.Shop })));
-const Profile = React.lazy(() => import("./pages/Profile").then(m => ({ default: m.Profile })));
-const Badges = React.lazy(() => import("./pages/Badges").then(m => ({ default: m.Badges })));
-const Syndicates = React.lazy(() => import("./pages/Syndicates").then(m => ({ default: m.Syndicates })));
+const Login = lazyRetry(() => import("./pages/Login").then(m => ({ default: m.Login })));
+const Dashboard = lazyRetry(() => import("./pages/Dashboard").then(m => ({ default: m.Dashboard })));
+const Assignments = lazyRetry(() => import("./pages/Assignments").then(m => ({ default: m.Assignments })));
+const AssignmentDetail = lazyRetry(() => import("./pages/AssignmentDetail").then(m => ({ default: m.AssignmentDetail })));
+const Wallet = lazyRetry(() => import("./pages/Wallet").then(m => ({ default: m.Wallet })));
+const Leaderboard = lazyRetry(() => import("./pages/Leaderboard").then(m => ({ default: m.Leaderboard })));
+const AdminPanel = lazyRetry(() => import("./pages/Admin").then(m => ({ default: m.AdminPanel })));
+const AdminAnalytics = lazyRetry(() => import("./pages/AdminAnalytics").then(m => ({ default: m.AdminAnalytics })));
+const Scorecard = lazyRetry(() => import("./pages/Scorecard").then(m => ({ default: m.Scorecard })));
+const Shop = lazyRetry(() => import("./pages/Shop").then(m => ({ default: m.Shop })));
+const Profile = lazyRetry(() => import("./pages/Profile").then(m => ({ default: m.Profile })));
+const Badges = lazyRetry(() => import("./pages/Badges").then(m => ({ default: m.Badges })));
+const Syndicates = lazyRetry(() => import("./pages/Syndicates").then(m => ({ default: m.Syndicates })));
 
-const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading } = useAuth();
+import { useMaintenance } from "./hooks/useMaintenance";
+
+const RequireAuth: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
+  const { user, loading, isAdmin } = useAuth();
   if (loading) return <SplashScreen />;
   if (!user) return <Navigate to="/login" replace />;
+  if (adminOnly && !isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 };
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const itemVariants = {
+    initial: { opacity: 0, y: 10, scale: 0.98 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -10, scale: 0.98 },
+  };
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.98 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -10, scale: 0.98 }}
+      variants={itemVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       transition={{ 
-        duration: 0.3, 
-        ease: [0.16, 1, 0.3, 1] // Custom ease-out (Quartic)
+        duration: 0.4, 
+        ease: [0.16, 1, 0.3, 1] 
       }}
       className="h-full w-full relative"
     >
@@ -219,7 +242,7 @@ const AnimatedRoutes = () => {
         path="/admin"
         element={
           <React.Suspense fallback={<SplashScreen />}>
-            <RequireAuth>
+            <RequireAuth adminOnly>
               <PageWrapper>
                 <AdminPanel />
               </PageWrapper>
@@ -253,42 +276,8 @@ const AppRoutes = () => {
     }
   }, [toasts]);
 
-  React.useEffect(() => {
-    if (user?.id) {
-      // Balance cleanup - ensure minimum coins is 0
-      if ((user.coins || 0) < 0) {
-        dbService.updateUser(user.id, {
-          coins: 0
-        }).catch(err => console.error("Balance correction failed:", err));
-      }
-
-      // Inventory cleanup - only if needed
-      const cleanInv = getCleanInventory(user);
-      if (cleanInv.length !== (user.inventory?.length || 0)) {
-        dbService.updateUser(user.id, {
-          inventory: cleanInv
-        }).catch(err => console.error("Inventory cleanup failed:", err));
-      }
-
-      // Welcome notification - strictly once per 24 hours
-      const storageKey = `welcome_notified_${user.id}`;
-      const lastNotified = localStorage.getItem(storageKey);
-      const now = Date.now();
-      const ONE_DAY = 24 * 60 * 60 * 1000;
-
-      if (!lastNotified || now - parseInt(lastNotified) > ONE_DAY) {
-        localStorage.setItem(storageKey, now.toString());
-        dbService.createNotification({
-          userId: user.id,
-          title: `Welcome back, ${user.name}!`,
-          message: "Ready for today's research missions?",
-          type: 'info',
-          read: false,
-          createdAt: Date.now()
-        }).catch(err => console.error("Welcome notification failed:", err));
-      }
-    }
-  }, [user?.id]); // Only run when user ID changes (login/logout)
+  // Handle essential user maintenance tasks
+  useMaintenance(user);
 
   useEffect(() => {
     document.documentElement.classList.add("dark");
@@ -318,8 +307,8 @@ const AppRoutes = () => {
         }}
       />
       <Navbar />
-      <main className="flex-grow w-full relative pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-8 pt-[calc(64px+env(safe-area-inset-top))] md:pt-[calc(80px+env(safe-area-inset-top))] overflow-x-hidden">
-        <div className="mx-auto px-4 md:px-6 lg:px-8 max-w-7xl min-h-full">
+      <main className="flex-grow w-full relative pb-safe-bottom md:pb-8 pt-safe-top-nav overflow-x-hidden md:px-0">
+        <div className="mx-auto max-w-7xl px-0 md:px-6 lg:px-8">
           <AnimatedRoutes />
           <DailyRewardModal />
           <VersionUpdateModal />
@@ -336,12 +325,19 @@ const AppRoutes = () => {
   );
 };
 
+import { QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { queryClient } from "./lib/queryClient";
+
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </AuthProvider>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }

@@ -1,0 +1,19 @@
+import { QueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes default
+      gcTime: 1000 * 60 * 30, // 30 minutes
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      onError: (error: any) => {
+        const message = error instanceof Error ? error.message : 'An error occurred';
+        toast.error(message);
+      },
+    },
+  },
+});

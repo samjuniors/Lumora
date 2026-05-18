@@ -16,10 +16,20 @@ export const ResourceCollector = () => {
   const [timeLeft, setTimeLeft] = useState<string>('');
   const [canCollect, setCanCollect] = useState(false);
 
+  const isMounted = React.useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     
     const checkStatus = () => {
+      if (!isMounted.current) return;
       const now = Date.now();
       const lastClaimed = user.lastCollectionTime || 0;
       const hoursSinceLastClaim = (now - lastClaimed) / (1000 * 60 * 60);
@@ -66,9 +76,7 @@ export const ResourceCollector = () => {
           diamondsAmount = 0;
       }
 
-      dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(e => {
-        console.warn("Background collect failed", e);
-      });
+      dbService.claimCollectorReward(user.id, coinsAmount, diamondsAmount).catch(() => {});
 
       updateResources({ 
         coins: (user.coins || 0) + coinsAmount,
@@ -85,13 +93,16 @@ export const ResourceCollector = () => {
           duration: 4000 
       });
       
-      setCollected(true);
-      setTimeout(() => setCollected(false), 3000);
-      setLoading(false);
+      if (isMounted.current) {
+        setCollected(true);
+        setTimeout(() => { if (isMounted.current) setCollected(false); }, 3000);
+        setLoading(false);
+      }
     } catch (e: any) {
-      console.error(e);
-      toast.error("Failed to collect resources. Please try again.");
-      setLoading(false);
+      if (isMounted.current) {
+        toast.error("Failed to collect resources. Please try again.");
+        setLoading(false);
+      }
     }
   };
 
@@ -111,16 +122,17 @@ export const ResourceCollector = () => {
       dbService.updateUser(user.id, { 
         lastCollectionTime: 0, 
         diamonds: (user.diamonds || 0) - resetCost 
-      }).catch(e => {
-        console.warn("Background reset failed", e);
-      });
+      }).catch(() => {});
+      
       updateResources({ diamonds: (user.diamonds || 0) - resetCost });
       toast.success("Collector Reset! Ready to mine.");
-      setLoading(false);
+      
+      if (isMounted.current) setLoading(false);
     } catch (e: any) {
-      console.error(e);
-      toast.error("Failed to reset.");
-      setLoading(false);
+      if (isMounted.current) {
+        toast.error("Failed to reset.");
+        setLoading(false);
+      }
     }
   };
 

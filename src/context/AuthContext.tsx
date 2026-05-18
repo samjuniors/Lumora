@@ -1,13 +1,15 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, signOut, User as FirebaseUser } from 'firebase/auth';
-import { auth, googleProvider } from '../services/firebase';
-import { dbService } from '../services/dbProvider';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
+import { authService, userService, adminService } from '../services/dbProvider';
 import { User } from '../types';
+import { isSuperAdmin, isAdmin, isStudent } from '../lib/permissions';
 
 interface AuthContextType {
-  firebaseUser: FirebaseUser | null;
+  firebaseUser: any | null;
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
+  isSuperAdmin: boolean;
+  isStudent: boolean;
   signIn: () => Promise<void>;
   logOut: () => Promise<void>;
   updateResources: (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => void;
@@ -18,6 +20,9 @@ const AuthContext = createContext<AuthContextType>({
   firebaseUser: null,
   user: null,
   loading: true,
+  isAdmin: false,
+  isSuperAdmin: false,
+  isStudent: false,
   signIn: async () => {},
   logOut: async () => {},
   updateResources: () => {},
@@ -25,9 +30,15 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [firebaseUser, setFirebaseUser] = useState<any | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const authValues = useMemo(() => ({
+    isAdmin: isAdmin(user),
+    isSuperAdmin: isSuperAdmin(user),
+    isStudent: isStudent(user)
+  }), [user]);
 
   const updateResources = (resources: Partial<{ coins: number; diamonds: number; xp: number }>) => {
     if (user) {
@@ -35,134 +46,109 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const unsubscribeSnapshot = React.useRef<(() => void) | null>(null);
+  const isMounted = React.useRef(true);
+
   useEffect(() => {
-    let unsubscribeSnapshot: (() => void) | undefined;
-
-    const unsubscribeAuth = onAuthStateChanged(auth, async (fUser: FirebaseUser | null) => {
+    isMounted.current = true;
+    const unsubscribeAuth = authService.onAuthStateChanged(async (fUser) => {
+      if (!isMounted.current) return;
+      
       setFirebaseUser(fUser);
+      
+      if (unsubscribeSnapshot.current) {
+        unsubscribeSnapshot.current();
+        unsubscribeSnapshot.current = null;
+      }
+
       if (fUser) {
-        // Listen to real-time changes via dbService
-        unsubscribeSnapshot = dbService.subscribeToUser(fUser.uid, (data) => {
+        unsubscribeSnapshot.current = userService.subscribeToUser(fUser.uid, (data) => {
+          if (!isMounted.current) return;
+          
           if (data) {
-            const updates: Partial<User> = {};
-            const isAdminEmail = fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || 
-                               fUser.email?.toLowerCase() === 'luvkus8@gmail' || 
-                               fUser.email?.toLowerCase() === 'luvkush8@gmail.com';
-
-            if (isAdminEmail && data.role !== 'superadmin') {
-              updates.role = 'superadmin';
-            }
-            
-            if (!data.luminaId) {
-              const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-              const randomChar = chars.charAt(Math.floor(Math.random() * chars.length));
-              const randomNum = Math.floor(1000 + Math.random() * 9000);
-              updates.luminaId = `LMN-${randomChar}${randomNum}`;
-            }
-
-            if (Object.keys(updates).length > 0) {
-              const updatedKeys = Object.keys(updates);
-              // Only call initialize if necessary
-              const finalUpdates: Partial<User> = {};
-              updatedKeys.forEach(k => {
-                const key = k as keyof User;
-                if (updates[key] !== data[key]) {
-                   (finalUpdates as any)[key] = updates[key];
-                }
-              });
-
-              if (Object.keys(finalUpdates).length > 0) {
-                dbService.initializeUser(fUser.uid, finalUpdates);
-              }
+            // Check for role upgrades (e.g. if email was added to admin list)
+            if (isSuperAdmin({ ...data, email: fUser.email || data.email }) && data.role !== 'superadmin') {
+              userService.updateUser(fUser.uid, { role: 'superadmin' });
             }
 
             setUser(data);
             setLoading(false);
-          } else if (fUser.email?.toLowerCase() === 'luvkus8@gmail.com' || fUser.email?.toLowerCase() === 'luvkus8@gmail' || fUser.email?.toLowerCase() === 'luvkush8@gmail.com') {
-            // Auto create superadmin
-            const createAdmin = async () => {
-              try {
-                const newUser: User = {
-                  id: fUser.uid,
-                  email: fUser.email || '',
-                  name: fUser.displayName || 'Grand Admin',
-                  role: 'superadmin',
-                  coins: 1000,
-                  diamonds: 500,
-                  createdAt: Date.now(),
-                  updatedAt: Date.now(),
-                  achievements: [],
-                  inventory: [],
-                  streak: 0,
-                  vipExp: 0,
-                  vipLevel: 0,
-                  xp: 0
-                };
-                await dbService.createUser(fUser.uid, newUser);
-              } catch (err) {
-                console.error('Failed to auto-create superadmin:', err);
-                setUser(null);
-                setLoading(false);
-              }
-            };
-            createAdmin();
           } else {
-            // Auto-create standard user with 50 coins and 50 diamonds
-            const createUserAccount = async () => {
-              try {
-                const newUser: User = {
-                  id: fUser.uid,
-                  email: fUser.email || '',
-                  name: fUser.displayName || fUser.email?.split('@')[0] || 'User',
-                  role: 'student',
-                  coins: 50,
-                  diamonds: 50,
-                  createdAt: Date.now(),
-                  updatedAt: Date.now(),
-                  achievements: [],
-                  inventory: [],
-                  streak: 0,
-                  vipExp: 0,
-                  vipLevel: 0,
-                  xp: 0
-                };
-                await dbService.createUser(fUser.uid, newUser);
-              } catch (err) {
-                console.error('Failed to auto-create user:', err);
+            // Auto-create user profile if it doesn't exist
+            const initUser = async () => {
+              // First check for pre-registration
+              const claimed = await adminService.checkAndClaimPreRegistration(
+                fUser.email || '', 
+                fUser.uid, 
+                fUser.displayName || fUser.email?.split('@')[0] || 'User'
+              );
+              
+              if (claimed) return; // User already created by claim
+
+              const isDefaultAdmin = isSuperAdmin({ email: fUser.email || '' } as User);
+              
+              const newUser: User = {
+                id: fUser.uid,
+                email: fUser.email || '',
+                name: fUser.displayName || fUser.email?.split('@')[0] || 'User',
+                role: isDefaultAdmin ? 'superadmin' : 'student',
+                coins: isDefaultAdmin ? 1000 : 50,
+                diamonds: isDefaultAdmin ? 500 : 50,
+                createdAt: Date.now(),
+                updatedAt: Date.now(),
+                achievements: [],
+                inventory: [],
+                streak: 0,
+                vipExp: 0,
+                vipLevel: 0,
+                xp: 0
+              };
+
+              await userService.createUser(fUser.uid, newUser);
+            };
+
+            initUser().catch(() => {
+              if (isMounted.current) {
                 setUser(null);
                 setLoading(false);
               }
-            };
-            createUserAccount();
+            });
           }
         });
       } else {
         setUser(null);
         setLoading(false);
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-        }
       }
     });
 
     return () => {
+      isMounted.current = false;
       unsubscribeAuth();
-      if (unsubscribeSnapshot) {
-        unsubscribeSnapshot();
+      if (unsubscribeSnapshot.current) {
+        unsubscribeSnapshot.current();
       }
     };
   }, []);
 
   const signIn = async () => {
-    await signInWithPopup(auth, googleProvider);
+    await authService.signInWithGoogle();
   };
 
   const logOut = async () => {
-    await signOut(auth);
+    await authService.signOut();
   };
 
   return (
-    <AuthContext.Provider value={{ firebaseUser, user, loading, signIn, logOut, updateResources, setUser }}>
+    <AuthContext.Provider value={{ 
+      firebaseUser, 
+      user, 
+      loading, 
+      ...authValues,
+      signIn, 
+      logOut, 
+      updateResources, 
+      setUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );

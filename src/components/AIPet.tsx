@@ -41,9 +41,17 @@ export const AIPet = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { playSound } = useSound();
 
-  const isStudent = user?.role === 'student';
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const { currentLevel } = useMemo(() => getUserLevelAndXP(user), [user]);
+  const isStudent = user?.role === 'student';
 
   const petStageLevel = useMemo(() => {
     if (currentLevel < 5) return 0;
@@ -162,12 +170,18 @@ export const AIPet = () => {
     // Call API
     try {
       const responseText = await chatWithAI(apiMessages);
-      setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+      if (isMounted.current) {
+        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+      }
     } catch (err) {
-      toast.error("AI connection failed. Coins were still deducted for the attempt.");
+      if (isMounted.current) {
+        toast.error("AI connection failed. Coins were still deducted for the attempt.");
+      }
     } finally {
-      setIsTyping(false);
-      playSound('notification');
+      if (isMounted.current) {
+        setIsTyping(false);
+        playSound('notification');
+      }
     }
   };
 
