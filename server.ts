@@ -143,9 +143,49 @@ async function startServer() {
     }
   });
 
+  app.delete("/api/users/:uid", async (req, res) => {
+    try {
+      const { uid } = req.params;
+      await prisma.user.delete({
+        where: { id: uid }
+      });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Pg Delete] Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.patch("/api/users/:uid", async (req, res) => {
+    try {
+      const { uid } = req.params;
+      const data = req.body;
+      
+      const postgresUser = await prisma.user.update({
+        where: { id: uid },
+        data: {
+          ...(data.email !== undefined && { email: data.email }),
+          ...(data.name !== undefined && { name: data.name }),
+          ...(data.role !== undefined && { role: data.role as any }),
+          ...(data.coins !== undefined && { coins: data.coins }),
+          ...(data.diamonds !== undefined && { diamonds: data.diamonds }),
+          ...(data.xp !== undefined && { xp: data.xp }),
+          ...(data.level !== undefined && { level: data.level }),
+          ...(data.streak !== undefined && { streak: data.streak }),
+          ...(data.avatar !== undefined && { avatar: data.avatar }),
+          ...(data.theme !== undefined && { theme: data.theme }),
+        }
+      });
+      res.json({ success: true, user: postgresUser });
+    } catch (err: any) {
+      console.error("[Pg Update] Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   app.post("/api/sync/user", async (req, res) => {
     try {
-      const { uid, email, name, role } = req.body;
+      const { uid, email, name, role, coins, diamonds, xp, level, streak } = req.body;
       if (!uid || !email) {
         return res.status(400).json({ error: "Missing required sync fields" });
       }
@@ -157,13 +197,23 @@ async function startServer() {
         update: {
           email,
           name: name || '',
-          role: role as any || 'student'
+          role: role as any || 'student',
+          ...(coins !== undefined && { coins }),
+          ...(diamonds !== undefined && { diamonds }),
+          ...(xp !== undefined && { xp }),
+          ...(level !== undefined && { level }),
+          ...(streak !== undefined && { streak }),
         },
         create: {
           id: uid,
           email,
           name: name || '',
-          role: role as any || 'student'
+          role: role as any || 'student',
+          coins: coins ?? 0,
+          diamonds: diamonds ?? 0,
+          xp: xp ?? 0,
+          level: level ?? 1,
+          streak: streak ?? 0,
         }
       });
       
@@ -172,6 +222,307 @@ async function startServer() {
       console.error("[Pg Sync] Error:", err.message);
       // We don't want sync errors to break the user experience yet while Firestore is primary
       res.status(200).json({ success: false, error: err.message });
+    }
+  });
+
+  app.get("/api/assignments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const assignment = await prisma.assignment.findUnique({
+        where: { id }
+      });
+      if (assignment) {
+        res.json(assignment);
+      } else {
+        res.status(404).json({ error: "Assignment not found in SQL" });
+      }
+    } catch (err: any) {
+      console.error("[Pg Read] Assignment Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.patch("/api/assignments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      
+      const postgresAssignment = await prisma.assignment.update({
+        where: { id },
+        data: {
+          ...(data.title !== undefined && { title: data.title }),
+          ...(data.description !== undefined && { description: data.description }),
+          ...(data.dueDate !== undefined && { dueDate: data.dueDate }),
+          ...(data.points !== undefined && { points: data.points }),
+          ...(data.status !== undefined && { status: data.status }),
+          ...(data.createdBy !== undefined && { createdBy: data.createdBy }),
+          ...(data.createdAt !== undefined && { createdAt: new Date(data.createdAt).toISOString() }),
+          ...(data.hasAiFeedback !== undefined && { hasAiFeedback: data.hasAiFeedback }),
+          ...(data.requireUpload !== undefined && { requireUpload: data.requireUpload }),
+          ...(data.allowedFileTypes !== undefined && { allowedFileTypes: data.allowedFileTypes }),
+          ...(data.difficulty !== undefined && { difficulty: data.difficulty }),
+          ...(data.category !== undefined && { category: data.category }),
+          ...(data.timeLimit !== undefined && { timeLimit: data.timeLimit }),
+          ...(data.maxAttempts !== undefined && { maxAttempts: data.maxAttempts })
+        }
+      });
+      res.json({ success: true, assignment: postgresAssignment });
+    } catch (err: any) {
+      console.error("[Pg Update] Assignment Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/assignments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await prisma.assignment.delete({
+        where: { id }
+      });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Pg Delete] Assignment Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/assignments", async (req, res) => {
+    try {
+      const { limit, offset } = req.query;
+      const take = limit ? parseInt(limit as string, 10) : 50;
+      const skip = offset ? parseInt(offset as string, 10) : 0;
+
+      const assignments = await prisma.assignment.findMany({
+        take,
+        skip,
+        orderBy: { createdAt: 'desc' }
+      });
+      res.json(assignments);
+    } catch (err: any) {
+      console.error("[Pg Read All] Assignment Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/sync/assignment", async (req, res) => {
+    try {
+      const {
+        id, title, description, dueDate, points, status, createdBy, createdAt,
+        hasAiFeedback, requireUpload, allowedFileTypes, difficulty, category, timeLimit, maxAttempts
+      } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: "Missing assignment id" });
+      }
+
+      // Check if assignment already exists
+      const existing = await prisma.assignment.findUnique({ where: { id } });
+
+      let postgresAssignment;
+
+      if (existing) {
+        // Update
+        postgresAssignment = await prisma.assignment.update({
+          where: { id },
+          data: {
+            ...(title !== undefined && { title }),
+            ...(description !== undefined && { description }),
+            ...(dueDate !== undefined && { dueDate }),
+            ...(points !== undefined && { points }),
+            ...(status !== undefined && { status }),
+            ...(createdBy !== undefined && { createdBy }),
+            ...(createdAt !== undefined && { createdAt: new Date(createdAt).toISOString() }),
+            ...(hasAiFeedback !== undefined && { hasAiFeedback }),
+            ...(requireUpload !== undefined && { requireUpload }),
+            ...(allowedFileTypes !== undefined && { allowedFileTypes }),
+            ...(difficulty !== undefined && { difficulty }),
+            ...(category !== undefined && { category }),
+            ...(timeLimit !== undefined && { timeLimit }),
+            ...(maxAttempts !== undefined && { maxAttempts })
+          }
+        });
+      } else {
+        // Create requires title
+        if (!title) {
+           return res.status(400).json({ error: "Missing required title for new assignment" });
+        }
+        postgresAssignment = await prisma.assignment.create({
+          data: {
+            id,
+            title,
+            description: description || '',
+            dueDate: dueDate || '',
+            points: points ?? 0,
+            status: status || 'draft',
+            createdBy: createdBy || null,
+            createdAt: createdAt ? new Date(createdAt).toISOString() : null,
+            hasAiFeedback: hasAiFeedback ?? false,
+            requireUpload: requireUpload ?? false,
+            allowedFileTypes: allowedFileTypes || [],
+            difficulty: difficulty || null,
+            category: category || null,
+            timeLimit: timeLimit ?? null,
+            maxAttempts: maxAttempts ?? null
+          }
+        });
+      }
+      
+      res.json({ success: true, assignment: postgresAssignment });
+    } catch (err: any) {
+      console.error("[Pg Sync] Assignment Error:", err.message);
+      res.status(200).json({ success: false, error: err.message }); // Keep it 200 so it doesn't break everything
+    }
+  });
+
+  // Submissions API Routes
+  app.get("/api/submissions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const submission = await prisma.submission.findUnique({
+        where: { id }
+      });
+      if (submission) {
+        res.json(submission);
+      } else {
+        res.status(404).json({ error: "Submission not found" });
+      }
+    } catch (err: any) {
+      console.error("[Pg Read] Submission Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.patch("/api/submissions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      
+      const postgresSubmission = await prisma.submission.update({
+        where: { id },
+        data: {
+          ...(data.assignmentId !== undefined && { assignmentId: data.assignmentId }),
+          ...(data.studentId !== undefined && { studentId: data.studentId }),
+          ...(data.content !== undefined && { content: data.content }),
+          ...(data.attachments !== undefined && { attachments: data.attachments }),
+          ...(data.aiScore !== undefined && { aiScore: data.aiScore }),
+          ...(data.aiFeedback !== undefined && { aiFeedback: data.aiFeedback }),
+          ...(data.feedback !== undefined && { feedback: data.feedback }),
+          ...(data.calculatedReward !== undefined && { calculatedReward: data.calculatedReward }),
+          ...(data.penaltyAmount !== undefined && { penaltyAmount: data.penaltyAmount }),
+          ...(data.status !== undefined && { status: data.status }),
+          ...(data.tabSwitches !== undefined && { tabSwitches: data.tabSwitches }),
+          ...(data.pasteCount !== undefined && { pasteCount: data.pasteCount }),
+          ...(data.submittedAt !== undefined && { submittedAt: data.submittedAt ? new Date(data.submittedAt).toISOString() : null }),
+          ...(data.updatedAt !== undefined && { updatedAt: data.updatedAt ? new Date(data.updatedAt).toISOString() : null })
+        }
+      });
+      res.json({ success: true, submission: postgresSubmission });
+    } catch (err: any) {
+      console.error("[Pg Update] Submission Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.delete("/api/submissions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      await prisma.submission.delete({
+        where: { id }
+      });
+      res.json({ success: true });
+    } catch (err: any) {
+      console.error("[Pg Delete] Submission Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.get("/api/submissions", async (req, res) => {
+    try {
+      const { limit, offset, assignmentId, studentId, status } = req.query;
+      const take = limit ? parseInt(limit as string, 10) : 50;
+      const skip = offset ? parseInt(offset as string, 10) : 0;
+      
+      let where: any = {};
+      if (assignmentId) where.assignmentId = assignmentId as string;
+      if (studentId) where.studentId = studentId as string;
+      if (status) where.status = status as string;
+
+      const submissions = await prisma.submission.findMany({
+        where,
+        take,
+        skip,
+        orderBy: { submittedAt: 'desc' }
+      });
+      res.json(submissions);
+    } catch (err: any) {
+      console.error("[Pg Read All] Submission Error:", err.message);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/api/sync/submission", async (req, res) => {
+    try {
+      const {
+        id, assignmentId, studentId, content, attachments, aiScore, aiFeedback,
+        feedback, calculatedReward, penaltyAmount, status, tabSwitches, pasteCount,
+        submittedAt, updatedAt
+      } = req.body;
+      
+      if (!id || !assignmentId || !studentId) {
+        return res.status(400).json({ error: "Missing required submission fields" });
+      }
+
+      // Check if submission already exists
+      const existing = await prisma.submission.findUnique({ where: { id } });
+      
+      let postgresSubmission;
+
+      if (existing) {
+        postgresSubmission = await prisma.submission.update({
+          where: { id },
+          data: {
+            ...(assignmentId !== undefined && { assignmentId }),
+            ...(studentId !== undefined && { studentId }),
+            ...(content !== undefined && { content }),
+            ...(attachments !== undefined && { attachments }),
+            ...(aiScore !== undefined && { aiScore }),
+            ...(aiFeedback !== undefined && { aiFeedback }),
+            ...(feedback !== undefined && { feedback }),
+            ...(calculatedReward !== undefined && { calculatedReward }),
+            ...(penaltyAmount !== undefined && { penaltyAmount }),
+            ...(status !== undefined && { status }),
+            ...(tabSwitches !== undefined && { tabSwitches }),
+            ...(pasteCount !== undefined && { pasteCount }),
+            ...(submittedAt !== undefined && { submittedAt: submittedAt ? new Date(submittedAt).toISOString() : null }),
+            ...(updatedAt !== undefined && { updatedAt: updatedAt ? new Date(updatedAt).toISOString() : null })
+          }
+        });
+      } else {
+        postgresSubmission = await prisma.submission.create({
+          data: {
+            id,
+            assignmentId,
+            studentId,
+            content: content || '',
+            attachments: attachments || null,
+            aiScore: aiScore ?? null,
+            aiFeedback: aiFeedback || null,
+            feedback: feedback || null,
+            calculatedReward: calculatedReward ?? null,
+            penaltyAmount: penaltyAmount ?? null,
+            status: status || 'pending',
+            tabSwitches: tabSwitches ?? 0,
+            pasteCount: pasteCount ?? 0,
+            submittedAt: submittedAt ? new Date(submittedAt).toISOString() : null,
+            updatedAt: updatedAt ? new Date(updatedAt).toISOString() : null
+          }
+        });
+      }
+      
+      res.json({ success: true, submission: postgresSubmission });
+    } catch (err: any) {
+      console.error("[Pg Sync] Submission Error:", err.message);
+      res.status(200).json({ success: false, error: err.message }); // Keep it 200 so it doesn't break everything
     }
   });
 

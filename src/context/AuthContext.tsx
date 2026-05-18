@@ -171,7 +171,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               uid: data.id,
               email: data.email,
               name: data.name,
-              role: data.role
+              role: data.role,
+              coins: data.coins,
+              diamonds: data.diamonds,
+              xp: data.xp,
+              level: data.level,
+              streak: data.streak
             })
           }).catch(e => console.warn("Pg Sync Failed:", e));
 
@@ -219,7 +224,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   uid: activeSessionUser.uid,
                   email: activeSessionUser.email,
                   name: newUser.name,
-                  role: newUser.role
+                  role: newUser.role,
+                  coins: newUser.coins,
+                  diamonds: newUser.diamonds,
+                  xp: newUser.xp,
+                  level: newUser.level,
+                  streak: newUser.streak
                 })
               }).catch(e => console.warn("Pg Sync Failed:", e));
 
@@ -259,7 +269,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(null);
       setLoading(false);
     }
-  }, [activeSessionUser?.uid, activeSessionUser?.email]);
+  }, [activeSessionUser?.uid, activeSessionUser?.email, isAuthInitialized]);
 
   const signInWithProvider = async (provider: 'google' | 'apple') => {
     if (CLERK_PUBLISHABLE_KEY) {

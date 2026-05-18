@@ -19,7 +19,7 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
   const navigate = useNavigate();
   const now = Date.now();
   
-  const sortedItems = [...group.items].sort((a, b) => (a.startDate || a.dueDate) - (b.startDate || b.dueDate));
+  const sortedItems = [...group.items].sort((a, b) => Number(a.startDate || a.dueDate || 0) - Number(b.startDate || b.dueDate || 0));
 
   const getMissionState = (a: Assignment) => {
     const status = getAssignmentStatus(a, enrollments, isStudent, userId);
@@ -61,9 +61,9 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
   useEffect(() => {
     let targetTime = 0;
     if (currentActive) {
-      targetTime = currentActive.dueDate;
+      targetTime = Number(currentActive.dueDate || 0);
     } else if (upcoming) {
-      targetTime = upcoming.startDate || upcoming.dueDate;
+      targetTime = Number(upcoming.startDate || upcoming.dueDate || 0);
     }
 
     if (!targetTime || isAllFinished) return;
@@ -88,7 +88,7 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
     return () => clearInterval(interval);
   }, [currentActive, upcoming, isAllFinished]);
 
-  const overallStatus = isAllFinished ? 'completed' : (currentActive ? (now > currentActive.dueDate ? 'missed' : 'active') : 'upcoming');
+  const overallStatus = isAllFinished ? 'completed' : (currentActive ? (now > Number(currentActive.dueDate || 0) ? 'missed' : 'active') : 'upcoming');
   const config = getStatusConfig(overallStatus as any);
 
   return (
@@ -146,9 +146,9 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
                   <div className="flex items-center gap-2 mb-1.5">
                     <span className={cn(
                       "px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest rounded border",
-                      now > currentActive.dueDate ? "bg-error/10 text-error border-error/20" : "bg-success/10 text-success border-success/20"
+                      now > Number(currentActive.dueDate || 0) ? "bg-error/10 text-error border-error/20" : "bg-success/10 text-success border-success/20"
                     )}>
-                      {now > currentActive.dueDate ? 'Expired' : 'Active'} M{currentActive.missionNumber || 1}
+                      {now > Number(currentActive.dueDate || 0) ? 'Expired' : 'Active'} M{currentActive.missionNumber || 1}
                     </span>
                     {currentActive.xpReward > 0 && (
                       <span className="text-[9px] font-black text-brand-gold-hover uppercase">+{currentActive.xpReward} XP</span>
@@ -158,7 +158,7 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
                 </div>
                 
                 <div className="shrink-0 bg-navy-900/50 border border-navy-700 px-2 py-1 rounded-lg flex items-center gap-1.5">
-                  <Clock size={10} className={cn(now > currentActive.dueDate ? "text-error" : "text-brand-gold")} />
+                  <Clock size={10} className={cn(now > Number(currentActive.dueDate || 0) ? "text-error" : "text-brand-gold")} />
                   <span className="font-mono text-[10px] font-bold text-text-primary">{timeLeftStr || '00:00:00'}</span>
                 </div>
               </div>
@@ -169,7 +169,7 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
                   onClick={() => navigate(`/assignments/${currentActive!.id}`)}
                   className="bg-brand-gold text-navy-950 px-3 py-1.5 rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-white transition-all shadow-glow-gold shrink-0 flex items-center gap-1"
                 >
-                  {now > currentActive.dueDate ? 'Resolve' : 'Deploy'} <ChevronRight size={12} />
+                  {now > Number(currentActive.dueDate || 0) ? 'Resolve' : 'Deploy'} <ChevronRight size={12} />
                 </button>
               </div>
             </div>
@@ -179,7 +179,7 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = ({ group,
               <Clock size={18} className="text-text-secondary" />
               <div>
                 <p className="text-xs font-bold text-text-primary">Next: {upcoming.title}</p>
-                <p className="text-[10px] text-text-secondary">Expected {upcoming.startDate ? format(upcoming.startDate, 'MMM d') : 'soon'}</p>
+                <p className="text-[10px] text-text-secondary">Expected {upcoming.startDate ? format(new Date(upcoming.startDate), 'MMM d') : 'soon'}</p>
               </div>
             </div>
             <div className="text-[9px] font-black text-brand-gold uppercase tracking-tighter">In {timeLeftStr}</div>

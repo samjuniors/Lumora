@@ -146,7 +146,7 @@ export const Dashboard = () => {
     visibleAssignments.forEach((a) => {
       let sKey = a.subject;
       if (!sKey) {
-        sKey = a.title.replace(/ \((Session|Day) \d+\)$/, "");
+        sKey = (a.title || "Untitled").replace(/ \((Session|Day) \d+\)$/, "");
       }
       if (!sKey) sKey = "General Tasks";
 
@@ -156,8 +156,8 @@ export const Dashboard = () => {
 
     Object.keys(groups).forEach((k) => {
       groups[k].sort((a, b) => {
-        const tA = a.startDate || a.dueDate;
-        const tB = b.startDate || b.dueDate;
+        const tA = Number(a.startDate || a.dueDate || 0);
+        const tB = Number(b.startDate || b.dueDate || 0);
         return tA - tB;
       });
     });

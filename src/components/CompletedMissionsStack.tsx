@@ -94,7 +94,7 @@ export const CompletedMissionsStack = () => {
                         <CheckCircle size={20} />
                      </div>
                      <div>
-                       <h3 className="font-bold text-sm tracking-tight text-text-primary truncate max-w-[150px] sm:max-w-[300px]">{mission.assignment.title}</h3>
+                       <h3 className="font-bold text-sm tracking-tight text-text-primary truncate max-w-[150px] sm:max-w-[300px]">{mission.assignment?.title || 'Unknown Mission'}</h3>
                        <p className="text-[10px] text-text-secondary uppercase font-bold tracking-widest">{new Date(mission.submission.submittedAt).toLocaleDateString()}</p>
                      </div>
                    </div>
@@ -133,8 +133,8 @@ export const CompletedMissionsStack = () => {
               >
                 <div className="flex justify-between items-start mb-4 gap-4">
                    <div className="min-w-0">
-                      <h3 className="font-bold text-text-primary text-base tracking-tight truncate" title={mission.assignment.title}>
-                        {mission.assignment.title}
+                      <h3 className="font-bold text-text-primary text-base tracking-tight truncate" title={mission.assignment?.title || 'Unknown Mission'}>
+                        {mission.assignment?.title || 'Unknown Mission'}
                       </h3>
                       <p className="text-[11px] text-text-secondary mt-0.5">
                         {new Date(mission.submission.submittedAt).toLocaleDateString()}
@@ -159,7 +159,7 @@ export const CompletedMissionsStack = () => {
 
                 <div className="mt-auto">
                    <Link 
-                      to={`/assignments/${mission.assignment.id}`} 
+                      to={`/assignments/${mission.assignment?.id || ''}`} 
                       className="w-full py-2 bg-navy-800 hover:bg-navy-700 border border-navy-700 text-text-primary font-bold rounded-lg transition-all text-xs flex items-center justify-center gap-2"
                    >
                      Intelligence Report <ChevronRight size={14} />

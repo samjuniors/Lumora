@@ -48,3 +48,40 @@ model User {
   syndicateId      String?
   luminaId         String?
 }
+
+model Assignment {
+  id               String   @id
+  title            String
+  description      String   @db.Text
+  dueDate          String
+  points           Int      @default(0)
+  status           String   @default("draft")
+  createdBy        String?
+  createdAt        String?
+  hasAiFeedback    Boolean? @default(false)
+  requireUpload    Boolean? @default(false)
+  allowedFileTypes String[]
+  difficulty       String?
+  category         String?
+  timeLimit        Int?
+  maxAttempts      Int?
+}
+
+model Submission {
+  id               String   @id
+  assignmentId     String
+  studentId        String
+  content          String   @db.Text
+  attachments      Json?    // Optional Array of Attachment objects
+  aiScore          Int?
+  aiFeedback       String?  @db.Text
+  feedback         Json?    
+  calculatedReward Int?
+  penaltyAmount    Int?
+  status           String   @default("pending")
+  tabSwitches      Int?     @default(0)
+  pasteCount       Int?     @default(0)
+  submittedAt      String?
+  updatedAt        String?
+}
+
