@@ -8,7 +8,7 @@ import { FirebaseUserService } from './firebase/FirebaseUserService';
 import { FirebaseAssignmentService } from './firebase/FirebaseAssignmentService';
 import { FirebaseSubmissionService } from './firebase/FirebaseSubmissionService';
 import { FirebaseWalletService } from './firebase/FirebaseWalletService';
-import { FirebaseNotificationService } from './firebase/FirebaseNotificationService';
+import { PrismaNotificationService } from './prisma/PrismaNotificationService';
 import { FirebaseAuthService } from './firebase/FirebaseAuthService';
 import { ISyndicateService } from './interfaces/ISyndicateService';
 import { IAdminService } from './interfaces/IAdminService';
@@ -59,7 +59,7 @@ class DbProvider {
 
   static getNotificationService(): INotificationService {
     if (!this.notificationServiceInstance) {
-      this.notificationServiceInstance = new FirebaseNotificationService();
+      this.notificationServiceInstance = new PrismaNotificationService();
     }
     return this.notificationServiceInstance;
   }

@@ -824,6 +824,238 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
     res.json({ success: true, provider: 'mock' });
   });
 
+  // --- NEW SQL MIGRATION ROUTES --- 
+
+  // Notifications API
+  app.get("/api/notifications", async (req, res) => {
+    try {
+      const { userId } = req.query;
+      if (!userId) return res.json([]);
+      const notifications = await prisma.notification.findMany({ where: { userId: String(userId) }, orderBy: { createdAt: "desc" } });
+      // Map back to expected types
+      res.json(notifications.map(n => ({
+        ...n,
+        createdAt: n.createdAt.getTime(),
+        read: n.read == true
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.post("/api/notifications", async (req, res) => {
+    try {
+      const { createdAt, ...data } = req.body;
+      const notif = await prisma.notification.create({ 
+        data: {
+          ...data,
+          createdAt: createdAt ? new Date(createdAt) : undefined
+        }
+      });
+      res.json({
+        ...notif,
+        createdAt: notif.createdAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/notifications/:id", async (req, res) => {
+    try {
+      const updated = await prisma.notification.update({ where: { id: req.params.id }, data: req.body });
+      res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/notifications/:id", async (req, res) => {
+    try {
+      await prisma.notification.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Invite Codes API
+  app.get("/api/invite-codes", async (req, res) => {
+    try {
+      const { code } = req.query;
+      if (code) {
+        const invite = await prisma.inviteCode.findUnique({ where: { code: String(code) } });
+        return res.json(invite ? [{
+          ...invite,
+          createdAt: invite.createdAt.getTime(),
+          updatedAt: invite.updatedAt.getTime(),
+        }] : []);
+      }
+      const invites = await prisma.inviteCode.findMany();
+      res.json(invites.map(i => ({
+          ...i,
+          createdAt: i.createdAt.getTime(),
+          updatedAt: i.updatedAt.getTime(),
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/invite-codes", async (req, res) => {
+    try {
+      const { createdAt, updatedAt, ...data } = req.body;
+      const invite = await prisma.inviteCode.create({ 
+        data: {
+          ...data,
+          createdAt: createdAt ? new Date(createdAt) : undefined
+        }
+      });
+      res.json({
+          ...invite,
+          createdAt: invite.createdAt.getTime(),
+          updatedAt: invite.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/invite-codes/:id", async (req, res) => {
+    try {
+      const updated = await prisma.inviteCode.update({ where: { id: req.params.id }, data: req.body });
+      res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/invite-codes/:id", async (req, res) => {
+    try {
+      await prisma.inviteCode.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Settings API
+  app.get("/api/settings", async (req, res) => {
+    try {
+      let settings = await prisma.settings.findUnique({ where: { id: "global" } });
+      if (!settings) settings = await prisma.settings.create({ data: { id: "global" } });
+      res.json({
+        ...settings,
+        updatedAt: settings.updatedAt.getTime()
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/settings", async (req, res) => {
+    try {
+      const updated = await prisma.settings.upsert({ where: { id: "global" }, update: req.body, create: { id: "global", ...req.body } });
+      res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Enrollments API
+  app.get("/api/enrollments", async (req, res) => {
+    try {
+      const { studentId, assignmentId } = req.query;
+      const where: any = {};
+      if (studentId) where.studentId = String(studentId);
+      if (assignmentId) where.assignmentId = String(assignmentId);
+      const enrollments = await prisma.enrollment.findMany({ where });
+      res.json(enrollments.map(e => ({
+        ...e,
+        enrolledAt: e.enrolledAt.getTime(),
+        updatedAt: e.updatedAt.getTime(),
+        graceDeadline: e.graceDeadline ? e.graceDeadline.getTime() : undefined
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/enrollments", async (req, res) => {
+    try {
+      const { enrolledAt, updatedAt, graceDeadline, ...data } = req.body;
+      const enroll = await prisma.enrollment.create({ 
+        data: {
+          ...data,
+          enrolledAt: enrolledAt ? new Date(enrolledAt) : undefined,
+          graceDeadline: graceDeadline ? new Date(graceDeadline) : undefined,
+        }
+      });
+      res.json({
+        ...enroll,
+        enrolledAt: enroll.enrolledAt.getTime(),
+        updatedAt: enroll.updatedAt.getTime(),
+        graceDeadline: enroll.graceDeadline ? enroll.graceDeadline.getTime() : undefined
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/enrollments/:id", async (req, res) => {
+    try {
+      const { enrolledAt, updatedAt, graceDeadline, ...data } = req.body;
+      const updated = await prisma.enrollment.update({ 
+        where: { id: req.params.id }, 
+        data: {
+          ...data,
+          enrolledAt: enrolledAt ? new Date(enrolledAt) : undefined,
+          graceDeadline: graceDeadline ? new Date(graceDeadline) : undefined,
+        } 
+      });
+      res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/enrollments/:id", async (req, res) => {
+    try {
+      await prisma.enrollment.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Transactions API
+  app.get("/api/transactions", async (req, res) => {
+    try {
+      const { userId, type } = req.query;
+      const where: any = {};
+      if (userId) {
+        where.OR = [
+          { senderId: String(userId) },
+          { receiverId: String(userId) }
+        ];
+      }
+      if (type) where.type = String(type);
+      const txs = await prisma.transaction.findMany({ where, orderBy: { timestamp: "desc" } });
+      res.json(txs.map(t => ({
+        ...t,
+        timestamp: t.timestamp.getTime(),
+        updatedAt: t.updatedAt.getTime()
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.post("/api/transactions/process", async (req, res) => {
+    try {
+      const { txData, userUpdates } = req.body;
+      const { timestamp, updatedAt, ...safeTxData } = txData;
+      // Atomic transaction: create history entry and update user balances
+      const result = await prisma.$transaction(async (tx) => {
+        const createdTx = await tx.transaction.create({ 
+          data: {
+            ...safeTxData,
+            timestamp: timestamp ? new Date(timestamp) : undefined
+          }
+        });
+        if (userUpdates && Array.isArray(userUpdates)) {
+          for (const update of userUpdates) {
+              const { where, data } = update;
+              await tx.user.update({ where, data });
+          }
+        }
+        return createdTx;
+      });
+      res.json({
+        ...result,
+        timestamp: result.timestamp.getTime(),
+        updatedAt: result.updatedAt.getTime()
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/transactions/:id", async (req, res) => {
+    try {
+      const updated = await prisma.transaction.update({ where: { id: req.params.id }, data: req.body });
+      res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {
     const { createServer: createViteServer } = await import("vite");

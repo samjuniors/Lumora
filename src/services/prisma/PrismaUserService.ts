@@ -1,101 +1,58 @@
 import { IUserService } from '../interfaces/IUserService';
 import { User, Role } from '../../types';
-import { prisma } from './client';
 
 export class PrismaUserService implements IUserService {
   async getUser(userId: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-    });
-    return user ? this.mapToUserType(user) : null;
+    try {
+      const res = await fetch(`/api/users/${userId}`);
+      if (!res.ok) return null;
+      return res.json();
+    } catch (e) { return null; }
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-    return user ? this.mapToUserType(user) : null;
+    const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+    if (!res.ok) return null;
+    const users = await res.json();
+    return users.length > 0 ? users[0] : null;
   }
 
   async updateUser(userId: string, data: Partial<User>): Promise<void> {
-    await prisma.user.update({
-      where: { id: userId },
-      data: {
-        name: data.name,
-        coins: data.coins,
-        diamonds: data.diamonds,
-        role: data.role as any,
-        xp: data.xp,
-        level: data.level,
-        rank: data.rank,
-        streak: data.streak,
-        syndicateId: data.syndicateId,
-        luminaId: data.luminaId,
-        avatar: data.avatar,
-        bio: data.bio,
-        bannerColor: data.bannerColor,
-        theme: data.theme,
-        themeId: data.themeId,
-        // map other fields as added to Prisma schema gradually
-      },
+    await fetch(`/api/users/${userId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
   }
 
   async createUser(userId: string, data: User): Promise<void> {
-    await prisma.user.create({
-      data: {
-        id: userId,
-        email: data.email,
-        name: data.name,
-        role: data.role as any,
-        coins: data.coins || 0,
-        diamonds: data.diamonds || 0,
-        xp: data.xp || 0,
-        level: data.level || 1,
-        streak: data.streak || 0,
-        createdAt: new Date(data.createdAt || Date.now()),
-        updatedAt: new Date(data.updatedAt || Date.now()),
-      },
+    await fetch('/api/sync/user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...data, uid: userId })
     });
   }
 
   async getUsersByRole(role: string, limit?: number, offset?: number): Promise<User[]> {
-    const users = await prisma.user.findMany({
-      where: { role: role as any },
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' }
-    });
-    return users.map(u => this.mapToUserType(u));
+    const res = await fetch(`/api/users?role=${role}&limit=${limit || 50}&offset=${offset || 0}`);
+    return res.json();
   }
 
   async getAllUsers(limit?: number, offset?: number): Promise<User[]> {
-    const users = await prisma.user.findMany({
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' }
-    });
-    return users.map(u => this.mapToUserType(u));
+    const res = await fetch(`/api/users?limit=${limit || 50}&offset=${offset || 0}`);
+    return res.json();
   }
 
   async getUsers(filters?: { role?: string, email?: string }, limit?: number, offset?: number): Promise<User[]> {
-    const where: any = {};
-    if (filters?.role) where.role = filters.role as any;
-    if (filters?.email) where.email = filters.email;
-
-    const users = await prisma.user.findMany({
-      where,
-      take: limit,
-      skip: offset,
-      orderBy: { createdAt: 'desc' }
-    });
-    return users.map(u => this.mapToUserType(u));
+    let url = `/api/users?limit=${limit || 50}&offset=${offset || 0}`;
+    if (filters?.role) url += `&role=${filters.role}`;
+    if (filters?.email) url += `&email=${encodeURIComponent(filters.email)}`;
+    const res = await fetch(url);
+    return res.json();
   }
 
   async deleteUser(userId: string): Promise<void> {
-    await prisma.user.delete({
-      where: { id: userId },
-    });
+    await fetch(`/api/users/${userId}`, { method: 'DELETE' });
   }
 
   async initializeUser(userId: string, data: Partial<User>): Promise<void> {
@@ -112,53 +69,43 @@ export class PrismaUserService implements IUserService {
   }
 
   subscribeToUser(userId: string, callback: (user: User | null) => void): () => void {
-    // Prisma does not natively support realtime document subscriptions.
-    // In the future: replace with SSE/WebSockets or polling layer.
-    console.warn('[PrismaUserService] subscribeToUser is not supported in SQL. Falling back to one-time fetch.');
-    this.getUser(userId).then(callback);
-    return () => {}; // No-op unsubscribe
-  }
-
-  subscribeToStudents(callback: (users: User[]) => void): () => void {
-    console.warn('[PrismaUserService] subscribeToStudents is not supported in SQL.');
-    this.getUsersByRole('student').then(callback);
-    return () => {};
-  }
-
-  async followUser(followerId: string, targetId: string): Promise<void> {
-    // No-op for now until relationships are added to Prisma schema
-    console.warn('[PrismaUserService] followUser not yet mapped in Prisma schema.');
-  }
-
-  async unfollowUser(followerId: string, targetId: string): Promise<void> {
-    // No-op for now
-    console.warn('[PrismaUserService] unfollowUser not yet mapped in Prisma schema.');
-  }
-
-  private mapToUserType(prismaUser: any): User {
-    return {
-      id: prismaUser.id,
-      email: prismaUser.email,
-      name: prismaUser.name,
-      role: prismaUser.role as Role,
-      coins: prismaUser.coins,
-      diamonds: prismaUser.diamonds,
-      xp: prismaUser.xp,
-      level: prismaUser.level,
-      rank: prismaUser.rank,
-      streak: prismaUser.streak,
-      syndicateId: prismaUser.syndicateId || undefined,
-      luminaId: prismaUser.luminaId || undefined,
-      avatar: prismaUser.avatar || undefined,
-      bio: prismaUser.bio || undefined,
-      bannerColor: prismaUser.bannerColor || undefined,
-      theme: prismaUser.theme || undefined,
-      themeId: prismaUser.themeId || undefined,
-      createdAt: prismaUser.createdAt.getTime(),
-      updatedAt: prismaUser.updatedAt.getTime(),
-      lastActive: prismaUser.lastActive ? prismaUser.lastActive.toISOString() : undefined,
+    let active = true;
+    const fetchUser = async () => {
+      try {
+        if (!active) return;
+        const user = await this.getUser(userId);
+        if (active) callback(user);
+      } catch (err) { }
+    };
+    fetchUser();
+    const interval = setInterval(fetchUser, 15000);
+    return () => {
+      active = false;
+      clearInterval(interval);
     };
   }
 
+  subscribeToStudents(callback: (users: User[]) => void): () => void {
+    let active = true;
+    const fetchStudents = async () => {
+      try {
+        if (!active) return;
+        const users = await this.getUsersByRole('student');
+        if (active) callback(users);
+      } catch (err) { }
+    };
+    fetchStudents();
+    const interval = setInterval(fetchStudents, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }
+
+  async followUser(followerId: string, targetId: string): Promise<void> {
+    console.warn('[PrismaUserService] followUser not fully supported');
+  }
+
+  async unfollowUser(followerId: string, targetId: string): Promise<void> {}
   async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {}
 }

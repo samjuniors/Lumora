@@ -51,6 +51,78 @@ model User {
   @@index([role])
 }
 
+model Notification {
+  id               String   @id
+  userId           String
+  title            String
+  message          String   @db.Text
+  type             String
+  read             Boolean  @default(false)
+  createdAt        DateTime @default(now())
+  
+  @@index([userId])
+}
+
+model InviteCode {
+  id               String   @id
+  code             String   @unique
+  role             String
+  createdBy        String
+  used             Boolean  @default(false)
+  usedBy           String[]
+  maxUses          Int?
+  currentUses      Int?     @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  @@index([code])
+}
+
+model Settings {
+  id               String   @id @default("global")
+  upiHandle        String?
+  mobileNumber     String?
+  payeeName        String?
+  paymentLink      String?
+  updatedAt        DateTime @updatedAt
+}
+
+model Enrollment {
+  id               String   @id
+  assignmentId     String
+  studentId        String
+  enrolledAt       DateTime @default(now())
+  status           String   @default("active")
+  grade            Int?
+  rewardEarned     Int?
+  graceDeadline    DateTime?
+  isDoubleDown     Boolean? @default(false)
+  stakedAmount     Int?
+  updatedAt        DateTime @updatedAt
+
+  @@index([assignmentId])
+  @@index([studentId])
+}
+
+model Transaction {
+  id               String   @id
+  senderId         String
+  receiverId       String
+  amount           Int
+  currency         String   @default("coins")
+  type             String
+  status           String   @default("completed")
+  utr              String?
+  itemId           String?
+  message          String?  @db.Text
+  timestamp        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([type])
+}
+
 model Assignment {
   id               String   @id
   title            String

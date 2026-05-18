@@ -318,7 +318,12 @@ export class FirebaseUserService extends FirebaseBaseService implements IUserSer
         callback(null);
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, `users/${userId}`);
+      console.warn("Firestore snapshot error:", error);
+      try {
+        handleFirestoreError(error, OperationType.GET, `users/${userId}`);
+      } catch (e) {
+        // Suppress throw to ensure callback is fired
+      }
       callback(null);
     });
     return () => {

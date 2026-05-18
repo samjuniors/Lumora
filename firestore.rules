@@ -6,12 +6,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function isValidId(id) { return id is string && id.size() <= 128; }
     function incoming() { return request.resource.data; }
     function existing() { return resource.data; }
     function isSignedIn() { return request.auth != null; }
     function isHardcodedAdmin() {
-      return isSignedIn() && (request.auth.token.email == 'luvkus8@gmail.com');
+      return isSignedIn() && request.auth.token.get('email', '') == 'luvkus8@gmail.com';
     }
     
     function isSuperAdmin() { 

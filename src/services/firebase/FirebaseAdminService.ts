@@ -96,6 +96,12 @@ export class FirebaseAdminService extends FirebaseBaseService implements IAdminS
 
   async getPlatformSettings(): Promise<PlatformSettings | null> {
     try {
+      const res = await fetch('/api/settings');
+      if (res.ok) return res.json();
+    } catch {}
+    
+    // Fallback to Firebase
+    try {
       const snap = await getDoc(doc(db, 'settings', 'platform'));
       return snap.exists() ? snap.data() as PlatformSettings : null;
     } catch (error) {
@@ -105,6 +111,14 @@ export class FirebaseAdminService extends FirebaseBaseService implements IAdminS
   }
 
   async updatePlatformSettings(data: Partial<PlatformSettings>): Promise<void> {
+    try {
+      await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+    } catch {}
+    
     try {
       await setDoc(doc(db, 'settings', 'platform'), data, { merge: true });
     } catch (error) {
@@ -174,7 +188,8 @@ export class FirebaseAdminService extends FirebaseBaseService implements IAdminS
 
       return newUser;
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${userId}`);
+      console.warn("Pre-registration check failed (likely permission):", error);
+      // Do not throw handleFirestoreError so we can continue with normal user creation
       return null;
     }
   }
@@ -196,9 +211,37 @@ export class FirebaseAdminService extends FirebaseBaseService implements IAdminS
   async adjustTransactionAmount(transactionId: string, newAmount: number, adminId: string): Promise<void> {}
   async giftItem(senderId: string, receiverId: string, itemId: string): Promise<void> {}
   async redeemInviteCode(code: string, userId: string, name: string, email: string): Promise<User> { return null as any; }
-  async getAllInviteCodes(): Promise<any[]> { return []; }
-  async saveInviteCode(id: string, data: any): Promise<void> {}
-  async deleteInviteCode(id: string): Promise<void> {}
+  async getAllInviteCodes(): Promise<any[]> {
+    try {
+      const res = await fetch('/api/invite-codes');
+      if (res.ok) return res.json();
+    } catch {}
+    return [];
+  }
+  async saveInviteCode(id: string, data: any): Promise<void> {
+    try {
+      const res = await fetch(`/api/invite-codes?code=${encodeURIComponent(data.code)}`);
+      const existing = await res.json();
+      if (existing && existing.length > 0 && existing[0].id === id) {
+        await fetch(`/api/invite-codes/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+      } else {
+        await fetch('/api/invite-codes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...data, id })
+        });
+      }
+    } catch {}
+  }
+  async deleteInviteCode(id: string): Promise<void> {
+    try {
+      await fetch(`/api/invite-codes/${id}`, { method: 'DELETE' });
+    } catch {}
+  }
   async saveAssignmentTemplate(id: string, data: any): Promise<void> {}
   async getAchievementProgress(userId: string): Promise<Record<string, number>> { return {}; }
   async claimAchievement(userId: string, achievementId: string, reward: { coins: number, diamonds: number }): Promise<void> {}

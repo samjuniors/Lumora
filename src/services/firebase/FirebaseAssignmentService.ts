@@ -188,7 +188,15 @@ export class FirebaseAssignmentService extends FirebaseBaseService implements IA
   }
 
   async getEnrollmentsByStudent(studentId: string): Promise<Enrollment[]> {
-    HybridDiagnostics.logFirebaseDependency('getEnrollmentsByStudent');
+    try {
+      const pgResult = await pgFetch(`/api/enrollments?studentId=${studentId}`);
+      if (pgResult.data && Array.isArray(pgResult.data)) {
+        HybridDiagnostics.logRead({ entity: 'Enrollment_List', entityId: studentId, source: 'pg', latencyMs: 0, success: true });
+        return pgResult.data;
+      }
+    } catch {}
+    
+    // Fallback
     try {
       const q = query(collection(db, 'enrollments'), where('studentId', '==', studentId));
       const snap = await getDocs(q);
@@ -200,7 +208,14 @@ export class FirebaseAssignmentService extends FirebaseBaseService implements IA
   }
 
   async getAllEnrollments(): Promise<Enrollment[]> {
-    HybridDiagnostics.logFirebaseDependency('getAllEnrollments');
+    try {
+      const pgResult = await pgFetch(`/api/enrollments`);
+      if (pgResult.data && Array.isArray(pgResult.data)) {
+        return pgResult.data;
+      }
+    } catch {}
+
+    // Fallback
     try {
       const snap = await getDocs(collection(db, 'enrollments'));
       return snap.docs.map(d => ({ ...d.data(), id: d.id } as Enrollment));
@@ -211,31 +226,58 @@ export class FirebaseAssignmentService extends FirebaseBaseService implements IA
   }
 
   async updateEnrollment(id: string, data: Partial<Enrollment>): Promise<void> {
-    HybridDiagnostics.logFirebaseDependency('updateEnrollment');
     try {
-      await updateDoc(doc(db, 'enrollments', id), { ...data, updatedAt: Date.now() });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `enrollments/${id}`);
+      await pgFetch(`/api/enrollments/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      HybridDiagnostics.logWrite({ entity: 'Enrollment', entityId: id, success: true });
+      updateDoc(doc(db, 'enrollments', id), { ...data, updatedAt: Date.now() }).catch(() => {});
+    } catch {
+      try {
+        await updateDoc(doc(db, 'enrollments', id), { ...data, updatedAt: Date.now() });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `enrollments/${id}`);
+      }
     }
   }
 
   async createEnrollment(data: Omit<Enrollment, 'id'>): Promise<string> {
-    HybridDiagnostics.logFirebaseDependency('createEnrollment');
+    const docRef = doc(collection(db, 'enrollments'));
+    const id = docRef.id;
+    const payload = { ...data, enrolledAt: Date.now(), updatedAt: Date.now() };
+
     try {
-      const docRef = await addDoc(collection(db, 'enrollments'), data);
-      return docRef.id;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'enrollments');
-      return '';
+      await pgFetch('/api/enrollments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, id })
+      });
+      HybridDiagnostics.logWrite({ entity: 'Enrollment', entityId: id, success: true });
+      setDoc(docRef, payload).catch(() => {});
+      return id;
+    } catch {
+      try {
+        await setDoc(docRef, payload);
+        return id;
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, 'enrollments');
+        return '';
+      }
     }
   }
 
   async deleteEnrollment(id: string): Promise<void> {
-    HybridDiagnostics.logFirebaseDependency('deleteEnrollment');
     try {
-      await deleteDoc(doc(db, 'enrollments', id));
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, `enrollments/${id}`);
+      await pgFetch(`/api/enrollments/${id}`, { method: 'DELETE' });
+      deleteDoc(doc(db, 'enrollments', id)).catch(() => {});
+    } catch {
+      try {
+        await deleteDoc(doc(db, 'enrollments', id));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.DELETE, `enrollments/${id}`);
+      }
     }
   }
 

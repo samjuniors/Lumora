@@ -7,6 +7,7 @@ import {
   where, 
   getDocs, 
   addDoc, 
+  setDoc,
   orderBy, 
   increment,
   writeBatch
@@ -16,19 +17,43 @@ import { IWalletService } from '../interfaces/IWalletService';
 import { Transaction, TransactionType, RechargeRequest, User } from '../../types';
 import { handleFirestoreError, OperationType } from '../../lib/errorHandling';
 import { FirebaseBaseService } from './FirebaseBaseService';
+import { pgFetch, HybridDiagnostics } from './hybridDiagnostics';
 
 export class FirebaseWalletService extends FirebaseBaseService implements IWalletService {
   async createTransaction(data: Omit<Transaction, 'id'>): Promise<string> {
+    const id = crypto.randomUUID();
+    const payload = { ...data, id, timestamp: data.timestamp || Date.now() };
+    
     try {
-      const docRef = await addDoc(collection(db, 'transactions'), data);
-      return docRef.id;
-    } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'transactions');
-      return '';
+      await pgFetch('/api/transactions/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txData: payload, userUpdates: [] })
+      });
+      HybridDiagnostics.logWrite({ entity: 'Transaction', entityId: id, success: true });
+      
+      setDoc(doc(db, 'transactions', id), payload).catch(() => {});
+      return id;
+    } catch {
+      try {
+        await setDoc(doc(db, 'transactions', id), payload);
+        return id;
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, 'transactions');
+        return '';
+      }
     }
   }
 
   async getUserTransactions(userId: string): Promise<Transaction[]> {
+    try {
+      const res = await pgFetch(`/api/transactions?userId=${userId}`);
+      if (res.data && Array.isArray(res.data)) {
+        HybridDiagnostics.logRead({ entity: 'Transaction_List', entityId: userId, source: 'pg', latencyMs: 0, success: true });
+        return res.data;
+      }
+    } catch {}
+
     try {
       const q1 = query(collection(db, 'transactions'), where('senderId', '==', userId), orderBy('timestamp', 'desc'));
       const q2 = query(collection(db, 'transactions'), where('receiverId', '==', userId), orderBy('timestamp', 'desc'));
@@ -43,6 +68,11 @@ export class FirebaseWalletService extends FirebaseBaseService implements IWalle
 
   async getAllTransactions(): Promise<Transaction[]> {
     try {
+      const res = await pgFetch('/api/transactions');
+      if (res.data && Array.isArray(res.data)) return res.data;
+    } catch {}
+
+    try {
       const q = query(collection(db, 'transactions'), orderBy('timestamp', 'desc'));
       const snap = await getDocs(q);
       return snap.docs.map(d => ({ ...d.data(), id: d.id } as Transaction));
@@ -56,6 +86,40 @@ export class FirebaseWalletService extends FirebaseBaseService implements IWalle
     try {
       if (amount <= 0) throw new Error("Invalid spend amount");
       const now = Date.now();
+      const txId = 'tx_spend_' + now + '_' + Math.random().toString(36).substring(7);
+
+      try {
+        await pgFetch('/api/transactions/process', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            txData: {
+              id: txId,
+              senderId: userId,
+              receiverId: 'SYSTEM',
+              amount,
+              type,
+              message,
+              status: 'completed',
+              currency: 'coins',
+              timestamp: now
+            },
+            userUpdates: [{ where: { id: userId }, data: { coins: { decrement: amount } } }]
+          })
+        });
+        HybridDiagnostics.logWrite({ entity: 'Transaction_Process', entityId: txId, success: true });
+        // Still push update to FS for drift consistency:
+        const userRef = doc(db, 'users', userId);
+        const batch = writeBatch(db);
+        batch.update(userRef, { coins: increment(-amount), updatedAt: now });
+        batch.set(doc(db, 'transactions', txId), { id: txId, senderId: userId, receiverId: 'SYSTEM', amount, type, status: 'completed', message, timestamp: now });
+        batch.commit().catch(() => {});
+        return;
+      } catch (e) {
+        console.warn("SQL process failed, falling back to FS...", e);
+      }
+
+      // fallback...
       const userRef = doc(db, 'users', userId);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) throw new Error("User not found");
@@ -71,7 +135,6 @@ export class FirebaseWalletService extends FirebaseBaseService implements IWalle
         updatedAt: now
       });
 
-      const txId = 'tx_spend_' + now + '_' + Math.random().toString(36).substring(7);
       batch.set(doc(db, 'transactions', txId), {
         id: txId,
         senderId: userId,

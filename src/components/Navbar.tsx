@@ -60,6 +60,7 @@ export const Navbar = () => {
             <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] border border-white/5 p-1 rounded-xl">
               {isAdmin ? (
                 <>
+                  <NavLink to="/dashboard" icon={BookOpen} title="Student View">Student View</NavLink>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
                   <NavLink to="/admin?tab=assignments" icon={Target}>Tasks</NavLink>
                   <NavLink to="/admin?tab=overview" icon={ShieldAlert}>System</NavLink>
@@ -122,10 +123,10 @@ export const Navbar = () => {
         <div className="glass-dark rounded-2xl shadow-2xl flex items-center justify-around h-16 w-full max-w-md mx-auto px-2 border-white/10 relative">
           {isAdmin ? (
             <>
+              <MobileNavLink to="/dashboard" icon={BookOpen} label="Student" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />
+              <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} isCenter />
               <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=recharges" icon={Wallet} label="Economy" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=reviews" icon={Zap} label="Queue" currentPath={location.pathname} />
             </>
           ) : (

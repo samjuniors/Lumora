@@ -95,6 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setFirebaseUser(prev => {
+        if (!fUser && prev === undefined) return null;
         if (!fUser && !prev) return prev;
         if (fUser && prev && fUser.uid === prev.uid && fUser.email === prev.email) {
           return prev;

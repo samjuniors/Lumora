@@ -71,9 +71,10 @@ export const Dashboard = () => {
     setPlatformEvents(events);
   }, []);
 
-  if (isAdmin) {
-    return <Navigate to="/admin" replace />;
-  }
+  // Use Admin panel link in navigation instead of forced redirect
+  // if (isAdmin) {
+  //   return <Navigate to="/admin" replace />;
+  // }
 
   // We'll track the last streak check in memory to prevent dependency loops
   const streakChecked = React.useRef(false);
