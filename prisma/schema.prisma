@@ -48,6 +48,11 @@ model User {
   syndicateId      String?
   luminaId         String?
 
+  // Social
+  followingIds     String[]
+  followerIds      String[]
+  presence         String   @default("offline")
+
   @@index([role])
 }
 
@@ -164,5 +169,61 @@ model Submission {
   @@index([studentId])
   @@index([status])
   @@index([submittedAt(sort: Desc)])
+}
+
+model RechargeRequest {
+  id        String   @id
+  userId    String
+  amount    Int
+  currency  String   @default("INR")
+  status    String   @default("pending")
+  utr       String?
+  timestamp DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Syndicate {
+  id          String   @id
+  name        String
+  motto       String?
+  emblem      String?
+  leaderId    String
+  members     String[] 
+  score       Int      @default(0)
+  level       Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([leaderId])
+}
+
+model AssignmentTemplate {
+  id               String   @id
+  title            String
+  description      String   @db.Text
+  defaultPoints    Int      @default(0)
+  difficulty       String?
+  category         String?
+  allowedFileTypes String[]
+  hasAiFeedback    Boolean? @default(false)
+  requireUpload    Boolean? @default(false)
+  tags             String[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model PreRegisteredUser {
+  id        String   @id // Usually email if email is key
+  email     String   @unique
+  name      String?
+  role      String   @default("student")
+  coins     Int      @default(100)
+  status    String   @default("pending") // pending, claimed
+  claimedAt DateTime?
+  userId    String?  // The ID of the created user
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 

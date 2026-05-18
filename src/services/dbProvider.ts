@@ -4,19 +4,19 @@ import { ISubmissionService } from './interfaces/ISubmissionService';
 import { IWalletService } from './interfaces/IWalletService';
 import { INotificationService } from './interfaces/INotificationService';
 import { IAuthService } from './interfaces/IAuthService';
-import { FirebaseUserService } from './firebase/FirebaseUserService';
-import { FirebaseAssignmentService } from './firebase/FirebaseAssignmentService';
-import { FirebaseSubmissionService } from './firebase/FirebaseSubmissionService';
-import { FirebaseWalletService } from './firebase/FirebaseWalletService';
+import { PrismaUserService } from './prisma/PrismaUserService';
+import { PrismaAssignmentService } from './prisma/PrismaAssignmentService';
+import { PrismaSubmissionService } from './prisma/PrismaSubmissionService';
+import { PrismaWalletService } from './prisma/PrismaWalletService';
 import { PrismaNotificationService } from './prisma/PrismaNotificationService';
-import { FirebaseAuthService } from './firebase/FirebaseAuthService';
+import { FirebaseAuthService } from './auth/FirebaseAuthService';
 import { ISyndicateService } from './interfaces/ISyndicateService';
 import { IAdminService } from './interfaces/IAdminService';
 import { IStorageService } from './interfaces/IStorageService';
 
-import { FirebaseAdminService } from './firebase/FirebaseAdminService';
-import { FirebaseSyndicateService } from './firebase/FirebaseSyndicateService';
-import { CloudflareR2StorageService } from './firebase/CloudflareR2StorageService';
+import { PrismaAdminService } from './prisma/PrismaAdminService';
+import { PrismaSyndicateService } from './prisma/PrismaSyndicateService';
+import { CloudflareR2StorageService } from './storage/CloudflareR2StorageService';
 
 class DbProvider {
   private static userServiceInstance: IUserService;
@@ -31,28 +31,28 @@ class DbProvider {
 
   static getUserService(): IUserService {
     if (!this.userServiceInstance) {
-      this.userServiceInstance = new FirebaseUserService();
+      this.userServiceInstance = new PrismaUserService();
     }
     return this.userServiceInstance;
   }
 
   static getAssignmentService(): IAssignmentService {
     if (!this.assignmentServiceInstance) {
-      this.assignmentServiceInstance = new FirebaseAssignmentService();
+      this.assignmentServiceInstance = new PrismaAssignmentService();
     }
     return this.assignmentServiceInstance;
   }
 
   static getSubmissionService(): ISubmissionService {
     if (!this.submissionServiceInstance) {
-      this.submissionServiceInstance = new FirebaseSubmissionService();
+      this.submissionServiceInstance = new PrismaSubmissionService();
     }
     return this.submissionServiceInstance;
   }
 
   static getWalletService(): IWalletService {
     if (!this.walletServiceInstance) {
-      this.walletServiceInstance = new FirebaseWalletService();
+      this.walletServiceInstance = new PrismaWalletService();
     }
     return this.walletServiceInstance;
   }
@@ -66,14 +66,14 @@ class DbProvider {
 
   static getAdminService(): IAdminService {
     if (!this.adminServiceInstance) {
-      this.adminServiceInstance = new FirebaseAdminService();
+      this.adminServiceInstance = new PrismaAdminService();
     }
     return this.adminServiceInstance;
   }
 
   static getSyndicateService(): ISyndicateService {
     if (!this.syndicateServiceInstance) {
-      this.syndicateServiceInstance = new FirebaseSyndicateService();
+      this.syndicateServiceInstance = new PrismaSyndicateService();
     }
     return this.syndicateServiceInstance;
   }

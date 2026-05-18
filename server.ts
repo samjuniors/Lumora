@@ -91,9 +91,7 @@ async function startServer() {
   // Push Notification Routes
   app.post("/api/push/subscribe", async (req, res) => {
     const subscription = req.body;
-    // Store subscription in Firestore (or in-memory for testing, but Firestore is better)
-    // For now, let's just log it or store it temporarily? 
-    // The user wants a robust solution. I need to initialize firebase-admin properly.
+    // Store subscription in Postgres if needed for cross-device alerts
     console.log("Subscription received:", subscription);
     res.status(201).json({ status: 'subscribed' });
   });
@@ -163,6 +161,70 @@ async function startServer() {
       console.error("[Pg Delete] Error:", err.message);
       res.status(500).json({ error: err.message });
     }
+  });
+
+  app.post("/api/users/:uid/follow", async (req, res) => {
+    try {
+      const followerId = req.params.uid;
+      const { targetId } = req.body;
+      
+      await prisma.$transaction(async (tx) => {
+        // Find existing arrays to append
+        const f1 = await tx.user.findUnique({ where: { id: followerId }, select: { followingIds: true } });
+        const f2 = await tx.user.findUnique({ where: { id: targetId }, select: { followerIds: true } });
+        
+        await tx.user.update({
+          where: { id: followerId },
+          data: { followingIds: { push: targetId } }
+        });
+        
+        await tx.user.update({
+          where: { id: targetId },
+          data: { followerIds: { push: followerId } }
+        });
+
+        await tx.notification.create({
+          data: {
+            id: crypto.randomUUID(),
+            userId: targetId,
+            title: '👥 New Follower',
+            message: 'A peer is now tracking your progress!',
+            type: 'info',
+            read: false
+          }
+        });
+      });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/users/:uid/unfollow", async (req, res) => {
+    try {
+      const followerId = req.params.uid;
+      const { targetId } = req.body;
+      
+      const f1 = await prisma.user.findUnique({ where: { id: followerId }, select: { followingIds: true } });
+      const f2 = await prisma.user.findUnique({ where: { id: targetId }, select: { followerIds: true } });
+      
+      await prisma.$transaction([
+        prisma.user.update({
+          where: { id: followerId },
+          data: { followingIds: f1?.followingIds.filter(id => id !== targetId) || [] }
+        }),
+        prisma.user.update({
+          where: { id: targetId },
+          data: { followerIds: f2?.followerIds.filter(id => id !== followerId) || [] }
+        })
+      ]);
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/users/:uid/presence", async (req, res) => {
+    try {
+      await prisma.user.update({ where: { id: req.params.uid }, data: { presence: req.body.presence } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
   });
 
   app.patch("/api/users/:uid", async (req, res) => {
@@ -1053,6 +1115,336 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
     try {
       const updated = await prisma.transaction.update({ where: { id: req.params.id }, data: req.body });
       res.json(updated);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Vite middleware for development
+  // ------------------------------------
+  // Assignment Templates API
+  // ------------------------------------
+  app.get("/api/assignment-templates", async (req, res) => {
+    try {
+      const templates = await prisma.assignmentTemplate.findMany({ orderBy: { createdAt: "desc" } });
+      res.json(templates.map(t => ({
+        ...t,
+        createdAt: t.createdAt.getTime(),
+        updatedAt: t.updatedAt.getTime()
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/assignment-templates", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = req.body;
+      const template = await prisma.assignmentTemplate.create({ 
+        data: {
+          ...data,
+          id: id || crypto.randomUUID(),
+        }
+      });
+      res.json({
+        ...template,
+        createdAt: template.createdAt.getTime(),
+        updatedAt: template.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/assignment-templates/:id", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = req.body;
+      const updated = await prisma.assignmentTemplate.update({ 
+        where: { id: req.params.id }, 
+        data
+      });
+      res.json({
+        ...updated,
+        createdAt: updated.createdAt.getTime(),
+        updatedAt: updated.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/assignment-templates/:id", async (req, res) => {
+    try {
+      await prisma.assignmentTemplate.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+
+  // ------------------------------------
+  // Syndicates API
+  // ------------------------------------
+  app.get("/api/syndicates", async (req, res) => {
+    try {
+      const syndicates = await prisma.syndicate.findMany({ orderBy: { score: "desc" } });
+      res.json(syndicates.map(s => ({
+        ...s,
+        createdAt: s.createdAt.getTime(),
+        updatedAt: s.updatedAt.getTime()
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/syndicates", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = req.body;
+      const s = await prisma.syndicate.create({ 
+        data: {
+          ...data,
+          id: id || crypto.randomUUID(),
+        }
+      });
+      res.json({
+        ...s,
+        createdAt: s.createdAt.getTime(),
+        updatedAt: s.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.get("/api/syndicates/:id", async (req, res) => {
+    try {
+      const s = await prisma.syndicate.findUnique({ where: { id: req.params.id } });
+      if (!s) return res.status(404).json({ error: "Syndicate not found" });
+      res.json({
+        ...s,
+        createdAt: s.createdAt.getTime(),
+        updatedAt: s.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/syndicates/:id", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, ...data } = req.body;
+      const updated = await prisma.syndicate.update({ 
+        where: { id: req.params.id }, 
+        data
+      });
+      res.json({
+        ...updated,
+        createdAt: updated.createdAt.getTime(),
+        updatedAt: updated.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/syndicates/:id", async (req, res) => {
+    try {
+      await prisma.syndicate.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // ------------------------------------
+  // Recharge Requests API
+  // ------------------------------------
+  app.get("/api/recharge-requests", async (req, res) => {
+    try {
+      const { userId } = req.query;
+      const where: any = {};
+      if (userId) where.userId = String(userId);
+
+      const reqs = await prisma.rechargeRequest.findMany({ where, orderBy: { timestamp: "desc" } });
+      res.json(reqs.map(r => ({
+        ...r,
+        timestamp: r.timestamp.getTime(),
+        updatedAt: r.updatedAt.getTime()
+      })));
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/recharge-requests", async (req, res) => {
+    try {
+      const { id, timestamp, updatedAt, ...data } = req.body;
+      const r = await prisma.rechargeRequest.create({ 
+        data: {
+          ...data,
+          id: id || crypto.randomUUID(),
+        }
+      });
+      res.json({
+        ...r,
+        timestamp: r.timestamp.getTime(),
+        updatedAt: r.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/recharge-requests/:id", async (req, res) => {
+    try {
+      const { id, timestamp, updatedAt, ...data } = req.body;
+      const updated = await prisma.rechargeRequest.update({ 
+        where: { id: req.params.id }, 
+        data
+      });
+      res.json({
+        ...updated,
+        timestamp: updated.timestamp.getTime(),
+        updatedAt: updated.updatedAt.getTime(),
+      });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+  
+  app.delete("/api/recharge-requests/:id", async (req, res) => {
+    try {
+      await prisma.rechargeRequest.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Pre-Registration API
+  app.get("/api/pre-registered", async (req, res) => {
+    try {
+      const { email } = req.query;
+      if (email) {
+        const u = await prisma.preRegisteredUser.findUnique({ where: { email: String(email) } });
+        return res.json(u ? [u] : []);
+      }
+      const users = await prisma.preRegisteredUser.findMany({ orderBy: { createdAt: "desc" } });
+      res.json(users);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.post("/api/pre-registered", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, claimedAt, ...data } = req.body;
+      const u = await prisma.preRegisteredUser.upsert({
+        where: { email: data.email },
+        update: data,
+        create: {
+          ...data,
+          id: id || crypto.randomUUID(),
+        }
+      });
+      res.json(u);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.patch("/api/pre-registered/:id", async (req, res) => {
+    try {
+      const { id, createdAt, updatedAt, claimedAt, ...data } = req.body;
+      const u = await prisma.preRegisteredUser.update({
+        where: { id: req.params.id },
+        data: {
+          ...data,
+          claimedAt: claimedAt ? new Date(claimedAt) : undefined
+        }
+      });
+      res.json(u);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  app.delete("/api/pre-registered/:id", async (req, res) => {
+    try {
+      await prisma.preRegisteredUser.delete({ where: { id: req.params.id } });
+      res.json({ success: true });
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+
+  // Maintenance & Penalty Sweep
+  app.post("/api/maintenance/penalty-sweep", async (req, res) => {
+    try {
+      const { assignmentId } = req.body;
+      const now = new Date();
+      
+      const result = await prisma.$transaction(async (tx) => {
+        let penalizedCount = 0;
+        const students = await tx.user.findMany({ where: { role: 'student' } });
+        
+        let assignments;
+        if (assignmentId) {
+          const a = await tx.assignment.findUnique({ where: { id: assignmentId } });
+          assignments = a ? [a] : [];
+        } else {
+          assignments = await tx.assignment.findMany({ where: { status: 'published' } });
+        }
+
+        for (const a of assignments) {
+          const dueDate = new Date(a.dueDate);
+          if (dueDate > now) continue;
+
+          for (const s of students) {
+             const sub = await tx.submission.findFirst({ where: { studentId: s.id, assignmentId: a.id } });
+             if (sub) continue;
+
+             const enr = await tx.enrollment.findFirst({ where: { studentId: s.id, assignmentId: a.id } });
+             if (enr && enr.status === 'missed') continue;
+
+             penalizedCount++;
+             const tax = 50; // Hard limit for high stakes
+             const penalty = Math.min(s.coins, tax);
+             
+             if (enr) {
+                await tx.enrollment.update({ where: { id: enr.id }, data: { status: 'missed', rewardEarned: -penalty } });
+             } else {
+                await tx.enrollment.create({
+                  data: {
+                    id: crypto.randomUUID(),
+                    studentId: s.id,
+                    assignmentId: a.id,
+                    status: 'missed',
+                    rewardEarned: -penalty,
+                    enrolledAt: now
+                  }
+                });
+             }
+
+             if (penalty > 0) {
+               await tx.user.update({ where: { id: s.id }, data: { coins: { decrement: penalty } } });
+               await tx.transaction.create({
+                 data: {
+                   id: crypto.randomUUID(),
+                   senderId: s.id,
+                   receiverId: 'SYSTEM',
+                   amount: penalty,
+                   type: 'penalty',
+                   message: `Missed mission: ${a.title}`,
+                   status: 'completed'
+                 }
+               });
+             }
+
+             await tx.notification.create({
+               data: {
+                 id: crypto.randomUUID(),
+                 userId: s.id,
+                 title: '⚠️ MISSION PENALTY',
+                 message: `You missed "${a.title}". ${penalty} coins deducted. Stay sharp.`,
+                 type: 'alert'
+               }
+             });
+          }
+        }
+        return { penalizedCount };
+      });
+      
+      res.json(result);
+    } catch (err: any) { res.status(500).json({ error: err.message }); }
+  });
+
+  // Achievements Progress (Mock for now as schema doesn't have it, but we can compute it)
+  app.get("/api/users/:uid/achievement-progress", async (req, res) => {
+    try {
+      const userId = req.params.uid;
+      const user = await prisma.user.findUnique({ where: { id: userId } });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      const subCount = await prisma.submission.count({ where: { studentId: userId, status: 'assessed' } });
+      const perfectCount = await prisma.submission.count({ where: { studentId: userId, status: 'assessed', aiScore: { gte: 95 } } });
+      const txCount = await prisma.transaction.count({ where: { OR: [{ senderId: userId }, { receiverId: userId }] } });
+
+      res.json({
+        wealth: user.coins,
+        scholar: subCount,
+        perfectionist: perfectCount,
+        socialite: txCount,
+        veteran: user.level,
+        streaker: user.streak
+      });
     } catch (err: any) { res.status(500).json({ error: err.message }); }
   });
 

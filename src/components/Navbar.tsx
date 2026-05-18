@@ -16,7 +16,7 @@ export const Navbar = () => {
   if (!user) return null;
   const { currentLevel } = getUserLevelAndXP(user);
 
-  const NavLink = ({ to, icon: Icon, children, highlighted }: { to: string, icon: any, children: React.ReactNode, highlighted?: boolean }) => {
+  const NavLink = ({ to, icon: Icon, children, highlighted, title }: { to: string, icon: any, children: React.ReactNode, highlighted?: boolean, title?: string }) => {
     const [targetPath, targetSearch] = to.split('?');
     const isActive = location.pathname === targetPath && (!targetSearch || location.search.includes(targetSearch));
     return (

@@ -91,18 +91,33 @@ export class PrismaAssignmentService implements IAssignmentService {
   }
 
   async getAssignmentTemplates(): Promise<AssignmentTemplate[]> {
-    return []; // Not migrated to pg yet
+    const res = await fetch(`/api/assignment-templates`);
+    if (!res.ok) return [];
+    return res.json();
   }
 
   async createAssignmentTemplate(data: Omit<AssignmentTemplate, 'id'>): Promise<string> {
-    throw new Error('Not implemented in Prisma');
+    const res = await fetch(`/api/assignment-templates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Create failed');
+    const result = await res.json();
+    return result.id;
   }
 
   async saveAssignmentTemplate(id: string, data: AssignmentTemplate): Promise<void> {
-    throw new Error('Not implemented in Prisma');
+    const res = await fetch(`/api/assignment-templates/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) throw new Error('Update failed');
   }
 
   async deleteAssignmentTemplate(id: string): Promise<void> {
-    throw new Error('Not implemented in Prisma');
+    await fetch(`/api/assignment-templates/${id}`, { method: 'DELETE' });
   }
 }
+

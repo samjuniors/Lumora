@@ -103,9 +103,26 @@ export class PrismaUserService implements IUserService {
   }
 
   async followUser(followerId: string, targetId: string): Promise<void> {
-    console.warn('[PrismaUserService] followUser not fully supported');
+    await fetch(`/api/users/${followerId}/follow`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetId })
+    });
   }
 
-  async unfollowUser(followerId: string, targetId: string): Promise<void> {}
-  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {}
+  async unfollowUser(followerId: string, targetId: string): Promise<void> {
+    await fetch(`/api/users/${followerId}/unfollow`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetId })
+    });
+  }
+
+  async updatePresence(userId: string, presence: 'online' | 'idle' | 'offline'): Promise<void> {
+    await fetch(`/api/users/${userId}/presence`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ presence })
+    });
+  }
 }
