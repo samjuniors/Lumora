@@ -132,7 +132,7 @@ export const Assignments = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 pt-8 pb-32">
+        <div className="max-w-7xl mx-auto px-4 md:px-0 pt-4 md:pt-8 pb-8">
             <motion.div 
                initial={{ opacity: 0, y: -20 }}
                animate={{ opacity: 1, y: 0 }}
@@ -233,7 +233,7 @@ export const Assignments = () => {
                             <p className="text-text-muted/60 mt-2 text-xs">Maintain vigilance. New directives incoming.</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 gap-12">
+                        <div className="grid grid-cols-1 gap-6 md:gap-8">
                             {groupedAssignments.map((group) => (
                                 <AssignmentGroupCard 
                                     key={group.id}

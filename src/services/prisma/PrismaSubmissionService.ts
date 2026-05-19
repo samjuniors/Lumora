@@ -98,7 +98,7 @@ export class PrismaSubmissionService implements ISubmissionService {
       } catch (err) { }
     };
     fetchSubmissions();
-    const interval = setInterval(fetchSubmissions, 15000);
+    const interval = setInterval(fetchSubmissions, 120000);
     return () => {
       active = false;
       clearInterval(interval);

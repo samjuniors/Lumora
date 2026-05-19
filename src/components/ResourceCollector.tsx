@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { playNotificationSound } from '../lib/audio';
 import { ConfirmModal } from './ui/ConfirmModal';
+import { Button } from './CommonUI';
 
 export const ResourceCollector = React.memo(() => {
   const { user, updateResources } = useAuth();
@@ -33,15 +34,15 @@ export const ResourceCollector = React.memo(() => {
     const checkStatus = () => {
       if (!isMounted.current) return;
       const now = Date.now();
-      const lastClaimed = user.lastCollectionAt ? new Date(user.lastCollectionAt).getTime() : 0;
-      const hoursSinceLastClaim = (now - lastClaimed) / (1000 * 60 * 60);
       
-      if (hoursSinceLastClaim >= 12) {
+      const nextTime = user.nextCollectionAt ? new Date(user.nextCollectionAt).getTime() : 0;
+      
+      if (now >= nextTime) {
         setCanCollect(true);
         setTimeLeft('Ready to Collect!');
       } else {
         setCanCollect(false);
-        const msLeft = (12 * 60 * 60 * 1000) - (now - lastClaimed);
+        const msLeft = nextTime - now;
         const h = Math.floor(msLeft / (1000 * 60 * 60));
         const m = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
         setTimeLeft(`${h}h ${m}m until next drop`);
@@ -51,7 +52,7 @@ export const ResourceCollector = React.memo(() => {
     checkStatus();
     const timer = setInterval(checkStatus, 60000); // Check every minute
     return () => clearInterval(timer);
-  }, [user?.id, user?.lastCollectionAt]);
+  }, [user?.id, user?.nextCollectionAt]);
 
   const handleCollect = async () => {
     if (!user || loading || !canCollect) return;
@@ -62,9 +63,12 @@ export const ResourceCollector = React.memo(() => {
       
       const { coins: coinsAmount, diamonds: diamondsAmount, tier: tierName } = serverResult;
 
+      const nextTime = new Date(Date.now() + 12 * 60 * 60 * 1000);
       updateResources({ 
         coins: (user.coins || 0) + coinsAmount,
-        diamonds: (user.diamonds || 0) + diamondsAmount 
+        diamonds: (user.diamonds || 0) + diamondsAmount,
+        lastCollectionAt: new Date().toISOString(),
+        nextCollectionAt: nextTime.toISOString()
       });
       playNotificationSound();
       
@@ -103,7 +107,11 @@ export const ResourceCollector = React.memo(() => {
     try {
       await walletService.resetCollector(user.id);
       
-      updateResources({ diamonds: (user.diamonds || 0) - 3 });
+      updateResources({ 
+        diamonds: (user.diamonds || 0) - 3,
+        lastCollectionAt: undefined,
+        nextCollectionAt: undefined
+      });
       toast.success("Collector Reset! Ready to mine.");
       
       if (isMounted.current) setLoading(false);
@@ -144,30 +152,27 @@ export const ResourceCollector = React.memo(() => {
             </motion.div>
           ) : (
             <div className="flex items-center gap-2 w-full sm:w-auto">
-              <button
+              <Button
+                variant={canCollect ? 'gold' : 'outline'}
+                size="md"
                 onClick={handleCollect}
                 disabled={!canCollect || loading}
-                className={cn(
-                  "flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-2",
-                  canCollect 
-                    ? "bg-brand-gold text-white border border-brand-gold/30 hover:bg-brand-gold/80 hover:translate-y-[-1px] active:translate-y-[0px] shadow-sm" 
-                    : "bg-navy-800 text-text-secondary/50 cursor-not-allowed border border-navy-700"
-                )}
+                className="flex-1 sm:flex-none uppercase tracking-widest text-[10px] sm:text-xs font-bold w-full sm:w-auto"
               >
-                <span className="text-white">
-                  {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Locked'}
-                </span>
-              </button>
+                {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Locked'}
+              </Button>
 
               {!canCollect && (
-                <button
+                <Button
+                  variant="outline"
+                  size="md"
                   onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
-                  className="px-4 py-2 rounded-lg bg-navy-800 text-cyan-400 border border-cyan-500/10 font-bold text-xs hover:bg-navy-700 transition-all flex items-center justify-center gap-2 group/reset"
+                  className="flex items-center justify-center gap-2 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-4"
                 >
                   <Gem size={14} className="group-hover/reset:rotate-12 transition-transform" />
                   Reset
-                </button>
+                </Button>
               )}
             </div>
           )}

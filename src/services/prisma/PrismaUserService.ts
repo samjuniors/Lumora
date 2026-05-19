@@ -84,7 +84,7 @@ export class PrismaUserService implements IUserService {
       } catch (err) { }
     };
     fetchUser();
-    const interval = setInterval(fetchUser, 30000);
+    const interval = setInterval(fetchUser, 120000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -107,7 +107,7 @@ export class PrismaUserService implements IUserService {
       } catch (err) { }
     };
     fetchStudents();
-    const interval = setInterval(fetchStudents, 60000);
+    const interval = setInterval(fetchStudents, 120000);
     return () => {
       active = false;
       clearInterval(interval);

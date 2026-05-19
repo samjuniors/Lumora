@@ -72,12 +72,12 @@ const Podium = React.memo(({ leaders, type, setSelectedUser, timeframe, timing }
               )}
             >
               {isFirst && (
-                <div className="absolute -top-6 bg-white text-bg-main text-[10px] font-black px-6 py-2 rounded-full flex items-center gap-2 shadow-2xl border border-white/20 uppercase tracking-[0.3em]">
+                <div className="absolute -top-6 bg-white text-bg-main text-xs font-bold px-6 py-2 rounded-full flex items-center gap-2 shadow-2xl border border-white/20 uppercase tracking-widest">
                    <Crown className="w-4 h-4" /> Apex Operative
                 </div>
               )}
               {!isFirst && (
-                <div className="absolute -top-4 bg-white/10 backdrop-blur-md text-[9px] font-black px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-widest opacity-60">
+                <div className="absolute -top-4 bg-white/10 backdrop-blur-md text-[10px] font-bold px-4 py-1.5 rounded-full border border-white/10 uppercase tracking-wider opacity-80">
                    Rank {rank}
                 </div>
               )}
@@ -98,14 +98,14 @@ const Podium = React.memo(({ leaders, type, setSelectedUser, timeframe, timing }
                  )}
                </motion.div>
                
-               <button onClick={() => setSelectedUser(student)} className="font-black text-center truncate block max-w-full px-2 text-xl hover:opacity-80 transition-opacity uppercase tracking-tight">
+               <button onClick={() => setSelectedUser(student)} className="font-bold text-center truncate block max-w-full px-2 text-xl hover:opacity-80 transition-opacity tracking-tight">
                   {student.name.split(' ')[0]}
                </button>
 
-               <div className={cn("mt-2 text-[10px] font-black uppercase tracking-[0.2em] opacity-60", isFirst ? "text-bg-main" : "text-text-muted")}>
+               <div className={cn("mt-2 text-xs font-semibold tracking-wider opacity-80 uppercase", isFirst ? "text-bg-main" : "text-text-muted")}>
                   Clearance Lvl {getUserLevelAndXP(student).currentLevel}
                </div>
-                            <div className={cn("mt-6 font-black flex items-center gap-2", isFirst ? "text-4xl text-bg-main" : "text-3xl text-brand-gold")}>
+                            <div className={cn("mt-6 font-bold flex items-center gap-2", isFirst ? "text-4xl text-bg-main" : "text-3xl text-brand-gold")}>
                  {type === 'diamonds' ? (
                    <>{(() => {
                       const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -356,7 +356,7 @@ export const Leaderboard = React.memo(() => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto space-y-12 relative pb-48 px-6">
+    <div className="max-w-7xl mx-auto space-y-8 md:space-y-12 relative pb-12 px-4 md:px-6">
       {/* Premium minimal Header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
@@ -366,25 +366,25 @@ export const Leaderboard = React.memo(() => {
         <div className="flex flex-col items-center gap-4">
            <div className="flex items-center gap-3">
              <span className="h-[1px] w-12 bg-brand-gold/30"></span>
-             <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Operational Dominance</span>
+             <span className="text-xs font-semibold text-brand-gold uppercase tracking-widest">Operational Dominance</span>
              <span className="h-[1px] w-12 bg-brand-gold/30"></span>
            </div>
-           <h1 className="text-5xl md:text-8xl font-black tracking-tighter text-text-primary uppercase leading-[0.85]">
-              Syndicate <span className="text-brand-gold text-glow-gold">Rankings</span>
+           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-text-primary uppercase leading-[0.9]">
+              Syndicate <span className="text-brand-gold text-glow-gold font-normal">Rankings</span>
            </h1>
-           <p className="text-text-secondary text-lg md:text-xl font-medium max-w-2xl mx-auto italic opacity-80">
+           <p className="text-text-secondary text-base md:text-lg font-medium max-w-2xl mx-auto opacity-80">
               Elite performance metrics. Only the most precise operatives ascend to the Apex Tier.
            </p>
         </div>
         
-        {/* Navigation Tabs */}
-        <div className="pt-12">
-          <div className="flex bg-white/[0.02] backdrop-blur-md p-2 w-full max-w-xl mx-auto rounded-[2rem] border border-white/5 shadow-premium">
+         {/* Navigation Tabs */}
+         <div className="pt-12">
+          <div className="flex bg-white/[0.02] backdrop-blur-md p-2 w-full max-w-xl mx-auto rounded-3xl border border-white/5 shadow-sm">
             <button
               onClick={() => setActiveTab('diamonds')}
               className={cn(
-                "flex-1 px-8 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3",
-                activeTab === 'diamonds' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
+                "flex-1 px-8 py-5 rounded-[1.5rem] font-semibold text-xs uppercase tracking-wider transition-all duration-500 flex items-center justify-center gap-3",
+                activeTab === 'diamonds' ? "bg-brand-gold text-bg-main shadow-md shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
               )}
             >
               <Gem className="w-4 h-4" /> Asset Leaders
@@ -392,8 +392,8 @@ export const Leaderboard = React.memo(() => {
             <button
               onClick={() => setActiveTab('grades')}
               className={cn(
-                "flex-1 px-8 py-5 rounded-[1.5rem] font-black text-[11px] uppercase tracking-[0.2em] transition-all duration-500 flex items-center justify-center gap-3",
-                activeTab === 'grades' ? "bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
+                "flex-1 px-8 py-5 rounded-[1.5rem] font-semibold text-xs uppercase tracking-wider transition-all duration-500 flex items-center justify-center gap-3",
+                activeTab === 'grades' ? "bg-brand-gold text-bg-main shadow-md shadow-brand-gold/20" : "text-text-muted hover:text-text-primary"
               )}
             >
               <GraduationCap className="w-4 h-4" /> Mastery Tier
@@ -411,7 +411,7 @@ export const Leaderboard = React.memo(() => {
                    key={t}
                    onClick={() => setTimeframe(t)}
                    className={cn(
-                     "px-8 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] transition-all border",
+                     "px-6 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition-all border",
                      timeframe === t 
                        ? "bg-brand-gold/5 border-brand-gold/30 text-brand-gold" 
                        : "text-text-muted border-transparent hover:text-text-primary hover:bg-white/5"
@@ -459,7 +459,7 @@ export const Leaderboard = React.memo(() => {
                       className="bg-bg-card/90 backdrop-blur-3xl border border-brand-gold/30 rounded-[2rem] shadow-glow-gold p-3 md:p-5 flex items-center gap-4 text-text-primary overflow-hidden relative"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-brand-gold/5 to-transparent pointer-events-none"></div>
-                      <div className="w-12 h-12 md:w-14 md:h-14 bg-brand-gold text-bg-main rounded-[1.25rem] flex items-center justify-center font-black text-xl md:text-2xl shrink-0">
+                      <div className="w-12 h-12 md:w-14 md:h-14 bg-brand-gold text-bg-main rounded-[1.25rem] flex items-center justify-center font-bold text-xl md:text-2xl shrink-0">
                         #{myIndex + 1}
                       </div>
                       <div className="w-12 h-12 md:w-14 md:h-14 bg-white/5 rounded-[1.25rem] flex items-center justify-center shrink-0 border border-white/5 overflow-hidden">
@@ -469,23 +469,23 @@ export const Leaderboard = React.memo(() => {
                            <span className="text-2xl md:text-3xl">{me.avatar || '👤'}</span>
                         )}
                       </div>
-                      <div className="flex-1 font-black z-10 min-w-0">
-                        <p className="truncate text-[10px] text-brand-gold uppercase tracking-[0.3em] mb-1">Operative Standing</p>
+                      <div className="flex-1 font-semibold z-10 min-w-0">
+                        <p className="truncate text-xs text-brand-gold uppercase tracking-wider mb-1">Operative Standing</p>
                         <div className="flex items-center gap-3">
-                          <span className="text-lg md:text-xl truncate uppercase tracking-tighter">Apex Designation</span>
+                          <span className="text-lg md:text-xl truncate uppercase tracking-tight">Apex Designation</span>
                           <div className="hidden md:flex items-center gap-2">
-                            <span className={cn("text-[9px] uppercase tracking-[0.2em] font-black px-3 py-1 rounded-full text-bg-main bg-brand-gold")}>
+                            <span className={cn("text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full text-bg-main bg-brand-gold")}>
                               {tier.name}
                             </span>
                             <span className={cn(
-                              "text-[9px] uppercase font-black tracking-[0.2em] px-3 py-1 rounded-full shadow-sm text-text-primary border border-white/10 bg-white/5",
+                              "text-[10px] uppercase font-bold tracking-wider px-3 py-1 rounded-full shadow-sm text-text-primary border border-white/10 bg-white/5",
                             )}>
                               {getPerformanceBadge(calculatePerformanceScore(me)).title}
                             </span>
                           </div>
                         </div>
                       </div>
-                    <div className="font-black text-xl md:text-3xl z-10 whitespace-nowrap bg-brand-gold/10 px-6 py-3 rounded-2xl flex items-center gap-2 border border-brand-gold/20 text-brand-gold shadow-glow-gold">
+                    <div className="font-bold text-xl md:text-3xl z-10 whitespace-nowrap bg-brand-gold/10 px-6 py-3 rounded-2xl flex items-center gap-2 border border-brand-gold/20 text-brand-gold shadow-glow-gold">
                       {activeTab === 'diamonds' ? (
                         <span className="flex items-center gap-3">
                           {(() => {

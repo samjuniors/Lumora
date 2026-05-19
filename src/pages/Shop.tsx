@@ -334,24 +334,24 @@ export const Shop = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="max-w-7xl mx-auto px-6 py-16 space-y-16"
+      className="max-w-7xl mx-auto px-4 md:px-6 py-8 md:py-16 space-y-8 md:space-y-16"
     >
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-10">
-        <div className="space-y-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-10">
+        <div className="space-y-2 md:space-y-4">
            <div className="flex items-center gap-3">
-             <span className="h-[1px] w-12 bg-brand-gold/30"></span>
-             <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Asset Procurement</span>
+             <span className="h-[1px] w-8 md:w-12 bg-brand-gold/30"></span>
+             <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] md:tracking-[0.4em]">Asset Procurement</span>
            </div>
-           <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-text-primary leading-tight uppercase">
+           <h1 className="text-3xl sm:text-4xl md:text-6xl font-black tracking-tighter text-text-primary leading-tight uppercase">
               Strategic <span className="text-brand-gold text-glow-gold">Exchange</span>
            </h1>
-           <p className="text-text-secondary font-medium md:text-lg max-w-2xl border-l-2 border-brand-gold/20 pl-6 py-2 italic opacity-80">
+           <p className="text-text-secondary font-medium text-sm md:text-lg max-w-2xl border-l-2 border-brand-gold/20 pl-4 py-1.5 italic opacity-80 leading-relaxed">
               Acquire elite tactical assets, neural link upgrades, and prestige symbols. Every acquisition has systemic consequences.
            </p>
         </div>
         
-        <Card variant="flat" className="p-10 border-white/5 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] min-w-[360px] relative overflow-hidden bg-white/[0.01] rounded-[2rem]">
+        <Card variant="flat" className="w-full md:w-auto p-6 md:p-10 border-white/5 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] min-w-[320px] md:min-w-[360px] relative overflow-hidden bg-white/[0.01] rounded-[1.5rem] md:rounded-[2rem]">
           <div className="absolute top-0 right-0 p-6 text-brand-gold opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
             <ShoppingBag size={120} />
           </div>

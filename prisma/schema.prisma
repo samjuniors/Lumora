@@ -47,6 +47,8 @@ model User {
   // Cooldowns
   lastRewardClaimedAt DateTime?
   lastCollectionAt     DateTime?
+  nextDailyRewardAt    DateTime?
+  nextCollectionAt     DateTime?
   
   // Timestamps
   createdAt        DateTime @default(now())

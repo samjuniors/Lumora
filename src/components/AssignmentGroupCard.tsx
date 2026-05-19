@@ -96,14 +96,14 @@ export const AssignmentGroupCard: React.FC<AssignmentGroupCardProps> = React.mem
     <Card 
       variant="flat" 
       className={cn(
-        "p-6 transition-all duration-300 border-white/[0.03]", 
+        "p-4 md:p-6 transition-all duration-300 border-white/[0.03]", 
         isDuoGroup ? "border-brand-gold/20" : ""
       )}
     >
-      <div className="flex items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-3 mb-5">
+        <div className="flex items-center gap-3">
           <div className={cn(
-            "w-12 h-12 border flex items-center justify-center shrink-0 rounded-2xl transition-all",
+            "w-10 h-10 border flex items-center justify-center shrink-0 rounded-[14px] transition-all",
             isDuoGroup 
               ? "bg-brand-gold/10 border-brand-gold/20 text-brand-gold" 
               : "bg-white/[0.03] border-white/5 text-text-primary"

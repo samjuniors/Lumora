@@ -36,7 +36,7 @@ import { ResourceCollector } from "../components/ResourceCollector";
 import { TheOracle } from "../components/TheOracle";
 import { motion, AnimatePresence } from "motion/react";
 import { cn, getUserLevelAndXP, getVIPLevel } from "../lib/utils";
-import { DashboardSkeleton } from "../components/Skeletons";
+import { DashboardSkeleton, ListSkeleton } from "../components/Skeletons";
 import { Card, SectionHeader, Button, EmptyState, animations } from "../components/CommonUI";
 
 import {
@@ -168,16 +168,6 @@ export const Dashboard = () => {
       .slice(0, 3);
   }, [visibleAssignments]);
 
-  if (isLoading && visibleAssignments.length === 0) return <DashboardSkeleton />;
-
-  const missedCount = studentEnrollments.filter(e => e.status === 'missed').length;
-  const activeMissions = visibleAssignments.filter(a => {
-      const enr = studentEnrollments.find(e => e.assignmentId === a.id);
-      return !enr || (enr.status === 'active');
-  });
-  
-  const potentialLoss = activeMissions.reduce((acc, a) => acc + (a.entryFee || 0), 0);
-
   const containerVariants = {
     hidden: { opacity: 0 },
     show: {
@@ -197,46 +187,54 @@ export const Dashboard = () => {
     },
   };
 
+  const missedCount = studentEnrollments?.filter(e => e.status === 'missed').length || 0;
+  const activeMissions = visibleAssignments?.filter(a => {
+      const enr = studentEnrollments?.find(e => e.assignmentId === a.id);
+      return !enr || (enr.status === 'active');
+  }) || [];
+  
+  const potentialLoss = activeMissions.reduce((acc, a) => acc + (a.entryFee || 0), 0);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="max-w-7xl mx-auto space-y-6 md:space-y-8 pb-24 px-4 md:px-0"
+      className="max-w-7xl mx-auto space-y-4 md:space-y-6 pb-6 px-3 md:px-0"
     >
       {/* Premium Header */}
-      <div className="flex flex-col lg:flex-row gap-6 md:gap-10 items-start pt-6 md:pt-10">
+      <div className="flex flex-col lg:flex-row gap-4 md:gap-8 items-start pt-4 md:pt-8">
         <div className="flex-grow space-y-4 md:space-y-6">
           <div className="space-y-2 md:space-y-3">
              <div className="flex items-center gap-3">
                <span className="h-[1px] w-8 md:w-12 bg-brand-gold/30"></span>
-               <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] md:tracking-[0.4em]">Strategic Control</span>
+               <span className="text-xs font-semibold text-brand-gold tracking-widest uppercase">Strategic Control</span>
              </div>
-             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter text-text-primary leading-[1] uppercase">
-                Lumina <span className="text-brand-gold text-glow-gold">Protocol</span>
+             <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold tracking-tight text-text-primary leading-[1]">
+                Lumina <span className="text-brand-gold text-glow-gold font-normal">Protocol</span>
              </h1>
-             <p className="text-text-secondary font-medium text-sm md:text-lg max-w-2xl border-l-2 border-brand-gold/20 pl-4 py-1.5 italic opacity-80 leading-relaxed">
+             <p className="text-text-secondary font-medium text-sm md:text-lg max-w-2xl border-l-2 border-brand-gold/20 pl-4 py-1.5 opacity-80 leading-relaxed">
                High-stakes academic dominance monitoring. Execute with precision or face liquidation.
              </p>
           </div>
           
           <div className="flex flex-wrap gap-5">
              <div className="bg-white/[0.02] border border-white/5 rounded-3xl px-8 py-5 flex items-center gap-5 transition-all hover:bg-white/[0.04] hover:scale-105 shadow-inner">
-                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500 shadow-lg shadow-orange-500/10">
+                <div className="w-12 h-12 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                    <Flame size={24} />
                 </div>
                 <div>
-                   <p className="text-[9px] uppercase tracking-[0.2em] font-black text-text-muted opacity-60">Neural Burn Streak</p>
-                   <p className="text-3xl font-black text-text-primary leading-none tabular-nums">{user?.streak || 0}</p>
+                   <p className="text-xs font-semibold tracking-wide text-text-muted opacity-80 uppercase">Neural Burn Streak</p>
+                   <p className="text-3xl font-bold text-text-primary leading-none tabular-nums pt-1">{user?.streak || 0}</p>
                 </div>
              </div>
              <div className="bg-white/[0.02] border border-white/5 rounded-3xl px-8 py-5 flex items-center gap-5 transition-all hover:bg-white/[0.04] hover:scale-105 shadow-inner">
-                <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shadow-lg shadow-brand-gold/10">
+                <div className="w-12 h-12 rounded-2xl bg-brand-gold/10 flex items-center justify-center text-brand-gold">
                    <Coins size={24} />
                 </div>
                 <div>
-                   <p className="text-[9px] uppercase tracking-[0.2em] font-black text-text-muted opacity-60">Capital Stockpile</p>
-                   <p className="text-3xl font-black text-text-primary leading-none tabular-nums">{user?.coins?.toLocaleString() || 0}</p>
+                   <p className="text-xs font-semibold tracking-wide text-text-muted opacity-80 uppercase">Capital Stockpile</p>
+                   <p className="text-3xl font-bold text-text-primary leading-none tabular-nums pt-1">{user?.coins?.toLocaleString() || 0}</p>
                 </div>
              </div>
           </div>
@@ -244,21 +242,21 @@ export const Dashboard = () => {
 
         <Card
           variant="glass"
-          className="w-full lg:w-[400px] p-8 md:p-10 flex flex-col justify-between relative overflow-hidden group shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] border-white/10"
+          className="w-full lg:w-[400px] p-8 md:p-10 flex flex-col justify-between relative overflow-hidden group border-white/10"
         >
           <div className="absolute top-0 right-0 p-10 opacity-[0.04] group-hover:opacity-[0.08] transition-all duration-700 group-hover:scale-110 group-hover:rotate-12">
              <Gem size={140} />
           </div>
           <div className="relative z-10">
             <div className="flex justify-between items-center mb-10">
-              <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] border-b border-brand-gold/20 pb-1.5 italic">Asset Allocation: Diamonds</span>
-              <Gem className="text-brand-gold animate-pulse" size={24} />
+              <span className="text-xs font-semibold text-text-muted pb-1 uppercase tracking-wider">Asset Allocation: Diamonds</span>
+              <Gem className="text-brand-gold opacity-80" size={24} />
             </div>
-            <div className="text-7xl font-black text-text-primary tracking-tighter mb-4 tabular-nums">
+            <div className="text-6xl font-bold text-text-primary tracking-tight mb-4 tabular-nums">
               {user?.diamonds || 0}
             </div>
             <div className="flex items-center gap-3">
-               <span className="bg-brand-gold text-bg-main text-[9px] font-black px-3 py-1 rounded-full uppercase tracking-widest">Level {currentLevel}</span>
+               <span className="bg-brand-gold text-bg-main text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Level {currentLevel}</span>
                <div className="h-1 flex-1 bg-white/[0.05] rounded-full overflow-hidden">
                   <div className="h-full bg-brand-gold shadow-glow-gold" style={{ width: `${xpProgress}%` }} />
                </div>
@@ -266,13 +264,13 @@ export const Dashboard = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-6 pt-10 mt-10 border-t border-white/5 relative z-10">
-            <Link to="/assignments?filter=active" className="space-y-2 group">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] group-hover:text-brand-gold transition-colors opacity-60">Operations</p>
-              <p className="text-3xl font-black text-text-primary leading-none tabular-nums group-hover:translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "active").length}</p>
+            <Link to="/assignments?filter=active" className="space-y-2 group/ops">
+              <p className="text-xs font-semibold text-text-muted transition-colors opacity-80 uppercase tracking-wide">Operations</p>
+              <p className="text-3xl font-bold text-text-primary leading-none tabular-nums group-hover/ops:translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "active").length}</p>
             </Link>
-            <Link to="/assignments?filter=completed" className="space-y-2 group text-right">
-              <p className="text-[10px] font-black text-text-muted uppercase tracking-[0.2em] group-hover:text-success transition-colors opacity-60">Secured</p>
-              <p className="text-3xl font-black text-text-primary leading-none tabular-nums group-hover:-translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</p>
+            <Link to="/assignments?filter=completed" className="space-y-2 group/sec text-right">
+              <p className="text-xs font-semibold text-text-muted transition-colors opacity-80 uppercase tracking-wide">Secured</p>
+              <p className="text-3xl font-bold text-text-primary leading-none tabular-nums group-hover/sec:-translate-x-1 transition-transform">{studentEnrollments.filter((e) => e.status === "submitted" || e.status === "graded").length}</p>
             </Link>
           </div>
         </Card>
@@ -284,21 +282,21 @@ export const Dashboard = () => {
             <motion.div 
               initial={{ scale: 0.98, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-rose-500/5 border border-rose-500/10 rounded-[2rem] p-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-premium"
+              className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6"
             >
                <div className="flex items-center gap-6">
                   <div className="w-16 h-16 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-2xl flex items-center justify-center shrink-0">
                      <AlertTriangle size={32} />
                   </div>
                   <div>
-                    <h3 className="text-xs font-black text-rose-500 uppercase tracking-[0.3em] mb-2">Liquidation Exposure Alert</h3>
-                    <p className="text-sm font-medium text-text-secondary leading-relaxed max-w-xl italic">
-                       System predicts a loss of <span className="font-black text-rose-500 underline underline-offset-4 decoration-2">{potentialLoss} Credits</span> due to deadline degradation. Immediate intervention mandatory.
+                    <h3 className="text-sm font-bold text-rose-500 uppercase tracking-widest mb-1.5">Liquidation Exposure Alert</h3>
+                    <p className="text-sm font-medium text-text-secondary leading-relaxed max-w-xl">
+                       System predicts a loss of <span className="font-bold text-rose-400">{potentialLoss} Credits</span> due to deadline degradation. Immediate intervention mandatory.
                     </p>
                   </div>
                </div>
                <Link to="/assignments?filter=active">
-                 <Button variant="danger" size="lg" className="w-full sm:w-auto font-black shadow-lg shadow-rose-500/10">Execute Defense</Button>
+                 <Button variant="danger" size="lg" className="w-full sm:w-auto font-bold shadow-lg shadow-rose-500/10">Execute Defense</Button>
                </Link>
             </motion.div>
           )}
@@ -319,7 +317,9 @@ export const Dashboard = () => {
           />
 
           <div className="space-y-4">
-            {groupedAssignments.length === 0 ? (
+            {isLoading && visibleAssignments.length === 0 ? (
+               <ListSkeleton />
+            ) : groupedAssignments.length === 0 ? (
                <EmptyState 
                  icon={Target}
                  title="No Active Missions"

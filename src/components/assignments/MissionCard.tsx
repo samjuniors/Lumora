@@ -42,7 +42,7 @@ export const MissionCard = ({ assignment, user, enrollments = [], onEdit }: Miss
             <Card 
                 variant="flat" 
                 className={cn(
-                    "flex flex-col h-full p-6 transition-all duration-300 border-white/[0.03] group-hover:border-white/10 group-hover:bg-white/[0.04]", 
+                    "flex flex-col h-full p-4 md:p-6 transition-all duration-300 border-white/[0.03] group-hover:border-white/10 group-hover:bg-white/[0.04]", 
                     assignment.isBonus && "border-brand-gold/30 bg-brand-gold/[0.02]"
                 )}
             >

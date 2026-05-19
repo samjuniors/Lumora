@@ -47,9 +47,9 @@ export const Navbar = React.memo(() => {
 
   return (
     <>
-      <nav className="glass-dark fixed top-0 w-full z-[120] border-b border-white/[0.05]">
+      <nav className="glass-dark fixed top-0 w-full z-[120] border-b border-white/[0.05] pt-[env(safe-area-inset-top)]">
         <div className="container mx-auto px-4 lg:px-6 max-w-7xl">
-          <div className="flex h-12 items-center justify-between">
+          <div className="flex h-12 md:h-14 items-center justify-between">
             {/* Left: Logo */}
             <div className="flex-shrink-0">
               <Link to="/dashboard" className="flex items-center group transition-transform active:scale-95">
@@ -61,7 +61,7 @@ export const Navbar = React.memo(() => {
             <div className="hidden lg:flex items-center gap-1">
               {isAdmin ? (
                 <>
-                  <NavLink to="/dashboard" icon={BookOpen} title="Student View">Student</NavLink>
+                  <NavLink to="/admin?tab=analytics" icon={BarChart3}>Analytics</NavLink>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
                   <NavLink to="/admin?tab=assignments" icon={Target}>Tasks</NavLink>
                   <NavLink to="/admin?tab=overview" icon={ShieldAlert}>System</NavLink>
@@ -120,11 +120,11 @@ export const Navbar = React.memo(() => {
       </nav>
 
       {/* Mobile Bottom Navigation - Floating island style */}
-      <div className="fixed bottom-3 left-3 right-3 z-[120] md:hidden">
-        <div className="glass-dark rounded-[18px] shadow-2xl flex items-center justify-around h-12 w-full max-w-sm mx-auto px-1 border border-white/10">
+      <div className="fixed bottom-0 left-0 right-0 z-[120] md:hidden px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pointer-events-none">
+        <div className="glass-dark rounded-[1.25rem] shadow-2xl flex items-center justify-around h-14 w-full max-w-sm mx-auto px-1.5 border border-white/10 pointer-events-auto">
           {isAdmin ? (
             <>
-              <MobileNavLink to="/dashboard" icon={BookOpen} label="Student" currentPath={location.pathname} />
+              <MobileNavLink to="/admin?tab=analytics" icon={BarChart3} label="Data" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} />

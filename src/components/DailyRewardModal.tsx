@@ -28,25 +28,26 @@ export const DailyRewardModal = () => {
   useEffect(() => {
     if (!isStudent || !user) return;
     
-    const now = new Date();
-    const lastClaim = user.lastRewardClaimedAt;
-    let alreadyClaimed = false;
-
-    if (lastClaim) {
-      const claimDate = new Date(lastClaim);
-      alreadyClaimed = 
-        claimDate.getUTCFullYear() === now.getUTCFullYear() &&
-        claimDate.getUTCMonth() === now.getUTCMonth() &&
-        claimDate.getUTCDate() === now.getUTCDate();
-    }
-    
-    if (!alreadyClaimed) {
-      const timer = setTimeout(() => {
+    const checkAvailability = () => {
+      let alreadyClaimed = false;
+      if (user.nextDailyRewardAt) {
+        const nextTime = new Date(user.nextDailyRewardAt).getTime();
+        alreadyClaimed = Date.now() < nextTime;
+      }
+      
+      if (!alreadyClaimed) {
         setIsOpen(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [user?.id, user?.lastRewardClaimedAt]);
+      }
+    };
+    
+    const initialTimer = setTimeout(checkAvailability, 1500);
+    const intervalTimer = setInterval(checkAvailability, 60000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
+    };
+  }, [user?.id, user?.nextDailyRewardAt, isStudent]);
 
   const handleClaim = async () => {
     if (!user) return;
@@ -89,7 +90,12 @@ export const DailyRewardModal = () => {
         icon: reward.type === 'penalty' ? '📉' : '🎉'
       });
       
-      updateResources({ lastRewardClaimedAt: new Date().toISOString() });
+      const nextDaily = new Date();
+      nextDaily.setUTCHours(24, 0, 0, 0);
+      updateResources({ 
+        lastRewardClaimedAt: new Date().toISOString(),
+        nextDailyRewardAt: nextDaily.toISOString()
+      });
       
     } catch (e: any) {
       console.error(e);

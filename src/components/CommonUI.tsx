@@ -118,16 +118,16 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   className
 }) => {
   return (
-    <div className={cn('flex items-center justify-between gap-4 py-2 mb-6', className)}>
+      <div className={cn('flex items-center justify-between gap-4 py-2 mb-6', className)}>
       <div className="flex items-center gap-4">
         {Icon && (
           <div className="w-10 h-10 flex items-center justify-center bg-white/[0.03] border border-white/5 rounded-xl text-brand-gold shrink-0">
             <Icon size={20} />
           </div>
         )}
-        <div className="space-y-0.5">
-          <h2 className="text-xl md:text-2xl font-bold text-text-primary tracking-tight leading-tight">{title}</h2>
-          {subtitle && <p className="text-[10px] sm:text-xs text-text-muted font-bold uppercase tracking-widest leading-none">{subtitle}</p>}
+        <div className="space-y-1">
+          <h2 className="text-xl md:text-2xl font-semibold text-text-primary tracking-tight leading-tight">{title}</h2>
+          {subtitle && <p className="text-xs text-text-muted font-medium">{subtitle}</p>}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -158,21 +158,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const variants = {
-    primary: 'bg-white/[0.05] text-text-primary border-white/10 hover:bg-white/[0.08] hover:border-white/15',
-    secondary: 'bg-brand-gold/10 text-brand-gold border-brand-gold/20 hover:bg-brand-gold/20',
-    outline: 'bg-transparent border-white/10 text-text-primary hover:bg-white/5',
-    danger: 'bg-red-500/10 border-red-500/10 text-red-500 hover:bg-red-500/20',
-    ghost: 'bg-transparent border-transparent text-text-secondary hover:text-text-primary hover:bg-white/5',
-    gold: 'bg-brand-gold text-bg-main border-brand-gold hover:brightness-110 shadow-lg shadow-brand-gold/10 font-black',
-    link: 'bg-transparent border-transparent text-brand-gold p-0 h-auto hover:underline'
+    primary: 'bg-white/[0.04] text-text-primary border border-white/[0.08] hover:bg-white/[0.06] hover:border-white/[0.12]',
+    secondary: 'bg-brand-gold/10 text-brand-gold hover:bg-brand-gold/15',
+    outline: 'bg-transparent border border-white/10 text-text-primary hover:bg-white/[0.04]',
+    danger: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
+    ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/[0.04]',
+    gold: 'bg-brand-gold text-bg-main hover:brightness-110 shadow-md font-semibold',
+    link: 'bg-transparent text-brand-gold p-0 h-auto hover:underline'
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-[10px] tracking-widest rounded-lg',
-    md: 'px-5 py-2.5 text-xs tracking-wider rounded-xl',
-    lg: 'px-8 py-3.5 text-sm tracking-widest rounded-2xl',
-    xl: 'px-10 py-5 text-base tracking-widest rounded-[2rem]',
-    icon: 'p-2.5 rounded-xl'
+    sm: 'px-3 py-1.5 text-xs rounded-lg',
+    md: 'px-4 py-2 text-sm rounded-xl',
+    lg: 'px-6 py-3 text-base rounded-2xl',
+    xl: 'px-8 py-4 text-lg rounded-2xl',
+    icon: 'p-2 rounded-xl'
   };
 
   return (
@@ -227,7 +227,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span className={cn(
-      'px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border',
+      'px-2.5 py-1 rounded-md text-[11px] font-medium tracking-wide border',
       variants[variant],
       className
     )}>
@@ -271,12 +271,12 @@ export const EmptyState = ({
   className?: string
 }) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center bg-white/[0.01] border border-dashed border-white/5 rounded-3xl", className)}>
-      <div className="w-16 h-16 bg-white/[0.03] rounded-2xl flex items-center justify-center text-text-muted/20 mb-6 border border-white/5 shadow-inner">
+    <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center bg-white/[0.02] border border-white/[0.05] rounded-3xl", className)}>
+      <div className="w-16 h-16 bg-white/[0.04] rounded-2xl flex items-center justify-center text-text-muted/40 mb-6 border border-white/5">
         <Icon size={32} />
       </div>
-      <h3 className="text-lg font-bold text-text-primary mb-2 uppercase tracking-tight">{title}</h3>
-      <p className="text-xs text-text-muted max-w-xs mx-auto mb-8 font-medium leading-relaxed italic">{description}</p>
+      <h3 className="text-lg font-semibold text-text-primary mb-2 tracking-tight">{title}</h3>
+      <p className="text-sm text-text-muted max-w-xs mx-auto mb-8 font-medium leading-relaxed">{description}</p>
       {action && action}
     </div>
   );

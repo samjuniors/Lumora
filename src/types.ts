@@ -23,6 +23,8 @@ export interface User {
   petLastFed?: string | number | Date;
   lastRewardClaimedAt?: string | number | Date;
   lastCollectionAt?: string | number | Date;
+  nextDailyRewardAt?: string | number | Date;
+  nextCollectionAt?: string | number | Date;
   lastMissedSweep?: number;
   lastSeenVersion?: string;
   xp?: number;

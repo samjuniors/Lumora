@@ -56,7 +56,7 @@ export class PrismaNotificationService implements INotificationService {
       }
     };
     fetchNotifs();
-    const interval = setInterval(fetchNotifs, 15000);
+    const interval = setInterval(fetchNotifs, 120000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -81,7 +81,7 @@ export class PrismaNotificationService implements INotificationService {
       }
     };
     fetchNotifs();
-    const interval = setInterval(fetchNotifs, 10000);
+    const interval = setInterval(fetchNotifs, 60000);
     return () => {
       active = false;
       clearInterval(interval);

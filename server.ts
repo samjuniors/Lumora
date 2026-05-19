@@ -1156,18 +1156,10 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
       // ... (rest of the logic)
 
       const now = new Date();
-      const lastClaim = user.lastRewardClaimedAt;
       
-      // Check if already claimed today (UTC)
-      if (lastClaim) {
-        const lastClaimDay = new Date(lastClaim);
-        if (
-          lastClaimDay.getUTCFullYear() === now.getUTCFullYear() &&
-          lastClaimDay.getUTCMonth() === now.getUTCMonth() &&
-          lastClaimDay.getUTCDate() === now.getUTCDate()
-        ) {
-          return res.status(400).json({ error: "Already claimed today" });
-        }
+      // Check if already claimed today using deterministic timestamp
+      if (user.nextDailyRewardAt && now.getTime() < user.nextDailyRewardAt.getTime()) {
+        return res.status(400).json({ error: "Already claimed today" });
       }
 
       // Generate reward server-side
@@ -1199,11 +1191,15 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
         currency = 'coins';
       }
 
+      const nextDaily = new Date(now);
+      nextDaily.setUTCHours(24, 0, 0, 0);
+
       await prisma.$transaction(async (tx) => {
         await tx.user.update({
           where: { id: userId },
           data: {
             lastRewardClaimedAt: now,
+            nextDailyRewardAt: nextDaily,
             ...(currency === 'coins' && { coins: { increment: value as number } }),
             ...(currency === 'diamonds' && { diamonds: { increment: value as number } }),
             ...(currency === 'xp' && { xp: { increment: value as number } }),
@@ -1240,14 +1236,10 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
       }
 
       const now = new Date();
-      const lastCollect = user.lastCollectionAt;
       
-      // 12 hour cooldown
-      if (lastCollect) {
-        const cooldownMs = 12 * 60 * 60 * 1000;
-        if (now.getTime() - lastCollect.getTime() < cooldownMs) {
-          return res.status(400).json({ error: "Collector on cooldown" });
-        }
+      // Check cooldown using deterministic timestamp
+      if (user.nextCollectionAt && now.getTime() < user.nextCollectionAt.getTime()) {
+        return res.status(400).json({ error: "Collector on cooldown" });
       }
 
       // Tiered Reward Calculation server-side
@@ -1270,11 +1262,14 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
           diamonds = 0;
       }
 
+      const nextCollect = new Date(now.getTime() + 12 * 60 * 60 * 1000);
+
       await prisma.$transaction(async (tx) => {
         await tx.user.update({
           where: { id: userId },
           data: {
             lastCollectionAt: now,
+            nextCollectionAt: nextCollect,
             coins: { increment: coins },
             diamonds: { increment: diamonds }
           }
@@ -1315,7 +1310,8 @@ If no rubric is provided, create 1-2 logical criteria based on the assignment de
           where: { id: userId },
           data: {
             diamonds: { decrement: resetCost },
-            lastCollectionAt: null 
+            lastCollectionAt: null,
+            nextCollectionAt: null
           }
         });
 

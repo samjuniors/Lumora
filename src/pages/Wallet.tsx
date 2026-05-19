@@ -54,8 +54,8 @@ export const Wallet = () => {
 
   if (loading && transactions.length === 0) {
     return (
-      <div className="max-w-5xl mx-auto px-6 py-12 space-y-8 animate-pulse">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 md:py-12 space-y-6 md:space-y-8 animate-pulse">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
           <div className="h-60 bg-white/5 rounded-3xl" />
           <div className="lg:col-span-2 h-60 bg-white/5 rounded-3xl" />
         </div>
@@ -68,7 +68,7 @@ export const Wallet = () => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 px-6 py-12"
+      className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 px-4 md:px-6 py-6 md:py-12"
     >
       
       {/* Portfolio Summary */}
