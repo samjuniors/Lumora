@@ -282,12 +282,14 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   };
 
   const mobileNumber = settings?.mobileNumber || '';
+  const upiHandle = settings?.upiHandle || '';
   const payeeName = settings?.payeeName || 'Admin Test';
   const paymentLink = settings?.paymentLink || '';
   
-  const isVPA = mobileNumber.includes('@');
+  const isVPA = upiHandle ? upiHandle.includes('@') : mobileNumber.includes('@');
+  const targetHandle = upiHandle || mobileNumber;
   
-  const encodedHandle = encodeURIComponent(mobileNumber);
+  const encodedHandle = encodeURIComponent(targetHandle);
   const encodedName = encodeURIComponent(payeeName);
   
   const upiParams = `pa=${encodedHandle}&pn=${encodedName}&am=${amount}&cu=INR`;
@@ -297,7 +299,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   const phonepeUrl = isVPA ? `phonepe://pay?${upiParams}` : '';
   const paytmUrl = isVPA ? `paytmmp://pay?${upiParams}` : '';
   
-  const hasPaymentMethod = mobileNumber || paymentLink;
+  const hasPaymentMethod = targetHandle || paymentLink;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -521,7 +523,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                 </Card>
               )}
               
-              {mobileNumber && isVPA && (
+              {targetHandle && isVPA && (
                 <Card variant="flat" className="p-6 border-brand-gold/20 bg-brand-gold/[0.02] space-y-4">
                    <div className="flex flex-col items-center text-center space-y-4">
                       <div className="bg-white p-3 rounded-2xl border-2 border-brand-gold shadow-[0_0_30px_rgba(251,191,36,0.1)]">
@@ -536,7 +538,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
               )}
             </div>
             
-            {mobileNumber && isVPA && (
+            {targetHandle && isVPA && (
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                    <div className="h-px bg-white/5 flex-1" />
