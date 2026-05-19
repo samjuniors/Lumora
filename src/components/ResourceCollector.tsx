@@ -139,38 +139,38 @@ export const ResourceCollector = React.memo(() => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 relative z-10 w-full sm:w-auto">
+      <div className="flex items-center gap-2 relative z-10 w-full md:w-auto justify-end mt-2 md:mt-0">
         <AnimatePresence mode="wait">
           {collected ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-xs"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-xs"
             >
               <Sparkles size={14}/> Extraction Success
             </motion.div>
           ) : (
-            <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
               <Button
                 variant={canCollect ? 'gold' : 'outline'}
-                size="md"
+                size="sm"
                 onClick={handleCollect}
                 disabled={!canCollect || loading}
-                className="flex-1 sm:flex-none uppercase tracking-widest text-[10px] sm:text-xs font-bold w-full sm:w-auto"
+                className="flex-1 sm:flex-none uppercase tracking-widest text-[10px] font-bold"
               >
-                {loading ? 'Mining...' : canCollect ? 'Collect Now' : 'Locked'}
+                {loading ? 'Mining...' : canCollect ? 'Collect' : 'Locked'}
               </Button>
 
               {!canCollect && (
                 <Button
                   variant="outline"
-                  size="md"
+                  size="sm"
                   onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
-                  className="flex items-center justify-center gap-2 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-4"
+                  className="flex items-center justify-center gap-1.5 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-3 text-[10px] uppercase font-bold tracking-widest"
                 >
-                  <Gem size={14} className="group-hover/reset:rotate-12 transition-transform" />
+                  <Gem size={12} className="group-hover/reset:rotate-12 transition-transform" />
                   Reset
                 </Button>
               )}

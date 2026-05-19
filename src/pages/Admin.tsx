@@ -73,57 +73,6 @@ export const AdminPanel = () => {
                        Cleared as <span className="text-brand-gold">{user.role}</span> &bull; System Stable
                     </div>
                 </div>
-
-                {/* Tab Navigation - Desktop */}
-                <div className="hidden lg:flex items-center gap-1 bg-white/[0.03] p-1 rounded-2xl border border-white/5 h-fit">
-                    {MAIN_TABS.map((t) => (
-                        <button
-                            key={t.id}
-                            onClick={() => setTab(t.id)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest ${
-                                tab === t.id 
-                                    ? 'bg-brand-gold text-bg-main shadow-lg shadow-brand-gold/10' 
-                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
-                            }`}
-                        >
-                            <t.icon size={13} />
-                            {t.label}
-                        </button>
-                    ))}
-                    {isSuperAdmin && (
-                        <button
-                            onClick={() => setTab('settings')}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-[10px] uppercase tracking-widest border border-transparent ${
-                                tab === 'settings' 
-                                    ? 'bg-white text-bg-main shadow-lg' 
-                                    : 'text-text-secondary hover:text-white hover:bg-white/5'
-                            }`}
-                        >
-                            <Settings size={13} />
-                            System
-                        </button>
-                    )}
-                </div>
-
-                {/* Mobile Tab Navigation (Horizontal Scroll) */}
-                <div className="lg:hidden flex overflow-x-auto no-scrollbar gap-2 pb-2 -mx-4 px-4">
-                    {ALL_TABS.map((t) => (
-                        (t.id !== 'settings' || isSuperAdmin) && (
-                            <button
-                                key={t.id}
-                                onClick={() => setTab(t.id)}
-                                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-[10px] uppercase tracking-widest whitespace-nowrap border transition-all ${
-                                    tab === t.id 
-                                        ? 'bg-brand-gold text-bg-main border-brand-gold' 
-                                        : 'bg-white/[0.03] text-text-secondary border-white/5'
-                                }`}
-                            >
-                                <t.icon size={12} />
-                                {t.label}
-                            </button>
-                        )
-                    ))}
-                </div>
             </div>
 
 
