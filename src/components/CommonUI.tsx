@@ -118,16 +118,16 @@ export const SectionHeader: React.FC<SectionHeaderProps> = ({
   className
 }) => {
   return (
-      <div className={cn('flex items-center justify-between gap-4 py-2 mb-6', className)}>
-      <div className="flex items-center gap-4">
+      <div className={cn('flex items-center justify-between gap-4 py-1 mb-4 md:mb-5', className)}>
+      <div className="flex items-center gap-3 md:gap-4">
         {Icon && (
-          <div className="w-10 h-10 flex items-center justify-center bg-white/[0.03] border border-white/5 rounded-xl text-brand-gold shrink-0">
-            <Icon size={20} />
+          <div className="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center bg-white/[0.03] border border-white/5 rounded-xl text-brand-gold shrink-0">
+            <Icon size={18} />
           </div>
         )}
-        <div className="space-y-1">
-          <h2 className="text-xl md:text-2xl font-semibold text-text-primary tracking-tight leading-tight">{title}</h2>
-          {subtitle && <p className="text-xs text-text-muted font-medium">{subtitle}</p>}
+        <div className="space-y-0.5">
+          <h2 className="text-lg md:text-2xl font-semibold text-text-primary tracking-tight leading-tight">{title}</h2>
+          {subtitle && <p className="text-[10px] md:text-xs text-text-muted font-medium">{subtitle}</p>}
         </div>
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -168,10 +168,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   };
 
   const sizes = {
-    sm: 'px-3 py-1.5 text-xs rounded-lg',
-    md: 'px-4 py-2 text-sm rounded-xl',
-    lg: 'px-6 py-3 text-base rounded-2xl',
-    xl: 'px-8 py-4 text-lg rounded-2xl',
+    sm: 'px-2.5 py-1.25 text-[11px] rounded-lg',
+    md: 'px-3.5 py-2 text-sm rounded-xl',
+    lg: 'px-5 py-2.5 text-base rounded-xl',
+    xl: 'px-7 py-3.5 text-lg rounded-2xl',
     icon: 'p-2 rounded-xl'
   };
 
@@ -271,12 +271,12 @@ export const EmptyState = ({
   className?: string
 }) => {
   return (
-    <div className={cn("flex flex-col items-center justify-center py-16 px-4 text-center bg-white/[0.02] border border-white/[0.05] rounded-3xl", className)}>
-      <div className="w-16 h-16 bg-white/[0.04] rounded-2xl flex items-center justify-center text-text-muted/40 mb-6 border border-white/5">
-        <Icon size={32} />
+    <div className={cn("flex flex-col items-center justify-center py-10 md:py-16 px-4 text-center bg-white/[0.02] border border-white/[0.05] rounded-[1.5rem] md:rounded-3xl", className)}>
+      <div className="w-12 h-12 md:w-16 md:h-16 bg-white/[0.04] rounded-2xl flex items-center justify-center text-text-muted/40 mb-4 md:mb-6 border border-white/5">
+        <Icon className="w-6 h-6 md:w-8 md:h-8" />
       </div>
-      <h3 className="text-lg font-semibold text-text-primary mb-2 tracking-tight">{title}</h3>
-      <p className="text-sm text-text-muted max-w-xs mx-auto mb-8 font-medium leading-relaxed">{description}</p>
+      <h3 className="text-base md:text-lg font-semibold text-text-primary mb-1 md:mb-2 tracking-tight">{title}</h3>
+      <p className="text-xs md:text-sm text-text-muted max-w-xs mx-auto mb-6 md:mb-8 font-medium leading-relaxed">{description}</p>
       {action && action}
     </div>
   );

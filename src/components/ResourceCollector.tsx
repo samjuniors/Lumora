@@ -172,15 +172,18 @@ export const ResourceCollector = React.memo(() => {
               <Sparkles size={12} /> Success
             </motion.div>
           ) : (
-            <div className="flex flex-col items-center gap-1.5 w-full sm:w-24">
+        <div className="flex flex-col items-center gap-1.5 w-full sm:w-28">
               <Button
                 variant={canCollect ? "gold" : "outline"}
                 size="sm"
                 onClick={handleCollect}
                 disabled={!canCollect || loading}
-                className="uppercase tracking-widest text-[8px] sm:text-[9px] font-black px-2 py-1.5 min-h-[0px] h-auto whitespace-nowrap w-full"
+                className={cn(
+                  "uppercase tracking-widest text-[8px] sm:text-[9px] font-black px-2 py-2 min-h-[0px] h-auto whitespace-nowrap w-full transition-all",
+                  !canCollect && "opacity-50 grayscale bg-white/5 border-white/10"
+                )}
               >
-                {loading ? "Mining..." : canCollect ? "Collect" : "Locked"}
+                {loading ? "Mining..." : canCollect ? "Deploy Collector" : "Systems Locked"}
               </Button>
 
               {!canCollect && (
@@ -189,13 +192,13 @@ export const ResourceCollector = React.memo(() => {
                   size="sm"
                   onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
-                  className="flex items-center justify-center gap-1 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-2 py-1.5 min-h-[0px] h-auto text-[8px] sm:text-[9px] uppercase font-black tracking-widest whitespace-nowrap w-full"
+                  className="flex items-center justify-center gap-1 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-2 py-1.5 min-h-[0px] h-auto text-[8px] sm:text-[9px] uppercase font-black tracking-widest whitespace-nowrap w-full rounded-lg"
                 >
                   <Gem
                     size={10}
                     className="sm:w-2.5 sm:h-2.5 group-hover/reset:rotate-12 transition-transform"
                   />
-                  Reset
+                  Instant Sync
                 </Button>
               )}
             </div>

@@ -44,7 +44,15 @@ import { useMaintenance } from "./hooks/useMaintenance";
 
 const RequireAuth: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> = ({ children, adminOnly }) => {
   const { user, loading, isAdmin } = useAuth();
-  if (loading) return <SplashScreen />;
+  
+  if (loading) {
+    return (
+      <div className="animate-in fade-in duration-500">
+        <SplashScreen />
+      </div>
+    );
+  }
+  
   if (!user) return <Navigate to="/login" replace />;
   if (adminOnly && !isAdmin) return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
@@ -52,9 +60,13 @@ const RequireAuth: React.FC<{ children: React.ReactNode, adminOnly?: boolean }> 
 
 const PageWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <div className="h-full w-full relative animate-in fade-in duration-200">
+    <motion.div 
+      initial={{ opacity: 0.8 }}
+      animate={{ opacity: 1 }}
+      className="h-full w-full relative"
+    >
       {children}
-    </div>
+    </motion.div>
   );
 };
 
@@ -206,10 +218,10 @@ const AppRoutes = () => {
   const location = useLocation();
   const { toasts } = useToasterStore();
 
-  // Scroll to top on location change
+  // Scroll to top on path change (ignore search to prevent tab-switching jumps)
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [location.pathname, location.search]);
+    window.scrollTo({ top: 0, behavior: 'auto' }); // Smooth can feel laggy for quick nav
+  }, [location.pathname]);
 
   // Limit toasts to 5 (dismiss oldest first)
   useEffect(() => {

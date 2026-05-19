@@ -40,7 +40,8 @@ export const Assignments = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('campaign');
 
-    const isLoading = isAssignmentsLoading || (isStudent && isEnrollmentsLoading);
+    const hasData = assignments.length > 0 && (!isStudent || studentEnrollments.length > 0);
+    const showSkeleton = isLoading && !hasData;
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -178,8 +179,8 @@ export const Assignments = () => {
                 </div>
             </motion.div>
 
-            <AnimatePresence mode="wait">
-                {isLoading ? (
+            <AnimatePresence mode="popLayout">
+                {showSkeleton ? (
                     <motion.div 
                         key="skeleton" 
                         initial={{ opacity: 0 }}

@@ -1,4 +1,4 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, keepPreviousData } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 
 export const queryClient = new QueryClient({
@@ -8,6 +8,7 @@ export const queryClient = new QueryClient({
       gcTime: 1000 * 60 * 30, // 30 minutes
       retry: 1,
       refetchOnWindowFocus: false,
+      placeholderData: keepPreviousData, // PERSIST data during refetches
     },
     mutations: {
       onError: (error: any) => {

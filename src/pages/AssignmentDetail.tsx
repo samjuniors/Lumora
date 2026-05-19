@@ -122,6 +122,9 @@ export const AssignmentDetail = () => {
                   (isStudent && (isEnrollmentsLoading || isSubmissionsLoading)) ||
                   (!isStudent && (isAdminSubmissionsLoading || isAdminEnrollmentsLoading));
 
+  const hasData = !!assignment && (!isStudent || studentEnrollments.length > 0 || studentSubmissions.length > 0);
+  const showSkeleton = loading && !hasData;
+
   useEffect(() => {
     if (!loading && submission && isFirstLoad.current) {
       setContent(submission.content || "");
@@ -574,8 +577,8 @@ export const AssignmentDetail = () => {
 
   return (
     <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 px-4 md:px-0">
-      <AnimatePresence mode="wait">
-        {loading ? (
+      <AnimatePresence mode="popLayout">
+        {showSkeleton ? (
           <motion.div
             key="loading"
             initial={{ opacity: 0 }}

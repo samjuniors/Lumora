@@ -43,13 +43,18 @@
   --radius-xl: 1.5rem;
 
   /* Standard Spacing System */
-  --space-page: 1.5rem;
-  --space-card: 1.25rem;
+  --space-page: 1.25rem;
+  --space-card: 1rem;
   
   @media (max-width: 640px) {
-    --space-page: 1rem;
-    --space-card: 1rem;
-    --radius-xl: 1rem;
+    --space-page: 0.75rem;
+    --space-card: 0.875rem;
+    --radius-xl: 0.875rem;
+  }
+
+  .faulty-text {
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+    animation: faulty-flicker 4s infinite;
   }
   
   /* Component Defaults */
@@ -58,6 +63,15 @@
   --card: var(--bg-surface);
   --primary: var(--brand-gold);
   --border: var(--border-main);
+}
+
+@keyframes faulty-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.5; }
+  94% { opacity: 1; }
+  96% { opacity: 0.8; }
+  97% { opacity: 1; }
 }
 
 @theme {

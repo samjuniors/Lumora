@@ -221,7 +221,9 @@ export const Leaderboard = React.memo(() => {
     return [...calculatedUsers].sort((a, b) => b.averageGrade - a.averageGrade || b.gradedCount - a.gradedCount);
   }, [calculatedUsers]);
 
-  if (isLoading && users.length === 0) {
+  const showSkeleton = isLoading && users.length === 0;
+
+  if (showSkeleton) {
      return <div className="max-w-6xl mx-auto"><ListSkeleton /></div>;
   }
 
@@ -425,12 +427,12 @@ export const Leaderboard = React.memo(() => {
         </div>
       </motion.div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout">
         <motion.div 
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
+          key={activeTab + '-' + timeframe}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
           className="transition-all"
         >
           {activeTab === 'diamonds' && renderList(coinLeaders, 'diamonds')}
@@ -440,7 +442,7 @@ export const Leaderboard = React.memo(() => {
 
       {/* Sticky Current User Rank Bar (if user is logged in as student) */}
       {currentUser && currentUser.role === 'student' && (
-        <div className="fixed bottom-[calc(64px+env(safe-area-inset-bottom))] md:bottom-8 left-0 right-0 px-4 z-[1000] pointer-events-none flex justify-center">
+        <div className="fixed bottom-[calc(84px+env(safe-area-inset-bottom))] md:bottom-8 left-0 right-0 px-4 z-[1000] pointer-events-none flex justify-center">
           <div className="w-full max-w-4xl pointer-events-auto">
              {(() => {
                 const list = activeTab === 'diamonds' ? coinLeaders : gradeLeaders;

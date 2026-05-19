@@ -59,6 +59,8 @@ export const Dashboard = () => {
   const [platformEvents, setPlatformEvents] = useState<any[]>([]);
 
   const isLoading = isAssignmentsLoading || isEnrollmentsLoading;
+  const hasData = assignments.length > 0 || studentEnrollments.length > 0;
+  const showSkeleton = isLoading && !hasData;
 
   useEffect(() => {
     const events = [
@@ -317,7 +319,7 @@ export const Dashboard = () => {
           />
 
           <div className="space-y-4">
-            {isLoading && visibleAssignments.length === 0 ? (
+            {showSkeleton ? (
                <ListSkeleton />
             ) : groupedAssignments.length === 0 ? (
                <EmptyState 

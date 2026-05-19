@@ -40,7 +40,8 @@ export const AdminAnalytics = () => {
   const [students, setStudents] = useState<User[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<StudentStats | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -64,8 +65,10 @@ export const AdminAnalytics = () => {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (isRefresh = false) => {
+    if (!isRefresh) setIsInitialLoading(true);
+    else setIsRefreshing(true);
+
     try {
       const [studentsList, assignmentsList, enrollmentsList] = await Promise.all([
         userService.getUsersByRole('student'),
@@ -79,7 +82,8 @@ export const AdminAnalytics = () => {
     } catch (err: any) {
       handleFirestoreError(err, OperationType.LIST, 'admin/analytics');
     } finally {
-      setLoading(false);
+      setIsInitialLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -180,7 +184,7 @@ export const AdminAnalytics = () => {
     ];
   }, [studentStats]);
 
-  if (loading) return <div className="max-w-6xl mx-auto p-6"><ListSkeleton /></div>;
+  if (isInitialLoading) return <div className="max-w-6xl mx-auto p-6"><ListSkeleton /></div>;
 
   return (
     <AnimatePresence mode="wait">
@@ -212,10 +216,11 @@ export const AdminAnalytics = () => {
           }
         />
 
-      <Card variant="glass" className="p-8 text-white shadow-xl border-white/5 bg-navy-900/40">
-        <div className="flex items-center justify-between mb-6">
+      <Card variant="glass" className="p-8 text-white shadow-xl border-white/5 bg-navy-900/40 relative overflow-hidden group">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
+        <div className="flex items-center justify-between mb-6 relative z-10">
            <h3 className="text-xl font-black flex items-center gap-2 text-white">
-             <Bot className="w-6 h-6 text-brand-gold" />
+             <Bot className="w-6 h-6 text-brand-gold animate-pulse" />
              AI Performance Insights
            </h3>
            <Button 
@@ -223,17 +228,18 @@ export const AdminAnalytics = () => {
              onClick={() => analyzePerformance(studentStats)}
              disabled={analyzing}
              isLoading={analyzing}
+             className="shadow-brand-gold/20"
            >
              Generate Insights
            </Button>
         </div>
         
         {aiAnalysis ? (
-          <div className="bg-bg-main/10 backdrop-blur-md p-6 rounded-2xl text-white font-mono leading-relaxed border border-white/5 whitespace-pre-wrap">
+          <div className="bg-white/5 backdrop-blur-md p-6 rounded-2xl text-white font-mono leading-relaxed border border-white/10 whitespace-pre-wrap relative z-10 shadow-inner selection:bg-brand-gold selection:text-bg-main faulty-text">
             {aiAnalysis}
           </div>
         ) : (
-          <div className="text-white/60 font-mono px-2">Click "Generate Insights" to let Gemini analyze student performance data.</div>
+          <div className="text-white/40 font-mono px-2 relative z-10 italic uppercase tracking-widest text-[10px]">Authorize Gemini link to synthesize student metadata.</div>
         )}
       </Card>
 
@@ -464,7 +470,7 @@ export const AdminAnalytics = () => {
             u={showGrantModal.user}
             onClose={() => setShowGrantModal(null)}
             onComplete={() => {
-              fetchData();
+              fetchData(true);
               // Also update selected student to reflect new balance
               if (selectedStudent && selectedStudent.student.id === showGrantModal.user.id) {
                 userService.getUser(selectedStudent.student.id).then(updated => {

@@ -235,7 +235,7 @@ export const AIPet = React.memo(() => {
        <motion.div 
          className="fixed right-4 md:right-8 z-[1050] flex justify-end"
          animate={{
-           bottom: 96,
+           bottom: isRankPage ? (isMobile ? 80 : 80) : 96,
            y: 0
          }}
          transition={{ type: "spring", stiffness: 200, damping: 25 }}
