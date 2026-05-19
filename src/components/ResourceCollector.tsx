@@ -143,15 +143,15 @@ export const ResourceCollector = React.memo(() => {
           <Pickaxe size={18} className="sm:w-6 sm:h-6" />
         </div>
         <div className="min-w-0 flex-1">
-          <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight truncate">
+          <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight">
             Resource Collector
           </h3>
-          <p className="text-[10px] sm:text-[11px] font-medium text-text-secondary">
-            Next:{" "}
+          <p className="text-[11px] sm:text-[12px] font-black uppercase tracking-wider mt-0.5">
+            Status:{" "}
             <span
               className={cn(
-                "font-bold",
-                canCollect ? "text-success" : "text-brand-gold",
+                "inline-block px-1.5 py-0.5 rounded",
+                canCollect ? "text-success bg-success/10" : "text-brand-gold bg-brand-gold/10",
               )}
             >
               {timeLeft}
@@ -160,25 +160,25 @@ export const ResourceCollector = React.memo(() => {
         </div>
       </div>
 
-      <div className="flex items-center gap-2 relative z-10 shrink-0 w-full sm:w-auto justify-end mt-1 sm:mt-0">
+      <div className="flex items-center gap-2 relative z-10 shrink-0 w-full sm:w-auto justify-end mt-2 sm:mt-0">
         <AnimatePresence mode="wait">
           {collected ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-[10px] sm:text-xs whitespace-nowrap"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-[10px] sm:text-xs whitespace-nowrap w-24"
             >
               <Sparkles size={12} /> Success
             </motion.div>
           ) : (
-            <div className="flex flex-row sm:flex-col items-center gap-2 sm:gap-1 flex-wrap sm:flex-nowrap justify-end w-full sm:w-auto">
+            <div className="flex flex-col items-center gap-1.5 w-full sm:w-24">
               <Button
                 variant={canCollect ? "gold" : "outline"}
                 size="sm"
                 onClick={handleCollect}
                 disabled={!canCollect || loading}
-                className="uppercase tracking-widest text-[9px] sm:text-[9px] font-bold px-3 sm:px-2 py-1.5 sm:py-1 min-h-[0px] h-auto whitespace-nowrap flex-1 sm:flex-none sm:w-20"
+                className="uppercase tracking-widest text-[8px] sm:text-[9px] font-black px-2 py-1.5 min-h-[0px] h-auto whitespace-nowrap w-full"
               >
                 {loading ? "Mining..." : canCollect ? "Collect" : "Locked"}
               </Button>
@@ -189,7 +189,7 @@ export const ResourceCollector = React.memo(() => {
                   size="sm"
                   onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
-                  className="flex items-center justify-center gap-1 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-3 sm:px-2 py-1.5 sm:py-1 min-h-[0px] h-auto text-[9px] sm:text-[9px] uppercase font-bold tracking-widest whitespace-nowrap flex-1 sm:flex-none sm:w-20"
+                  className="flex items-center justify-center gap-1 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-2 py-1.5 min-h-[0px] h-auto text-[8px] sm:text-[9px] uppercase font-black tracking-widest whitespace-nowrap w-full"
                 >
                   <Gem
                     size={10}

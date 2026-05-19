@@ -74,7 +74,8 @@ const AdminActionModal = ({
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-text-primary/60 backdrop-blur-[2px] z-[1000000] flex items-center justify-center p-4 overflow-y-auto"
         >
             <motion.div 
                 initial={{ scale: 0.9, y: 20 }}

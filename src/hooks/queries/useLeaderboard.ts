@@ -6,7 +6,7 @@ export function useLeaderboardData() {
     queryKey: ['leaderboard-full'],
     queryFn: async () => {
       const [users, submissions] = await Promise.all([
-        userService.getAllUsers(),
+        userService.getAllUsers(1000),
         submissionService.getAllAssessedSubmissions()
       ]);
       return { 

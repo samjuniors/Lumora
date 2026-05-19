@@ -212,8 +212,7 @@ export const AdminAnalytics = () => {
           }
         />
 
-      {/* AI Insights Card */}
-      <Card variant="glass" className="p-8 text-text-primary shadow-xl border-white/5 bg-navy-900/40">
+      <Card variant="glass" className="p-8 text-white shadow-xl border-white/5 bg-navy-900/40">
         <div className="flex items-center justify-between mb-6">
            <h3 className="text-xl font-black flex items-center gap-2 text-white">
              <Bot className="w-6 h-6 text-brand-gold" />
@@ -230,11 +229,11 @@ export const AdminAnalytics = () => {
         </div>
         
         {aiAnalysis ? (
-          <div className="bg-bg-main/10 backdrop-blur-md p-6 rounded-2xl text-indigo-100 font-medium leading-relaxed border border-white/5 whitespace-pre-wrap">
+          <div className="bg-bg-main/10 backdrop-blur-md p-6 rounded-2xl text-white font-mono leading-relaxed border border-white/5 whitespace-pre-wrap">
             {aiAnalysis}
           </div>
         ) : (
-          <div className="text-indigo-300/60 font-medium px-2">Click "Generate Insights" to let Gemini analyze student performance data.</div>
+          <div className="text-white/60 font-mono px-2">Click "Generate Insights" to let Gemini analyze student performance data.</div>
         )}
       </Card>
 
@@ -457,14 +456,27 @@ export const AdminAnalytics = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      {showGrantModal && (
+      <AnimatePresence>
+        {showGrantModal && (
           <AdminActionModal 
-              type={showGrantModal.type}
-              u={showGrantModal.user}
-              onClose={() => setShowGrantModal(null)}
-              onComplete={fetchData}
+            key={`${showGrantModal.user.id}-${showGrantModal.type}`}
+            type={showGrantModal.type}
+            u={showGrantModal.user}
+            onClose={() => setShowGrantModal(null)}
+            onComplete={() => {
+              fetchData();
+              // Also update selected student to reflect new balance
+              if (selectedStudent && selectedStudent.student.id === showGrantModal.user.id) {
+                userService.getUser(selectedStudent.student.id).then(updated => {
+                  if (updated) {
+                    setSelectedStudent(prev => prev ? { ...prev, student: updated } : null);
+                  }
+                });
+              }
+            }}
           />
-      )}
+        )}
+      </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

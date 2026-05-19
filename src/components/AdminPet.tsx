@@ -53,7 +53,7 @@ export const AdminPet: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-28 left-6 md:left-12 z-[1050]">
+    <div className="fixed bottom-20 left-6 md:left-12 z-[1050]">
       <AnimatePresence>
         {isOpen && (
           <motion.div

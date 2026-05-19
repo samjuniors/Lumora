@@ -5,9 +5,9 @@ export interface IUserService {
   getUserByEmail(email: string): Promise<User | null>;
   updateUser(userId: string, data: Partial<User>): Promise<void>;
   createUser(userId: string, data: User): Promise<void>;
-  getUsersByRole(role: string): Promise<User[]>;
-  getAllUsers(): Promise<User[]>;
-  getUsers(): Promise<User[]>;
+  getUsersByRole(role: string, limit?: number, offset?: number): Promise<User[]>;
+  getAllUsers(limit?: number, offset?: number): Promise<User[]>;
+  getUsers(filters?: { role?: string, email?: string }, limit?: number, offset?: number): Promise<User[]>;
   deleteUser(userId: string): Promise<void>;
   initializeUser(userId: string, data: Partial<User>): Promise<void>;
   generateLumoraId(userId: string): Promise<string>;

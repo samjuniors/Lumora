@@ -50,6 +50,7 @@ export const AdminPanel = () => {
 
     const MAIN_TABS = [
         { id: 'overview', label: 'Overview', icon: BarChart3 },
+        { id: 'analytics', label: 'Analytics', icon: BarChart3 }, // Added this
         { id: 'assignments', label: 'Missions', icon: Target },
         { id: 'reviews', label: 'Reviews', icon: Zap },
         { id: 'users', label: 'Users', icon: UserIcon },

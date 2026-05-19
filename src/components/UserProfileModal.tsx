@@ -80,7 +80,7 @@ export const UserProfileModal = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-bg-surface rounded-2xl w-[90%] max-w-[280px] sm:w-full sm:max-w-[320px] p-3.5 sm:p-5 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
+          className="bg-bg-surface rounded-2xl w-[90%] max-w-[240px] sm:w-full sm:max-w-[260px] p-3 sm:p-4 overflow-y-auto max-h-[80vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
         >
           <button 
             onClick={onClose} 

@@ -260,6 +260,8 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
 
   const [currency, setCurrency] = useState<'INR' | 'USD'>(() => {
+    const saved = localStorage.getItem('preferred_currency');
+    if (saved === 'INR' || saved === 'USD') return saved;
     try {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       return (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') ? 'INR' : 'USD';
@@ -267,6 +269,10 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
       return 'USD';
     }
   });
+
+  useEffect(() => {
+    localStorage.setItem('preferred_currency', currency);
+  }, [currency]);
 
   const displayAmount = (val: number) => {
     if (currency === 'INR') return `₹${val}`;
