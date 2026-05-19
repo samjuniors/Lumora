@@ -178,18 +178,25 @@ export const Assignments = () => {
                 </div>
             </motion.div>
 
-            {isLoading ? (
-                <div key="skeleton" className="mt-12">
-                   <ListSkeleton />
-                </div>
-            ) : (
-                <motion.div 
-                    key="content"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="space-y-12"
-                >
+            <AnimatePresence mode="wait">
+                {isLoading ? (
+                    <motion.div 
+                        key="skeleton" 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="mt-12"
+                    >
+                        <ListSkeleton />
+                    </motion.div>
+                ) : (
+                    <motion.div 
+                        key="content"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="space-y-12"
+                    >
                     <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
                         {['all', 'active', 'upcoming', 'completed', 'missed', 'retest'].map((s) => (
                             <button
@@ -243,6 +250,7 @@ export const Assignments = () => {
                     {isStudent && <CompletedMissionsStack />}
                 </motion.div>
             )}
+            </AnimatePresence>
 
 
             {showCreateModal && (

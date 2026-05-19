@@ -32,7 +32,7 @@ function configureWebPush() {
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  const PORT = 3000;
 
   app.use(compression());
   app.use(express.json());
@@ -269,6 +269,16 @@ async function startServer() {
       // Ensure we have an email, even if it's a placeholder if Clerk fails to provide one
       const finalizedEmail = email || `${uid}@placeholder.com`;
       
+      // Check if another user exists with the same email but different ID (e.g. Firebase recreating user)
+      const existingEmailOwner = await prisma.user.findUnique({
+        where: { email: finalizedEmail }
+      });
+
+      if (existingEmailOwner && existingEmailOwner.id !== uid) {
+        console.log(`[Pg Sync] Collision detected for email "${finalizedEmail}" under previous ID "${existingEmailOwner.id}". Deleting old record.`);
+        await prisma.user.delete({ where: { email: finalizedEmail } });
+      }
+
       // Upsert the user into PostgreSQL safely. 
       // This allows continuous identity synchronization without disrupting Firestore's primacy.
       const postgresUser = await prisma.user.upsert({

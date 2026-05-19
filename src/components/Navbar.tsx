@@ -13,8 +13,9 @@ export const Navbar = React.memo(() => {
   const location = useLocation();
   const [showInvite, setShowInvite] = React.useState(false);
 
+  const currentLevel = React.useMemo(() => user ? getUserLevelAndXP(user).currentLevel : 1, [user]);
+
   if (!user) return null;
-  const currentLevel = React.useMemo(() => getUserLevelAndXP(user).currentLevel, [user]);
 
   const NavLink = ({ to, icon: Icon, children, highlighted, title }: { to: string, icon: any, children: React.ReactNode, highlighted?: boolean, title?: string }) => {
     const [targetPath, targetSearch] = to.split('?');

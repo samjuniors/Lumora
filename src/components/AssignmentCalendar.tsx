@@ -187,8 +187,9 @@ export const AssignmentCalendar = React.memo(({ assignments, enrollments = [], i
                             <Clock className="w-3 h-3" />
                             {format(assignment.dueDate, 'h:mm a')}
                           </span>
-                          {status === 'completed' && <span className="text-[8px] font-black uppercase tracking-tighter">SECURED</span>}
-                          {status === 'missed' && <span className="text-[8px] font-black uppercase tracking-tighter">BREACHED</span>}
+                          {status === 'completed' && <span className="text-[8px] font-black uppercase tracking-tighter bg-emerald-500/10 px-1 rounded">SECURED</span>}
+                          {status === 'missed' && <span className="text-[8px] font-black uppercase tracking-tighter bg-rose-500/10 px-1 rounded text-rose-500">BREACHED</span>}
+                          {status === 'pending' && <span className="text-[8px] font-black uppercase tracking-tighter bg-brand-gold/10 px-1 rounded text-brand-gold">ACTIVE</span>}
                         </div>
                       </Link>
                     </motion.div>

@@ -259,7 +259,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
 
-  const mobileNumber = settings?.mobileNumber || 'admin@upi';
+  const mobileNumber = settings?.mobileNumber || '';
   const payeeName = settings?.payeeName || 'Admin Test';
   const paymentLink = settings?.paymentLink || '';
   
@@ -496,40 +496,26 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
               )}
             </div>
             
-            {mobileNumber && (
+            {mobileNumber && isVPA && (
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                    <div className="h-px bg-white/5 flex-1" />
-                   <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-40">Verification Protocol</span>
+                   <span className="text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-40">Direct Payment Link</span>
                    <div className="h-px bg-white/5 flex-1" />
                 </div>
 
+                <a href={upiUrl} className="w-full bg-brand-gold text-bg-main border border-brand-gold font-black px-6 py-5 rounded-3xl flex items-center justify-center gap-3 hover:bg-brand-gold-hover transition-all shadow-lg shadow-brand-gold/20">
+                  <Smartphone size={20} />
+                  <span className="uppercase tracking-widest">Pay via UPI App</span>
+                </a>
+
                 <div className="md:hidden">
-                    <div className="grid grid-cols-2 gap-3">
-                      <a href={gpayUrl} className="bg-white/[0.02] border border-white/5 text-text-primary font-black uppercase tracking-widest py-4 rounded-2xl text-[10px] hover:bg-white/[0.05] transition-all">GPay</a>
-                      <a href={phonepeUrl} className="bg-white/[0.02] border border-white/5 text-text-primary font-black uppercase tracking-widest py-4 rounded-2xl text-[10px] hover:bg-white/[0.05] transition-all">PhonePe</a>
+                    <div className="grid grid-cols-3 gap-3">
+                      <a href={paytmUrl} className="bg-white/[0.02] border border-white/5 text-text-primary text-center font-black uppercase tracking-widest py-4 rounded-2xl text-[10px] hover:bg-white/[0.05] transition-all">Paytm</a>
+                      <a href={gpayUrl} className="bg-white/[0.02] border border-white/5 text-text-primary text-center font-black uppercase tracking-widest py-4 rounded-2xl text-[10px] hover:bg-white/[0.05] transition-all">GPay</a>
+                      <a href={phonepeUrl} className="bg-white/[0.02] border border-white/5 text-text-primary text-center font-black uppercase tracking-widest py-4 rounded-2xl text-[10px] hover:bg-white/[0.05] transition-all">PhonePe</a>
                     </div>
                 </div>
-    
-                <button 
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(mobileNumber);
-                    toast.success("ID COPIED");
-                  }} 
-                  className="w-full bg-black/20 text-text-primary border border-white/5 font-black px-6 py-5 rounded-3xl flex items-center justify-between hover:bg-black/40 transition-all group"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-white/5 rounded-2xl flex items-center justify-center text-brand-gold group-hover:scale-110 transition-transform">
-                      <Smartphone size={20} />
-                    </div>
-                    <div className="text-left">
-                       <p className="text-[10px] text-text-muted uppercase tracking-widest font-black opacity-60">Payment ID</p>
-                       <p className="text-sm font-black tracking-tight">{mobileNumber}</p>
-                    </div>
-                  </div>
-                  <Plus size={20} className="text-brand-gold rotate-45" />
-                </button>
               </div>
             )}
              

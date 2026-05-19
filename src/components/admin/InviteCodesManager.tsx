@@ -93,7 +93,7 @@ export const InviteCodesManager = () => {
                             value={newCodeName} 
                             onChange={e=>setNewCodeName(e.target.value)} 
                             placeholder="E.g. VIP_CLASS" 
-                            className="w-full px-6 py-3.5 bg-bg-main border border-transparent rounded-[18px] outline-none focus:bg-bg-surface focus:border-indigo-500 transition-all font-bold tracking-tight" 
+                            className="w-full px-6 py-3.5 bg-bg-main border border-transparent rounded-[18px] outline-none focus:bg-bg-surface focus:border-white transition-all font-bold tracking-tight text-text-primary" 
                         />
                     </div>
                     <div className="w-full md:w-32">
@@ -104,7 +104,7 @@ export const InviteCodesManager = () => {
                             value={newMaxUses} 
                             onChange={e=>setNewMaxUses(e.target.value)} 
                             placeholder="∞" 
-                            className="w-full px-5 py-3.5 bg-bg-main border border-transparent rounded-[18px] outline-none focus:bg-bg-surface focus:border-indigo-500 transition-all font-bold" 
+                            className="w-full px-5 py-3.5 bg-bg-main border border-transparent rounded-[18px] outline-none focus:bg-bg-surface focus:border-white transition-all font-bold text-text-primary" 
                         />
                     </div>
                     <div className="w-full md:w-48">
@@ -113,7 +113,7 @@ export const InviteCodesManager = () => {
                             <select 
                                 value={newRole} 
                                 onChange={e=>setNewRole(e.target.value as Role)} 
-                                className="w-full px-5 py-3.5 bg-bg-main border border-border-main text-text-primary rounded-[18px] outline-none focus:bg-bg-surface focus:border-brand-gold transition-all appearance-none font-bold"
+                                className="w-full px-5 py-3.5 bg-bg-main border border-border-main text-text-primary rounded-[18px] outline-none focus:bg-bg-surface focus:border-white transition-all appearance-none font-bold"
                             >
                                 <option value="student" className="bg-bg-surface text-text-primary">Student</option>
                                 {isSuperAdmin && <option value="admin" className="bg-bg-surface text-text-primary">Admin</option>}
@@ -127,7 +127,7 @@ export const InviteCodesManager = () => {
                     <button 
                         type="submit" 
                         disabled={loading} 
-                        className="w-full md:w-auto bg-brand-gold-hover hover:bg-slate-900 text-bg-main font-black px-8 py-3.5 rounded-[18px] disabled:opacity-50 transition-all shadow-lg shadow-indigo-100 active:scale-95"
+                        className="w-full md:w-auto bg-white hover:bg-gray-200 text-black font-black px-8 py-3.5 rounded-[18px] disabled:opacity-50 transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)] active:scale-95"
                     >
                         {loading ? 'Minting...' : 'Generate Token'}
                     </button>

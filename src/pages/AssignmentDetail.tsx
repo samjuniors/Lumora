@@ -572,34 +572,50 @@ export const AssignmentDetail = () => {
     }
   };
 
-  if (loading)
-    return <AssignmentDetailSkeleton />;
-
-  if (!assignment)
-    return (
-      <div className="p-12 text-center text-rose-500 font-bold">
-        Mission not found
-      </div>
-    );
-
-  const isSubmissionLate = enrollment?.graceDeadline
-    ? (submission ? submission.submittedAt > enrollment.graceDeadline : Date.now() > enrollment.graceDeadline)
-    : (submission ? submission.submittedAt > assignment.dueDate : Date.now() > assignment.dueDate);
-
-  const finalEntryFee = assignment.entryFee * (isDoubleDown ? 2 : 1);
-  const finalBonusReward = isDoubleDown ? Math.floor(assignment.bonusReward * 2.5) : assignment.bonusReward;
-  const finalPenalty = assignment.penaltyFee * (isDoubleDown ? 2 : 1);
-
-  const hasNotStarted =
-    assignment.startDate && Date.now() < assignment.startDate;
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="max-w-6xl mx-auto space-y-4 md:space-y-8"
-    >
-      <AnimatePresence>
+    <div className="max-w-6xl mx-auto space-y-4 md:space-y-8 px-4 md:px-0">
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <AssignmentDetailSkeleton />
+          </motion.div>
+        ) : !assignment ? (
+          <motion.div
+            key="not-found"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="p-12 text-center text-rose-500 font-bold"
+          >
+            Mission not found
+          </motion.div>
+        ) : (
+          (() => {
+            const isSubmissionLate = enrollment?.graceDeadline
+              ? (submission ? submission.submittedAt > enrollment.graceDeadline : Date.now() > enrollment.graceDeadline)
+              : (submission ? submission.submittedAt > assignment.dueDate : Date.now() > assignment.dueDate);
+
+            const finalEntryFee = assignment.entryFee * (isDoubleDown ? 2 : 1);
+            const finalBonusReward = isDoubleDown ? Math.floor(assignment.bonusReward * 2.5) : assignment.bonusReward;
+            const finalPenalty = assignment.penaltyFee * (isDoubleDown ? 2 : 1);
+
+            const hasNotStarted =
+              assignment.startDate && Date.now() < assignment.startDate;
+
+            return (
+              <motion.div
+                key="content"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-4 md:space-y-8"
+              >
+            <AnimatePresence>
         {showCompletionMessage && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -1234,6 +1250,10 @@ export const AssignmentDetail = () => {
           </motion.div>
         </div>
       )}
-    </motion.div>
+            </motion.div>
+          );
+        })())}
+      </AnimatePresence>
+    </div>
   );
 };

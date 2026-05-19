@@ -375,7 +375,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                                         onClick={() => setIsGlobal(true)}
                                         className={cn(
                                             "px-6 py-4 rounded-2xl font-bold text-sm border-2 transition-all",
-                                            isGlobal ? "bg-brand-gold-hover text-bg-main border-indigo-600 shadow-lg" : "bg-bg-surface text-text-secondary/80 border-border-main hover:border-brand-gold/30"
+                                            isGlobal ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.1)]" : "bg-bg-surface text-text-secondary/80 border-border-main hover:border-white/30"
                                         )}
                                     >
                                         Global (All Students)
@@ -385,7 +385,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                                         onClick={() => setIsGlobal(false)}
                                         className={cn(
                                             "px-6 py-4 rounded-2xl font-bold text-sm border-2 transition-all",
-                                            !isGlobal ? "bg-brand-gold-hover text-bg-main border-indigo-600 shadow-lg" : "bg-bg-surface text-text-secondary/80 border-border-main hover:border-brand-gold/30"
+                                            !isGlobal ? "bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.1)]" : "bg-bg-surface text-text-secondary/80 border-border-main hover:border-white/30"
                                         )}
                                     >
                                         Selected Students
@@ -422,7 +422,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                                                  const isSelected = assignedStudents.includes(s.id);
                                                  return (
                                                      <label key={s.id} className={cn("flex items-center gap-3 p-3 rounded-2xl border cursor-pointer transition-all", isSelected ? "bg-bg-surface border-brand-gold/30 ring-2 ring-indigo-50 shadow-sm" : "bg-bg-surface/80 border-border-main hover:bg-bg-surface")}>
-                                                         <div className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all", isSelected ? "border-indigo-600 bg-brand-gold-hover text-bg-main" : "border-border-main text-transparent")}>
+                                                         <div className={cn("w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all", isSelected ? "border-white bg-white text-black" : "border-border-main text-transparent")}>
                                                              <CheckCircle2 className="w-3.5 h-3.5" />
                                                          </div>
                                                          <input 
@@ -446,7 +446,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                              <div className="flex items-center gap-3 bg-brand-gold-secondary-hover/50 p-4 rounded-2xl border border-brand-gold/20 mb-2 mt-6 group cursor-pointer" onClick={() => setSendEmail(!sendEmail)}>
                                  <div className={cn(
                                      "w-12 h-6 rounded-full transition-colors relative",
-                                     sendEmail ? "bg-brand-gold-hover" : "bg-slate-200"
+                                     sendEmail ? "bg-white" : "bg-bg-main border border-border-main"
                                  )}>
                                      <div className={cn(
                                          "absolute top-1 left-1 w-4 h-4 bg-bg-surface rounded-full transition-transform",
@@ -590,7 +590,7 @@ export const CreateAssignmentModal = ({ onClose, onCreated }: CreateAssignmentMo
                         )}
                     </div>
                     <div className="pt-6">
-                        <button type="submit" disabled={loading} className="w-full bg-brand-gold-hover text-bg-main font-bold py-4 rounded-xl hover:bg-indigo-700 transition shadow-lg disabled:opacity-50 text-lg">
+                        <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition shadow-[0_0_20px_rgba(255,255,255,0.1)] disabled:opacity-50 text-lg">
                             {loading ? 'Initializing Campaign...' : 'Deploy Campaign'}
                         </button>
                     </div>

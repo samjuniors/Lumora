@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { notificationService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
@@ -8,6 +9,7 @@ import { useNotifications } from '../hooks/queries/useNotifications';
 
 export const NotificationManager: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: notifications = [] } = useNotifications();
   const seenMessages = useRef<Set<string>>(new Set());
 
@@ -31,11 +33,24 @@ export const NotificationManager: React.FC = () => {
 
       playNotificationSound();
       
+      const handleNotificationAction = async (tId: string) => {
+        toast.dismiss(tId);
+        if (newestUnread.metadata?.url) {
+          navigate(newestUnread.metadata.url);
+        }
+        try {
+          await notificationService.markNotificationRead(newestUnread.id);
+        } catch (err) {
+          console.error("Failed to mark as read:", err);
+        }
+      };
+
       toast.custom((t) => (
         <div
+          onClick={() => handleNotificationAction(t.id)}
           className={`${
             t.visible ? 'animate-enter' : 'animate-leave'
-          } max-w-md w-full bg-bg-surface shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden`}
+          } max-w-md w-full bg-bg-surface shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden cursor-pointer hover:bg-white/[0.02] transition-colors border border-white/5`}
         >
           <div className="flex-1 w-0 p-4">
             <div className="flex items-start">
@@ -55,12 +70,18 @@ export const NotificationManager: React.FC = () => {
                 <p className="mt-1 text-sm text-text-secondary">
                   {newestUnread.message}
                 </p>
+                {newestUnread.metadata?.url && (
+                  <p className="mt-2 text-[10px] text-brand-gold uppercase font-black tracking-widest flex items-center gap-1">
+                    Click to view <Bell className="w-3 h-3" />
+                  </p>
+                )}
               </div>
             </div>
           </div>
           <div className="flex border-l border-border-main">
             <button
-              onClick={async () => {
+              onClick={async (e) => {
+                e.stopPropagation();
                 toast.dismiss(t.id);
                 try {
                   await notificationService.markNotificationRead(newestUnread.id);
@@ -75,7 +96,7 @@ export const NotificationManager: React.FC = () => {
           </div>
         </div>
       ), {
-        duration: 2500,
+        duration: newestUnread.metadata?.url ? 6000 : 3500,
         position: 'top-right'
       });
 

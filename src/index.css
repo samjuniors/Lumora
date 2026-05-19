@@ -27,6 +27,7 @@
   
   --brand-gold: #fbbf24;       /* Amber 400 - More vibrant SaaS gold */
   --brand-gold-muted: #d97706;  /* Amber 600 */
+  --brand-gold-hover: #f8fafc;  /* White/Grey for contrast mode */
   --brand-gold-glow: rgba(251, 191, 36, 0.08);
   
   --text-primary: #f8fafc;     /* Slate 50 */
@@ -71,6 +72,7 @@
   --color-bg-card: var(--bg-surface);
   
   --color-brand-gold: var(--brand-gold);
+  --color-brand-gold-hover: var(--brand-gold-hover);
   --color-gold-muted: var(--brand-gold-muted);
   --color-gold-glow: var(--brand-gold-glow);
   
@@ -148,6 +150,14 @@
     @apply min-h-[100dvh] overflow-x-hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+  }
+
+  body::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    display: none;
   }
 
   /* Responsive Typography Stabilization */

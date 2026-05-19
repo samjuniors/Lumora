@@ -175,7 +175,7 @@ export const Scorecard = () => {
     };
 
     fetchData();
-  }, [viewingUserId, user, studentId]);
+  }, [viewingUserId]);
 
   const stats = useMemo(() => {
     let totalScore = 0;
