@@ -54,7 +54,6 @@ export const InstallPrompt = () => {
     if (deferredPrompt) {
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      console.log(`User response: ${outcome}`);
       setDeferredPrompt(null);
       setShowPrompt(false);
       if (outcome === 'accepted') {
