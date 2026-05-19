@@ -75,12 +75,12 @@ export const UserProfileModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[60] flex items-center justify-center p-2 sm:p-4">
+      <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[200] flex items-center justify-center p-2 sm:p-4 pt-safe-top pb-safe-bottom">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-bg-surface rounded-[1.5rem] w-full max-w-[300px] sm:max-w-[340px] p-4 sm:p-5 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
+          className="bg-bg-surface rounded-2xl w-[90%] max-w-[280px] sm:w-full sm:max-w-[320px] p-3.5 sm:p-5 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
         >
           <button 
             onClick={onClose} 

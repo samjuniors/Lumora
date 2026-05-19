@@ -26,7 +26,7 @@ export const AIPet = React.memo(() => {
   const { user, updateResources, isStudent } = useAuth();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const isRankPage = location.pathname.includes('leaderboard');
+  const isRankPage = location.pathname.includes('leaderboard') || location.pathname.includes('syndicates');
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -236,7 +236,7 @@ export const AIPet = React.memo(() => {
          className="fixed right-4 md:right-8 z-[1050] flex justify-end"
          animate={{
            bottom: 112,
-           y: isRankPage && isMobile ? -150 : 0
+           y: isRankPage && isMobile ? -80 : 0
          }}
          transition={{ type: "spring", stiffness: 200, damping: 25 }}
        >

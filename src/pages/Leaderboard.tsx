@@ -440,7 +440,7 @@ export const Leaderboard = React.memo(() => {
 
       {/* Sticky Current User Rank Bar (if user is logged in as student) */}
       {currentUser && currentUser.role === 'student' && (
-        <div className="fixed bottom-[calc(104px+env(safe-area-inset-bottom))] md:bottom-8 left-0 right-0 px-4 z-[1000] pointer-events-none flex justify-center">
+        <div className="fixed bottom-[calc(76px+env(safe-area-inset-bottom))] md:bottom-8 left-0 right-0 px-4 z-[1000] pointer-events-none flex justify-center">
           <div className="w-full max-w-4xl pointer-events-auto">
              {(() => {
                 const list = activeTab === 'diamonds' ? coinLeaders : gradeLeaders;
