@@ -251,13 +251,29 @@ export const Wallet = () => {
 
 const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   const { user, isSuperAdmin } = useAuth();
-  const [amount, setAmount] = useState<number | ''>(100);
+  const [amount, setAmount] = useState<number | ''>(120);
   const [step, setStep] = useState(1);
   const [utr, setUtr] = useState('');
   const [loading, setLoading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [screenshotFile, setScreenshotFile] = useState<File | null>(null);
   const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
+
+  const [currency, setCurrency] = useState<'INR' | 'USD'>(() => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') ? 'INR' : 'USD';
+    } catch {
+      return 'USD';
+    }
+  });
+
+  const displayAmount = (val: number) => {
+    if (currency === 'INR') return `₹${val}`;
+    if (val === 120) return `$1.49`;
+    if (val === 500) return `$5.99`;
+    return `$${(val / 83).toFixed(2)}`;
+  };
 
   const mobileNumber = settings?.mobileNumber || '';
   const payeeName = settings?.payeeName || 'Admin Test';
@@ -358,7 +374,25 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
             )}
             
             <div className="space-y-4">
-              <p className="text-text-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Select Infusion Package</p>
+              <div className="flex items-center justify-between">
+                <p className="text-text-muted text-[10px] font-black uppercase tracking-[0.2em] opacity-60">Select Infusion Package</p>
+                <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-lg p-1">
+                  <button 
+                    type="button"
+                    onClick={() => setCurrency('INR')}
+                    className={cn("px-2 py-1 text-[9px] font-black tracking-widest rounded transition-all", currency === 'INR' ? "bg-brand-gold text-bg-main" : "text-text-muted hover:text-white")}
+                  >
+                    INR
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCurrency('USD')}
+                    className={cn("px-2 py-1 text-[9px] font-black tracking-widest rounded transition-all", currency === 'USD' ? "bg-brand-gold text-bg-main" : "text-text-muted hover:text-white")}
+                  >
+                    USD
+                  </button>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <button 
                   type="button"
@@ -371,7 +405,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                   )}
                 >
                   <span className="text-[10px] uppercase tracking-widest opacity-60">Starter</span>
-                  <span className="text-2xl tracking-tighter">₹120</span>
+                  <span className="text-2xl tracking-tighter">{displayAmount(120)}</span>
                   <span className="text-[10px] opacity-40 font-bold">69 CREDITS</span>
                 </button>
                 <button 
@@ -386,7 +420,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                 >
                   <div className="absolute top-0 right-0 bg-brand-gold text-bg-main text-[8px] px-2 py-1 rounded-bl-xl font-black uppercase tracking-widest">Optimized</div>
                   <span className="text-[10px] uppercase tracking-widest opacity-60">Premium</span>
-                  <span className="text-2xl tracking-tighter">₹500</span>
+                  <span className="text-2xl tracking-tighter">{displayAmount(500)}</span>
                   <span className="text-[10px] opacity-40 font-bold">780 CREDITS</span>
                 </button>
               </div>
@@ -489,7 +523,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                       </div>
                       <div>
                         <h4 className="font-black text-sm text-text-primary uppercase tracking-widest">Instant Scan</h4>
-                        <p className="text-text-muted text-[11px] font-black text-brand-gold mt-1">₹{amount} NET VAL</p>
+                        <p className="text-text-muted text-[11px] font-black text-brand-gold mt-1">{displayAmount(Number(amount))} NET VAL</p>
                       </div>
                    </div>
                 </Card>

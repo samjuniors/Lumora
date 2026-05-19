@@ -213,9 +213,9 @@ export const AdminAnalytics = () => {
         />
 
       {/* AI Insights Card */}
-      <Card variant="glass" className="p-8 text-bg-main shadow-xl border-white/5 bg-navy-900/40">
+      <Card variant="glass" className="p-8 text-text-primary shadow-xl border-white/5 bg-navy-900/40">
         <div className="flex items-center justify-between mb-6">
-           <h3 className="text-xl font-black flex items-center gap-2">
+           <h3 className="text-xl font-black flex items-center gap-2 text-white">
              <Bot className="w-6 h-6 text-brand-gold" />
              AI Performance Insights
            </h3>
@@ -457,7 +457,6 @@ export const AdminAnalytics = () => {
           </motion.div>
         )}
       </AnimatePresence>
-      </motion.div>
       {showGrantModal && (
           <AdminActionModal 
               type={showGrantModal.type}
@@ -466,6 +465,7 @@ export const AdminAnalytics = () => {
               onComplete={fetchData}
           />
       )}
+      </motion.div>
     </AnimatePresence>
   );
 };

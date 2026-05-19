@@ -45,7 +45,7 @@ export const ResourceCollector = React.memo(() => {
         const msLeft = nextTime - now;
         const h = Math.floor(msLeft / (1000 * 60 * 60));
         const m = Math.floor((msLeft % (1000 * 60 * 60)) / (1000 * 60));
-        setTimeLeft(`${h}h ${m}m until next drop`);
+        setTimeLeft(`${h}h ${m}m`);
       }
     };
 
@@ -135,7 +135,7 @@ export const ResourceCollector = React.memo(() => {
         </div>
         <div className="min-w-0">
           <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight truncate">Resource Collector</h3>
-          <p className="text-[10px] sm:text-[11px] font-medium text-text-secondary truncate">Next: <span className={cn("font-bold", canCollect ? "text-success" : "text-brand-gold")}>{timeLeft}</span></p>
+          <p className="text-[10px] sm:text-[11px] font-medium text-text-secondary">Next: <span className={cn("font-bold", canCollect ? "text-success" : "text-brand-gold")}>{timeLeft}</span></p>
         </div>
       </div>
 

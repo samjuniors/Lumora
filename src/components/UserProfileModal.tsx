@@ -80,49 +80,49 @@ export const UserProfileModal = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-bg-surface rounded-[2rem] sm:rounded-[2.5rem] w-full max-w-[360px] sm:max-w-[420px] p-5 sm:p-7 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
+          className="bg-bg-surface rounded-[1.5rem] w-full max-w-[300px] sm:max-w-[340px] p-4 sm:p-5 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
         >
           <button 
             onClick={onClose} 
-            className="absolute top-4 right-4 p-2 text-text-secondary/80 hover:bg-border-main hover:text-text-primary rounded-full transition-colors z-10"
+            className="absolute top-3 right-3 p-1.5 text-text-secondary/80 hover:bg-border-main hover:text-text-primary rounded-full transition-colors z-10"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
 
           <div className="flex flex-col items-center">
-            <div className="w-24 h-24 rounded-[2rem] bg-brand-gold-secondary-hover border-4 border-white shadow-xl flex items-center justify-center text-4xl mb-4 relative overflow-hidden group">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-brand-gold-secondary-hover border-2 border-white shadow-xl flex items-center justify-center text-3xl mb-3 relative overflow-hidden group">
               {(profileUser.avatar?.startsWith('http') || profileUser.avatar?.startsWith('data:')) ? (
                  <img src={profileUser.avatar} alt={profileUser.name} className="w-full h-full object-cover" />
               ) : (
                  <span>{profileUser.avatar || '👤'}</span>
               )}
-              <PresenceDot status={profileUser.presence} className="absolute bottom-1 right-1 z-20" />
+              <PresenceDot status={profileUser.presence} className="absolute bottom-1 right-1 z-20 scale-75" />
             </div>
             
             <div className="text-center mb-1">
-              <h2 className="text-2xl font-black text-text-primary leading-tight">{profileUser.name}</h2>
+              <h2 className="text-xl font-black text-text-primary leading-tight">{profileUser.name}</h2>
               {profileUser.luminaId && (
-                <span className="text-[10px] font-mono font-bold text-[#D4AF37] uppercase tracking-tighter bg-[#1A2B48]/5 px-2 py-0.5 rounded border border-[#D4AF37]/20">
+                <span className="text-[9px] font-mono font-bold text-[#D4AF37] uppercase tracking-tighter bg-[#1A2B48]/5 px-2 py-0.5 rounded border border-[#D4AF37]/20">
                   {profileUser.luminaId}
                 </span>
               )}
             </div>
 
-            <div className="flex items-center flex-wrap justify-center gap-2 mb-6">
+            <div className="flex items-center flex-wrap justify-center gap-1.5 mb-4 mt-2">
               {profileUser.role === 'superadmin' ? (
-                  <span className="text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg text-bg-main bg-gradient-to-r from-rose-500 to-orange-500 shadow-sm border border-rose-400">
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md text-bg-main bg-gradient-to-r from-rose-500 to-orange-500 shadow-sm border border-rose-400">
                       Super Admin
                   </span>
               ) : profileUser.role === 'admin' ? (
-                  <span className="text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg text-bg-main bg-gradient-to-r from-blue-500 to-indigo-500 shadow-sm border border-blue-400">
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md text-bg-main bg-gradient-to-r from-blue-500 to-indigo-500 shadow-sm border border-blue-400">
                       Admin
                   </span>
               ) : null}
-              <span className="text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg bg-brand-gold-secondary-hover text-indigo-700">
+              <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md bg-brand-gold-secondary-hover text-indigo-700">
                 Level {currentLevel}
               </span>
               <span className={cn(
-                "text-xs uppercase tracking-wider font-extrabold px-2 py-1 rounded-lg shadow-sm border border-black/5",
+                "text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 rounded-md shadow-sm border border-black/5",
                 badge.color,
                 (calculatePerformanceScore(profileUser) >= 2000 && calculatePerformanceScore(profileUser) < 5000) ? "text-[#0A1128]" : "text-bg-main"
               )}>
@@ -131,42 +131,42 @@ export const UserProfileModal = ({
             </div>
 
             {currentUser && currentUser.id !== profileUser.id && (
-              <div className="flex gap-2 w-full mb-6">
+              <div className="flex gap-2 w-full mb-4">
                 <button 
                   onClick={handleFollowToggle}
                   className={cn(
-                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold transition-all border-2",
+                    "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-all border-2",
                     isFollowing 
                       ? "bg-bg-surface border-border-main text-text-secondary hover:text-red-500 hover:border-red-200" 
                       : "bg-[#1A2B48] border-[#1A2B48] text-[#D4AF37] hover:bg-[#0A1128]"
                   )}
                 >
                   {isFollowing ? (
-                    <><UserCheck className="w-4 h-4" /> Following</>
+                    <><UserCheck className="w-3.5 h-3.5" /> Following</>
                   ) : (
-                    <><UserPlus className="w-4 h-4" /> Follow</>
+                    <><UserPlus className="w-3.5 h-3.5" /> Follow</>
                   )}
                 </button>
                 <button 
                   onClick={() => setShowGiftModal(true)}
-                  className="px-4 flex items-center justify-center bg-[#D4AF37] text-[#1A2B48] rounded-xl font-bold border-2 border-[#D4AF37] hover:bg-amber-400 transition-colors"
+                  className="px-3 flex items-center justify-center bg-[#D4AF37] text-[#1A2B48] rounded-xl font-bold border-2 border-[#D4AF37] hover:bg-amber-400 transition-colors"
                   title="Send Coins"
                 >
-                  <Gift className="w-5 h-5" />
+                  <Gift className="w-4 h-4" />
                 </button>
               </div>
             )}
 
-            <div className="flex w-full bg-border-main/80 p-1 rounded-2xl mb-4">
+            <div className="flex w-full bg-border-main/80 p-1 rounded-xl mb-3">
               <button 
                 onClick={() => setActiveTab('overview')}
-                className={cn("flex-1 py-2.5 rounded-xl text-sm font-bold transition-all", activeTab === 'overview' ? "bg-bg-surface shadow-sm text-text-primary" : "text-text-secondary hover:text-text-primary")}
+                className={cn("flex-1 py-1.5 rounded-lg text-xs font-bold transition-all", activeTab === 'overview' ? "bg-bg-surface shadow-sm text-text-primary" : "text-text-secondary hover:text-text-primary")}
               >
                  Overview
               </button>
               <button 
                 onClick={() => setActiveTab('achievements')}
-                className={cn("flex-1 py-2.5 rounded-xl text-sm font-bold transition-all", activeTab === 'achievements' ? "bg-bg-surface shadow-sm text-text-primary" : "text-text-secondary hover:text-text-primary")}
+                className={cn("flex-1 py-1.5 rounded-lg text-xs font-bold transition-all", activeTab === 'achievements' ? "bg-bg-surface shadow-sm text-text-primary" : "text-text-secondary hover:text-text-primary")}
               >
                  Achievements
               </button>
@@ -179,67 +179,67 @@ export const UserProfileModal = ({
                 className="w-full flex flex-col items-center"
               >
                 {!isFriend ? (
-                  <div className="w-full bg-bg-main border border-border-main rounded-3xl p-6 mt-2 text-center flex flex-col items-center gap-3">
-                    <div className="w-12 h-12 bg-border-main/50 rounded-2xl flex items-center justify-center text-text-secondary/50">
-                      <Lock className="w-6 h-6" />
+                  <div className="w-full bg-bg-main border border-border-main rounded-2xl p-4 mt-1 text-center flex flex-col items-center gap-2">
+                    <div className="w-10 h-10 bg-border-main/50 rounded-xl flex items-center justify-center text-text-secondary/50">
+                      <Lock className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-text-primary">Profile Locked</h4>
-                      <p className="text-xs text-text-secondary font-medium">Follow this user to see their academic progress and full statistics.</p>
+                      <h4 className="font-bold text-sm text-text-primary">Profile Locked</h4>
+                      <p className="text-[10px] text-text-secondary font-medium">Follow this user to see their academic progress and full statistics.</p>
                     </div>
                     <div className="flex gap-4 mt-2">
                        <div className="text-center">
-                          <p className="text-[10px] uppercase tracking-widest text-text-secondary font-bold">Followers</p>
-                          <p className="font-black text-text-primary">{(profileUser.followerIds || []).length}</p>
+                          <p className="text-[9px] uppercase tracking-widest text-text-secondary font-bold">Followers</p>
+                          <p className="font-black text-sm text-text-primary">{(profileUser.followerIds || []).length}</p>
                        </div>
                        <div className="text-center">
-                          <p className="text-[10px] uppercase tracking-widest text-text-secondary font-bold">Following</p>
-                          <p className="font-black text-text-primary">{(profileUser.followingIds || []).length}</p>
+                          <p className="text-[9px] uppercase tracking-widest text-text-secondary font-bold">Following</p>
+                          <p className="font-black text-sm text-text-primary">{(profileUser.followingIds || []).length}</p>
                        </div>
                     </div>
                   </div>
                 ) : (
                   <div className="w-full">
                     {profileUser.bio && (
-                      <p className="text-xs text-text-secondary font-medium text-center italic mb-4 px-4 line-clamp-2">
+                      <p className="text-[10px] text-text-secondary font-medium text-center italic mb-3 px-3 line-clamp-2">
                         "{profileUser.bio}"
                       </p>
                     )}
-                    <div className="w-full grid grid-cols-2 gap-3 mb-6 mt-4">
-                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                        <Trophy className="w-6 h-6 text-yellow-500 mb-2" />
-                        <span className="text-sm text-text-secondary font-semibold mb-1">Coins</span>
-                        <span className="text-xl font-black text-text-primary">{profileUser.coins}</span>
+                    <div className="w-full grid grid-cols-2 gap-2 mb-4 mt-2">
+                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
+                        <Trophy className="w-5 h-5 text-yellow-500 mb-1" />
+                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Coins</span>
+                        <span className="text-lg font-black text-text-primary">{profileUser.coins}</span>
                       </div>
-                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                        <svg viewBox="0 0 24 24" className="w-6 h-6 text-cyan-400 mb-2" fill="currentColor">
+                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
+                        <svg viewBox="0 0 24 24" className="w-5 h-5 text-cyan-400 mb-1" fill="currentColor">
                           <path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L5.5 12 12 5.5l6.5 6.5L12 19.5z" />
                         </svg>
-                        <span className="text-sm text-text-secondary font-semibold mb-1">Diamonds</span>
-                        <span className="text-xl font-black text-text-primary">{profileUser.diamonds || 0}</span>
+                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Diamonds</span>
+                        <span className="text-lg font-black text-text-primary">{profileUser.diamonds || 0}</span>
                       </div>
-                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                        <Sparkles className="w-6 h-6 text-indigo-500 mb-2" />
-                        <span className="text-sm text-text-secondary font-semibold mb-1">Lifetime</span>
-                        <span className="text-xl font-black text-text-primary">{profileUser.lifetimeDiamonds || 0}</span>
+                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
+                        <Sparkles className="w-5 h-5 text-indigo-500 mb-1" />
+                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Lifetime</span>
+                        <span className="text-lg font-black text-text-primary">{profileUser.lifetimeDiamonds || 0}</span>
                       </div>
-                      <div className="bg-bg-main rounded-2xl p-4 flex flex-col items-center border border-border-main">
-                        <Target className="w-6 h-6 text-brand-gold mb-2" />
-                        <span className="text-sm text-text-secondary font-semibold mb-1">Avg Grade</span>
-                        <span className="text-xl font-black text-text-primary flex items-center gap-1.5 px-2 py-0.5 rounded-lg">
-                          <span className={cn("text-sm px-1.5 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
+                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
+                        <Target className="w-5 h-5 text-brand-gold mb-1" />
+                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Avg Grade</span>
+                        <span className="text-lg font-black text-text-primary flex items-center gap-1 px-1.5 py-0.5 rounded-lg">
+                          <span className={cn("text-xs px-1 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
                           {profileUser.averageGrade ?? 0}%
                         </span>
                       </div>
                     </div>
 
-                    <div className="w-full space-y-3">
+                    <div className="w-full space-y-2">
                       <Link 
                         to={`/scorecard/${profileUser.id}`}
                         onClick={onClose}
-                        className="w-full bg-[#1A2B48] text-white hover:bg-[#0A1128] font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-indigo-950/20 flex items-center justify-center gap-2"
+                        className="w-full bg-[#1A2B48] text-white hover:bg-[#0A1128] font-bold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-950/20 flex items-center justify-center gap-1.5 text-xs"
                       >
-                        <ScrollText className="w-5 h-5 text-[#D4AF37]" /> View Academic Performance
+                        <ScrollText className="w-4 h-4 text-[#D4AF37]" /> View Academic Performance
                       </Link>
                     </div>
                   </div>

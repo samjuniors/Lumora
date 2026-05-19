@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Send, Coins, ShieldAlert, Gift, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { walletService, userService } from '../../services/dbProvider';
@@ -64,11 +65,16 @@ const AdminActionModal = ({
         gift: { title: 'Special Grant', icon: <Gift size={32} />, color: 'text-brand-gold', bg: 'bg-brand-gold/10' },
     }[type];
 
-    return (
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
+
+    if (!mounted) return null;
+
+    const modalContent = (
         <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[300] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
         >
             <motion.div 
                 initial={{ scale: 0.9, y: 20 }}
@@ -136,6 +142,8 @@ const AdminActionModal = ({
             </motion.div>
         </motion.div>
     );
+
+    return createPortal(modalContent, document.body);
 };
 
 export default AdminActionModal;
