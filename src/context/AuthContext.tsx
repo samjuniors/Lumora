@@ -33,6 +33,7 @@ interface AuthContextType {
     petFullness: number;
     petHappiness: number;
     petLastFed: string | number | Date;
+    lastRewardClaimedAt?: string | number | Date;
   }>) => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
@@ -72,6 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     petFullness: number;
     petHappiness: number;
     petLastFed: string | number | Date;
+    lastRewardClaimedAt?: string | number | Date;
   }>) => {
     if (user) {
       setUser({ ...user, ...resources });

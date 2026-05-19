@@ -98,7 +98,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/login"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-[100dvh] bg-bg-main" />}>
             <PageWrapper>
               <Login />
             </PageWrapper>
@@ -108,7 +108,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Dashboard />
@@ -120,7 +120,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/assignments"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Assignments />
@@ -132,7 +132,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/assignments/:id"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <AssignmentDetail />
@@ -144,7 +144,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/wallet"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Wallet />
@@ -156,7 +156,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/shop"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Shop />
@@ -168,7 +168,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/profile"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Profile />
@@ -180,7 +180,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/badges"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Badges />
@@ -192,7 +192,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/syndicates"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Syndicates />
@@ -204,7 +204,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/leaderboard"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Leaderboard />
@@ -216,7 +216,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/scorecard"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Scorecard />
@@ -228,7 +228,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/scorecard/:studentId"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth>
               <PageWrapper>
                 <Scorecard />
@@ -240,7 +240,7 @@ const AnimatedRoutes = () => {
       <Route
         path="/admin"
         element={
-          <React.Suspense fallback={<SplashScreen />}>
+          <React.Suspense fallback={<div className="h-full w-full animate-pulse bg-bg-surface/5 rounded-2xl min-h-[50vh]" />}>
             <RequireAuth adminOnly>
               <PageWrapper>
                 <AdminPanel />
@@ -290,12 +290,12 @@ const AppRoutes = () => {
       <Toaster
         position="top-center"
         toastOptions={{ 
-          className: "rounded-2xl font-semibold shadow-lg",
-          duration: 2000,
+          className: "rounded-2xl font-semibold shadow-2xl border border-white/10",
+          duration: 3000,
           style: {
-            background: '#081B33',
+            background: 'rgba(10, 15, 30, 0.98)',
             color: '#F7F7F5',
-            border: '1px solid #142A4A',
+            backdropFilter: 'blur(10px)',
           },
           success: {
             iconTheme: {

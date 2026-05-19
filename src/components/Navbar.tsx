@@ -49,11 +49,11 @@ export const Navbar = React.memo(() => {
     <>
       <nav className="glass-dark fixed top-0 w-full z-[120] border-b border-white/[0.05]">
         <div className="container mx-auto px-4 lg:px-6 max-w-7xl">
-          <div className="flex h-12 md:h-16 items-center justify-between">
+          <div className="flex h-12 items-center justify-between">
             {/* Left: Logo */}
             <div className="flex-shrink-0">
               <Link to="/dashboard" className="flex items-center group transition-transform active:scale-95">
-                <Logo className="w-24 md:w-32 h-auto text-white" />
+                <Logo className="w-20 md:w-28 h-auto text-white" />
               </Link>
             </div>
 
@@ -120,8 +120,8 @@ export const Navbar = React.memo(() => {
       </nav>
 
       {/* Mobile Bottom Navigation - Floating island style */}
-      <div className="fixed bottom-4 left-4 right-4 z-[120] md:hidden">
-        <div className="glass-dark rounded-xl shadow-2xl flex items-center justify-around h-14 w-full max-w-sm mx-auto px-1 border border-white/10">
+      <div className="fixed bottom-3 left-3 right-3 z-[120] md:hidden">
+        <div className="glass-dark rounded-[18px] shadow-2xl flex items-center justify-around h-12 w-full max-w-sm mx-auto px-1 border border-white/10">
           {isAdmin ? (
             <>
               <MobileNavLink to="/dashboard" icon={BookOpen} label="Student" currentPath={location.pathname} />

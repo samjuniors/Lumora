@@ -124,11 +124,12 @@
 
   /* Safe Area Helpers */
   .safe-top { padding-top: env(safe-area-inset-top); }
-  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-  .pt-safe-top-nav { padding-top: calc(4rem + env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: calc(env(safe-area-inset-bottom) + 4rem); }
+  .pt-safe-top-nav { padding-top: calc(3rem + env(safe-area-inset-top)); }
   
   @media (max-width: 640px) {
-    .pt-safe-top-nav { padding-top: calc(3.5rem + env(safe-area-inset-top)); }
+    .pt-safe-top-nav { padding-top: calc(3rem + env(safe-area-inset-top)); }
+    .pb-safe-bottom { padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)); } /* Ensure content clears floating bottom nav */
   }
   
   .mobile-bottom-nav-space {

@@ -183,40 +183,40 @@ export const Dashboard = () => {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
+        staggerChildren: 0.05,
       },
     },
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    hidden: { opacity: 0, y: 10 },
     show: {
       opacity: 1,
-      scale: 1,
       y: 0,
-      transition: { type: "spring" as const, stiffness: 300, damping: 24 },
+      transition: { type: "tween" as const, ease: "easeOut", duration: 0.3 },
     },
   };
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-7xl mx-auto space-y-12 pb-32 px-4"
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="max-w-7xl mx-auto space-y-6 md:space-y-8 pb-24 px-4 md:px-0"
     >
       {/* Premium Header */}
-      <div className="flex flex-col lg:flex-row gap-10 items-start pt-10">
-        <div className="flex-grow space-y-8">
-          <div className="space-y-3">
+      <div className="flex flex-col lg:flex-row gap-6 md:gap-10 items-start pt-6 md:pt-10">
+        <div className="flex-grow space-y-4 md:space-y-6">
+          <div className="space-y-2 md:space-y-3">
              <div className="flex items-center gap-3">
-               <span className="h-[1px] w-12 bg-brand-gold/30"></span>
-               <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.4em]">Strategic Control Center</span>
+               <span className="h-[1px] w-8 md:w-12 bg-brand-gold/30"></span>
+               <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.3em] md:tracking-[0.4em]">Strategic Control</span>
              </div>
-             <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-text-primary leading-[0.85] uppercase">
+             <h1 className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter text-text-primary leading-[1] uppercase">
                 Lumina <span className="text-brand-gold text-glow-gold">Protocol</span>
              </h1>
-             <p className="text-text-secondary font-medium md:text-xl max-w-2xl border-l-2 border-brand-gold/20 pl-6 py-2 italic opacity-80">
-               High-stakes academic dominance monitoring. Execute with precision or face systemic liquidation.
+             <p className="text-text-secondary font-medium text-sm md:text-lg max-w-2xl border-l-2 border-brand-gold/20 pl-4 py-1.5 italic opacity-80 leading-relaxed">
+               High-stakes academic dominance monitoring. Execute with precision or face liquidation.
              </p>
           </div>
           

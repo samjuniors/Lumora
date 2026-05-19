@@ -519,15 +519,19 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
               </div>
             )}
              
-             <form onSubmit={handleSubmitUtr} className="pt-8 border-t border-white/5 text-left mt-8 space-y-6">
+             <form onSubmit={handleSubmitUtr} className="pt-8 border-t border-white/5 text-left mt-8 space-y-8">
                <div className="space-y-4">
-                  <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-60">Vault Verification</label>
-                  <div className="space-y-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-1.5 h-4 bg-brand-gold rounded-full" />
+                    <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-80">Vault Verification</label>
+                  </div>
+                  
+                  <div className="space-y-5">
                     <input 
                       type="text" 
                       value={utr}
                       onChange={e => setUtr(e.target.value)}
-                      className="w-full bg-black/20 border border-white/5 rounded-2xl px-6 py-4 outline-none focus:border-brand-gold/50 transition-all text-white font-black text-sm tracking-tight placeholder:opacity-30" 
+                      className="w-full bg-black/40 border border-white/10 rounded-[1.5rem] px-6 py-5 outline-none focus:border-brand-gold/50 focus:bg-black/60 focus:ring-4 focus:ring-brand-gold/10 transition-all text-white font-black text-sm tracking-widest placeholder:tracking-normal placeholder:opacity-30" 
                       placeholder="ENTER 12-DIGIT UTR / REFERENCE"
                     />
                     
@@ -541,20 +545,22 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                       />
                       <label 
                         htmlFor="payment-screenshot"
-                        className="flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-[2.5rem] p-10 hover:border-brand-gold/30 cursor-pointer transition-all bg-white/[0.01] hover:bg-white/[0.03]"
+                        className="flex flex-col items-center justify-center border-[3px] border-dashed border-white/10 rounded-[2rem] p-12 hover:border-brand-gold/40 cursor-pointer transition-all bg-black/20 hover:bg-brand-gold/[0.02] group"
                       >
                         {screenshotPreview ? (
-                          <div className="space-y-3 text-center">
-                            <img src={screenshotPreview} alt="Preview" className="h-32 mx-auto rounded-2xl shadow-2xl" />
+                          <div className="space-y-4 text-center">
+                            <div className="relative mx-auto rounded-3xl overflow-hidden border-2 border-brand-gold/30 shadow-[0_0_30px_rgba(251,191,36,0.15)] group-hover:scale-105 transition-transform">
+                                <img src={screenshotPreview} alt="Preview" className="h-40 object-cover" />
+                            </div>
                             <p className="text-[10px] text-brand-gold font-black uppercase tracking-widest">Asset Attached</p>
                           </div>
                         ) : (
                           <>
-                            <div className="w-16 h-16 bg-white/5 rounded-[2rem] flex items-center justify-center text-text-muted mb-4 group-hover:scale-110 transition-transform">
+                            <div className="w-20 h-20 bg-white/5 rounded-[2rem] flex items-center justify-center text-text-muted mb-6 group-hover:scale-110 group-hover:text-brand-gold transition-all duration-300">
                               <Plus className="w-8 h-8" />
                             </div>
-                            <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Upload Receipt Buffer</p>
-                            <p className="text-[9px] text-text-muted/40 mt-1 uppercase tracking-[0.2em] font-bold">SYSLOG: JPG, PNG (2MB MAX)</p>
+                            <p className="text-[11px] font-black text-text-muted uppercase tracking-[0.3em] group-hover:text-text-primary transition-colors">Upload Receipt Buffer</p>
+                            <p className="text-[9px] text-text-muted/40 mt-3 uppercase tracking-[0.2em] font-bold">SYSLOG: JPG, PNG (2MB MAX)</p>
                           </>
                         )}
                       </label>
@@ -563,13 +569,13 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                </div>
                
                {loading && uploadProgress > 0 && uploadProgress < 100 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3 bg-black/20 p-6 rounded-2xl border border-white/5">
                     <div className="flex justify-between text-[10px] font-black text-cyan-400 uppercase tracking-widest">
                       <span>Uploading Data Buffer</span>
                       <span>{Math.round(uploadProgress)}%</span>
                     </div>
-                    <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-400" style={{ width: `${uploadProgress}%` }} />
+                    <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)] transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
                     </div>
                   </div>
                )}
@@ -580,7 +586,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                 fullWidth
                 size="xl"
                 disabled={loading} 
-                className="py-5 font-black text-xs uppercase tracking-[0.3em] shadow-2xl shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-500 border-none"
+                className="py-6 font-black text-xs uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(16,185,129,0.15)] bg-emerald-600 hover:bg-emerald-500 border-none rounded-[1.5rem] mt-4"
                >
                  {loading ? 'Transmitting...' : 'Authorize Transaction'}
                </Button>
@@ -674,17 +680,21 @@ const TransferModal = ({ onClose, onComplete }: any) => {
            )}
 
            <div className="relative space-y-3">
-             <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-60 ml-1">Target Operative</label>
+             <div className="flex items-center gap-3 mb-2">
+                <div className="w-1.5 h-4 bg-brand-gold rounded-full" />
+                <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-80">Target Operative</label>
+             </div>
+             
              {selectedStudent ? (
-               <div className="flex items-center justify-between bg-black/20 border border-brand-gold/20 rounded-[1.5rem] px-5 py-4 group animate-in fade-in slide-in-from-top-2">
-                 <div className="space-y-0.5">
-                   <div className="font-black text-text-primary text-sm tracking-tight">{selectedStudent.name}</div>
-                   <div className="text-[10px] text-brand-gold font-black uppercase tracking-widest opacity-60">{selectedStudent.email}</div>
+               <div className="flex items-center justify-between bg-brand-gold/[0.05] border border-brand-gold/20 rounded-[1.5rem] px-6 py-5 group animate-in fade-in slide-in-from-top-2 shadow-[0_0_20px_rgba(251,191,36,0.05)]">
+                 <div className="space-y-1">
+                   <div className="font-black text-brand-gold text-sm tracking-widest uppercase">{selectedStudent.name}</div>
+                   <div className="text-[10px] text-text-muted font-bold tracking-widest opacity-60">{selectedStudent.email}</div>
                  </div>
                  <button 
                   type="button" 
                   onClick={() => {setSelectedStudent(null); setSearch('');}}
-                  className="p-2 hover:bg-white/5 rounded-xl text-text-muted transition-colors"
+                  className="p-3 bg-black/20 hover:bg-rose-500/10 hover:text-rose-500 rounded-[1rem] text-text-muted transition-all border border-white/5 hover:border-rose-500/20"
                  >
                    <X className="w-5 h-5" />
                  </button>
@@ -697,7 +707,7 @@ const TransferModal = ({ onClose, onComplete }: any) => {
                    value={search} 
                    onChange={e => {setSearch(e.target.value); setShowResults(true);}}
                    onFocus={() => setShowResults(true)}
-                   className="w-full bg-black/20 border border-white/5 rounded-2xl px-6 py-4 outline-none focus:border-brand-gold/30 transition-all text-white text-sm font-black tracking-tight placeholder:opacity-30" 
+                   className="w-full bg-black/40 border border-white/10 rounded-[1.5rem] px-6 py-5 outline-none focus:border-brand-gold/50 focus:bg-black/60 focus:ring-4 focus:ring-brand-gold/10 transition-all text-white font-black text-sm tracking-widest placeholder:tracking-normal placeholder:opacity-30" 
                    placeholder="SEARCH OPERATIVE IDENTIFIER..."
                  />
                  <AnimatePresence>
@@ -733,10 +743,13 @@ const TransferModal = ({ onClose, onComplete }: any) => {
              )}
            </div>
            
-           <div className="space-y-3">
-             <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-60 ml-1">Credit Quantity</label>
-             <div className="relative">
-               <Coins className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold opacity-50" />
+           <div className="space-y-3 mt-6">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="w-1.5 h-4 bg-brand-gold rounded-full" />
+                <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-80">Credit Quantity</label>
+             </div>
+             <div className="relative group">
+               <Coins className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-brand-gold opacity-50 group-hover:opacity-100 transition-opacity" />
                <input 
                  required 
                  type="number" 
@@ -744,20 +757,20 @@ const TransferModal = ({ onClose, onComplete }: any) => {
                  max={user?.coins} 
                  value={amount} 
                  onChange={e=>setAmount(e.target.value)} 
-                 className="w-full pl-14 pr-6 py-4 bg-black/20 border border-white/5 rounded-2xl outline-none focus:border-brand-gold/30 transition-all font-black text-sm text-white tracking-tight" 
-                 placeholder={`AVAILABLE: ${user?.coins.toLocaleString()}`}
+                 className="w-full pl-14 pr-6 py-5 bg-black/40 border border-white/10 rounded-[1.5rem] outline-none focus:border-brand-gold/50 focus:bg-black/60 focus:ring-4 focus:ring-brand-gold/10 transition-all font-black text-sm text-white tracking-widest placeholder:tracking-normal placeholder:opacity-30" 
+                 placeholder={`AVAILABLE: ${user?.coins.toLocaleString()} 🪙`}
                />
              </div>
            </div>
            
-           <div className="pt-4">
+           <div className="pt-6">
              <Button 
               variant="gold"
               fullWidth
               size="xl"
               disabled={loading || !selectedStudent || !amount || parseInt(amount) <= 0 || parseInt(amount) > (user?.coins || 0)} 
               type="submit" 
-              className="py-5 font-black text-xs uppercase tracking-[0.3em] shadow-2xl shadow-brand-gold/20"
+              className="py-6 font-black text-xs uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(251,191,36,0.15)] rounded-[1.5rem]"
              >
                 {loading ? 'Authorizing Transversal...' : 'Finalize Transmission'}
              </Button>
@@ -812,9 +825,13 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
         </div>
         <form onSubmit={handleConvert} className="space-y-6 py-2">
            <div className="space-y-3">
-             <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.2em] opacity-60 ml-1">Asset Quantity (Diamonds)</label>
-             <div className="relative">
-               <ArrowRightLeft className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400 opacity-50" />
+             <div className="flex items-center gap-3 mb-2">
+                <div className="w-1.5 h-4 bg-cyan-400 rounded-full" />
+                <label className="block text-[10px] font-black text-text-muted uppercase tracking-[0.3em] opacity-80">Asset Quantity</label>
+             </div>
+             
+             <div className="relative group">
+               <ArrowRightLeft className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400 opacity-50 group-hover:opacity-100 transition-opacity" />
                <input 
                  required 
                  type="number" 
@@ -822,34 +839,34 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
                  max={user?.diamonds || 0} 
                  value={amount} 
                  onChange={e=>setAmount(e.target.value)} 
-                 className="w-full pl-14 pr-6 py-4 bg-black/20 border border-white/5 rounded-2xl outline-none focus:border-brand-gold/30 transition-all font-black text-sm text-white tracking-tight" 
-                 placeholder={`AVAILABLE: ${user?.diamonds || 0}`}
+                 className="w-full pl-14 pr-6 py-5 bg-black/40 border border-white/10 rounded-[1.5rem] outline-none focus:border-cyan-400/50 focus:bg-black/60 focus:ring-4 focus:ring-cyan-500/10 transition-all font-black text-sm text-white tracking-widest placeholder:tracking-normal placeholder:opacity-30" 
+                 placeholder={`AVAILABLE: ${user?.diamonds || 0} 💎`}
                />
              </div>
            </div>
            
            {amount && parseInt(amount) > 0 && (
-             <div className="bg-black/20 p-6 rounded-2xl border border-white/5 text-xs shadow-inner flex justify-between items-center animate-in fade-in slide-in-from-top-2">
-                <span className="text-text-muted font-black uppercase tracking-widest opacity-60">Net Credit Yield:</span>
-                <span className="font-black text-brand-gold text-xl tracking-tighter tabular-nums flex items-center gap-2">
-                  <Coins className="w-5 h-5" /> {Math.floor(parseInt(amount) / 7)}
+             <div className="bg-cyan-500/10 p-6 rounded-[1.5rem] border border-cyan-500/20 text-xs shadow-[0_0_20px_rgba(34,211,238,0.1)] flex justify-between items-center animate-in fade-in slide-in-from-top-2">
+                <span className="text-cyan-400 font-black uppercase tracking-widest opacity-80">Net Credit Yield:</span>
+                <span className="font-black text-brand-gold text-2xl tracking-tighter tabular-nums flex items-center gap-3">
+                  <Coins className="w-6 h-6" /> {Math.floor(parseInt(amount) / 7)}
                 </span>
              </div>
            )}
 
-           <div className="pt-4">
+           <div className="pt-6">
              <Button 
                 variant="gold"
                 fullWidth
                 size="xl"
                 disabled={loading || !amount || parseInt(amount) <= 0 || parseInt(amount) > (user?.diamonds || 0)} 
                 type="submit" 
-                className="py-5 font-black text-xs uppercase tracking-[0.3em] shadow-2xl shadow-brand-gold/20"
+                className="py-6 font-black text-xs uppercase tracking-[0.3em] shadow-[0_0_30px_rgba(251,191,36,0.15)] rounded-[1.5rem]"
              >
                 {loading ? 'Liquidating...' : 'Authorize Recalibration'}
              </Button>
            </div>
-        </form>
+         </form>
     </Modal>
   )
 }

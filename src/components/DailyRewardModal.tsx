@@ -19,7 +19,7 @@ interface DailyReward {
 }
 
 export const DailyRewardModal = () => {
-  const { user, isStudent } = useAuth();
+  const { user, isStudent, updateResources } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [claimedReward, setClaimedReward] = useState<DailyReward | null>(null);
@@ -88,6 +88,8 @@ export const DailyRewardModal = () => {
       toast(reward.type === 'penalty' ? `Ouch! ${reward.label}` : `Claimed: ${reward.label}`, {
         icon: reward.type === 'penalty' ? '📉' : '🎉'
       });
+      
+      updateResources({ lastRewardClaimedAt: new Date().toISOString() });
       
     } catch (e: any) {
       console.error(e);

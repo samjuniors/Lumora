@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 
 export const SettingsManager = () => {
     const [settings, setSettings] = useState({
+        upiHandle: '',
         mobileNumber: '',
         payeeName: '',
         paymentLink: ''
@@ -18,6 +19,7 @@ export const SettingsManager = () => {
             try {
                 const s = await adminService.getPlatformSettings();
                 if (s) setSettings({
+                    upiHandle: s.upiHandle || '',
                     mobileNumber: s.mobileNumber || '',
                     payeeName: s.payeeName || '',
                     paymentLink: s.paymentLink || ''
@@ -64,12 +66,23 @@ export const SettingsManager = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div className="space-y-3">
                                     <label className="flex items-center gap-2 text-[10px] font-black text-text-secondary/50 uppercase tracking-[0.2em] ml-1">
-                                        <Phone size={12} /> Contact Point
+                                        <CreditCard size={12} /> Target UPI ID
+                                    </label>
+                                    <input 
+                                        value={settings.upiHandle} 
+                                        onChange={e => setSettings({...settings, upiHandle: e.target.value})}
+                                        placeholder="user@upi"
+                                        className="w-full bg-bg-main/50 border-2 border-transparent focus:border-brand-gold/30 rounded-3xl px-6 py-4 text-sm font-bold text-text-primary outline-none transition-all placeholder:text-text-secondary/20 shadow-inner"
+                                    />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="flex items-center gap-2 text-[10px] font-black text-text-secondary/50 uppercase tracking-[0.2em] ml-1">
+                                        <Phone size={12} /> Mobile Number (Optional)
                                     </label>
                                     <input 
                                         value={settings.mobileNumber} 
                                         onChange={e => setSettings({...settings, mobileNumber: e.target.value})}
-                                        placeholder="+1 (555) 000-0000"
+                                        placeholder="+1555..."
                                         className="w-full bg-bg-main/50 border-2 border-transparent focus:border-brand-gold/30 rounded-3xl px-6 py-4 text-sm font-bold text-text-primary outline-none transition-all placeholder:text-text-secondary/20 shadow-inner"
                                     />
                                 </div>

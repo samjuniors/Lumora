@@ -70,15 +70,21 @@ export class PrismaUserService implements IUserService {
 
   subscribeToUser(userId: string, callback: (user: User | null) => void): () => void {
     let active = true;
+    let lastUserStr = '';
     const fetchUser = async () => {
       try {
         if (!active) return;
         const user = await this.getUser(userId);
-        if (active) callback(user);
+        if (!active) return;
+        const currentStr = JSON.stringify(user);
+        if (currentStr !== lastUserStr) {
+          lastUserStr = currentStr;
+          callback(user);
+        }
       } catch (err) { }
     };
     fetchUser();
-    const interval = setInterval(fetchUser, 15000);
+    const interval = setInterval(fetchUser, 30000);
     return () => {
       active = false;
       clearInterval(interval);
@@ -87,15 +93,21 @@ export class PrismaUserService implements IUserService {
 
   subscribeToStudents(callback: (users: User[]) => void): () => void {
     let active = true;
+    let lastUsersStr = '';
     const fetchStudents = async () => {
       try {
         if (!active) return;
         const users = await this.getUsersByRole('student');
-        if (active) callback(users);
+        if (!active) return;
+        const currentStr = JSON.stringify(users);
+        if (currentStr !== lastUsersStr) {
+          lastUsersStr = currentStr;
+          callback(users);
+        }
       } catch (err) { }
     };
     fetchStudents();
-    const interval = setInterval(fetchStudents, 30000);
+    const interval = setInterval(fetchStudents, 60000);
     return () => {
       active = false;
       clearInterval(interval);

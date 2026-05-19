@@ -50,7 +50,7 @@ export const NotificationManager: React.FC = () => {
           onClick={() => handleNotificationAction(t.id)}
           className={`${
             t.visible ? 'animate-enter' : 'animate-leave'
-          } max-w-md w-full bg-bg-surface shadow-2xl rounded-2xl pointer-events-auto flex ring-1 ring-black ring-opacity-5 overflow-hidden cursor-pointer hover:bg-white/[0.02] transition-colors border border-white/5`}
+          } max-w-md w-full bg-[#0A0F1E] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.6)] rounded-2xl pointer-events-auto flex ring-1 ring-white/10 overflow-hidden cursor-pointer hover:bg-[#111A33] transition-colors`}
         >
           <div className="flex-1 w-0 p-4">
             <div className="flex items-start">
@@ -78,7 +78,7 @@ export const NotificationManager: React.FC = () => {
               </div>
             </div>
           </div>
-          <div className="flex border-l border-border-main">
+          <div className="flex border-l border-white/5">
             <button
               onClick={async (e) => {
                 e.stopPropagation();
@@ -97,7 +97,7 @@ export const NotificationManager: React.FC = () => {
         </div>
       ), {
         duration: newestUnread.metadata?.url ? 6000 : 3500,
-        position: 'top-right'
+        position: 'top-center'
       });
 
       // Request browser notification permission for high-priority alerts
