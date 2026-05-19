@@ -27,6 +27,15 @@ export const AIPet = React.memo(() => {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const isRankPage = location.pathname.includes('leaderboard');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<'chat' | 'care'>('chat');
   const [showRules, setShowRules] = useState(false);
@@ -227,7 +236,7 @@ export const AIPet = React.memo(() => {
          className="fixed right-4 md:right-8 z-[1050] flex justify-end"
          animate={{
            bottom: 112,
-           y: isRankPage ? -150 : 0
+           y: isRankPage && isMobile ? -150 : 0
          }}
          transition={{ type: "spring", stiffness: 200, damping: 25 }}
        >

@@ -472,7 +472,7 @@ export const Leaderboard = React.memo(() => {
                       <div className="flex-1 font-semibold z-10 min-w-0">
                         <p className="truncate text-xs text-brand-gold uppercase tracking-wider mb-1">Operative Standing</p>
                         <div className="flex items-center gap-3">
-                          <span className="text-lg md:text-xl truncate uppercase tracking-tight">Apex Designation</span>
+                          <span className="text-lg md:text-xl truncate uppercase tracking-tight">{me.name}</span>
                           <div className="hidden md:flex items-center gap-2">
                             <span className={cn("text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full text-bg-main bg-brand-gold")}>
                               {tier.name}

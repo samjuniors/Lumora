@@ -33,6 +33,8 @@ interface StudentStats {
   submissions: Enrollment[];
 }
 
+import AdminActionModal from '../components/admin/AdminActionModal';
+
 export const AdminAnalytics = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState<User[]>([]);
@@ -43,6 +45,7 @@ export const AdminAnalytics = () => {
   const [selectedStudent, setSelectedStudent] = useState<StudentStats | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [showGrantModal, setShowGrantModal] = useState<{ user: User, type: 'coins' | 'penalty' | 'diamonds' | 'gift' } | null>(null);
 
   const analyzePerformance = async (studentStats: any) => {
     setAnalyzing(true);
@@ -400,7 +403,10 @@ export const AdminAnalytics = () => {
 
                 {/* Quick Actions */}
                 <div className="flex gap-2">
-                  <button className="flex-1 bg-brand-gold text-bg-main py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-brand-gold-hover transition-colors">
+                  <button 
+                    onClick={() => setShowGrantModal({ user: selectedStudent.student, type: 'coins' })}
+                    className="flex-1 bg-brand-gold text-bg-main py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-brand-gold-hover transition-colors"
+                  >
                     Adjust Balance
                   </button>
                   <button className="flex-1 bg-bg-main text-text-primary py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 text-sm hover:bg-border-main transition-colors border border-border-main">
@@ -452,6 +458,14 @@ export const AdminAnalytics = () => {
         )}
       </AnimatePresence>
       </motion.div>
+      {showGrantModal && (
+          <AdminActionModal 
+              type={showGrantModal.type}
+              u={showGrantModal.user}
+              onClose={() => setShowGrantModal(null)}
+              onComplete={fetchData}
+          />
+      )}
     </AnimatePresence>
   );
 };

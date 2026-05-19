@@ -126,38 +126,38 @@ export const ResourceCollector = React.memo(() => {
   if (!user) return null;
 
   return (
-    <div className="card-premium p-5 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+    <div className="card-premium p-3 sm:p-5 flex flex-row items-center justify-between gap-2 sm:gap-6 relative overflow-hidden group">
       <div className="absolute right-0 top-0 w-32 h-32 bg-brand-gold/5 rounded-full blur-3xl group-hover:bg-brand-gold/10 transition-all duration-700 pointer-events-none" />
       
-      <div className="flex items-center gap-4 relative z-10 w-full sm:w-auto">
-        <div className="w-12 h-12 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center shrink-0 border border-brand-gold/20 shadow-soft">
-          <Pickaxe size={24} />
+      <div className="flex items-center gap-3 relative z-10 flex-shrink min-w-0">
+        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-navy-800 text-brand-gold rounded-xl flex items-center justify-center shrink-0 border border-brand-gold/20 shadow-soft">
+          <Pickaxe size={18} className="sm:w-6 sm:h-6" />
         </div>
-        <div>
-          <h3 className="text-base font-bold text-text-primary tracking-tight">Resource Collector</h3>
-          <p className="text-[11px] font-medium text-text-secondary">Next collection: <span className={cn("font-bold", canCollect ? "text-success" : "text-brand-gold")}>{timeLeft}</span></p>
+        <div className="min-w-0">
+          <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight truncate">Resource Collector</h3>
+          <p className="text-[10px] sm:text-[11px] font-medium text-text-secondary truncate">Next: <span className={cn("font-bold", canCollect ? "text-success" : "text-brand-gold")}>{timeLeft}</span></p>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 relative z-10 w-full md:w-auto justify-end mt-2 md:mt-0">
+      <div className="flex items-center gap-2 relative z-10 shrink-0">
         <AnimatePresence mode="wait">
           {collected ? (
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-xs"
+              className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg font-bold text-[10px] sm:text-xs whitespace-nowrap"
             >
-              <Sparkles size={14}/> Extraction Success
+              <Sparkles size={12}/> Success
             </motion.div>
           ) : (
-            <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
+            <div className="flex items-center gap-2 flex-wrap justify-end">
               <Button
                 variant={canCollect ? 'gold' : 'outline'}
                 size="sm"
                 onClick={handleCollect}
                 disabled={!canCollect || loading}
-                className="flex-1 sm:flex-none uppercase tracking-widest text-[10px] font-bold"
+                className="uppercase tracking-widest text-[9px] sm:text-[10px] font-bold px-3 py-1.5 whitespace-nowrap"
               >
                 {loading ? 'Mining...' : canCollect ? 'Collect' : 'Locked'}
               </Button>
@@ -168,9 +168,9 @@ export const ResourceCollector = React.memo(() => {
                   size="sm"
                   onClick={() => setShowResetConfirm(true)}
                   disabled={loading}
-                  className="flex items-center justify-center gap-1.5 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-3 text-[10px] uppercase font-bold tracking-widest"
+                  className="flex items-center justify-center gap-1.5 group/reset border-brand-gold/20 text-brand-gold hover:bg-brand-gold/10 px-3 py-1.5 min-h-0 h-auto text-[9px] sm:text-[10px] uppercase font-bold tracking-widest whitespace-nowrap"
                 >
-                  <Gem size={12} className="group-hover/reset:rotate-12 transition-transform" />
+                  <Gem size={10} className="sm:w-3 sm:h-3 group-hover/reset:rotate-12 transition-transform" />
                   Reset
                 </Button>
               )}
