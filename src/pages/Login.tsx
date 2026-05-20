@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Logo } from '../components/Logo';
 import { handleAsyncError } from '../lib/errorHandling';
 import { SignIn, SignUp } from '@clerk/clerk-react';
+import { dark } from '@clerk/themes';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const isClerkEnabled = !!CLERK_PUBLISHABLE_KEY && 
@@ -115,13 +116,19 @@ export const Login = () => {
               <p className="text-text-secondary text-sm mt-2 font-medium">Please wait while we initialize your account.</p>
             </motion.div>
           ) : isClerkEnabled ? (
-            <div className="flex justify-center flex-col items-center max-w-sm">
+            <div className="flex justify-center flex-col items-center w-full">
+               <div className="text-center mb-6 w-full">
+                 <h2 className="text-2xl font-bold text-text-primary tracking-tight">{isLogin ? 'Welcome back' : 'Create an account'}</h2>
+                 <p className="text-text-secondary text-sm mt-1">Enter your details to continue</p>
+               </div>
+
                {isLogin ? (
                   <SignIn 
                     routing="hash" 
                     fallbackRedirectUrl="/dashboard" 
                     forceRedirectUrl="/dashboard" 
                     appearance={{
+                      baseTheme: dark,
                       variables: {
                         colorPrimary: '#fbbf24',
                         colorBackground: '#0a1027',
@@ -130,20 +137,26 @@ export const Login = () => {
                         colorInputBackground: '#020617',
                         colorInputText: '#f8fafc',
                         colorBorder: '#1e293b',
+                        colorTextOnPrimaryBackground: '#020617',
                       },
                       elements: {
-                        card: 'bg-transparent border-0 shadow-none p-0',
+                        card: 'bg-transparent border-0 shadow-none p-0 w-full',
+                        header: 'hidden',
                         headerTitle: 'hidden',
                         headerSubtitle: 'hidden',
-                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold',
+                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold h-11',
                         socialButtonsBlockButtonText: 'text-[#f8fafc]',
-                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all',
-                        formFieldLabel: 'text-[#94a3b8] font-medium',
-                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-2 focus:ring-[#fbbf24]/50 focus:border-[#fbbf24] outline-none transition-all',
+                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all h-11 text-sm shadow-md shadow-brand-gold/15',
+                        formFieldLabel: 'text-[#94a3b8] font-medium text-xs mb-1',
+                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-1 focus:ring-[#fbbf24] focus:border-[#fbbf24] outline-none transition-all py-2.5 px-3 text-sm',
                         footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
                         footerActionText: 'text-[#94a3b8]',
                         identityPreviewText: 'text-[#f8fafc]',
                         identityPreviewEditButtonIcon: 'text-[#fbbf24]',
+                        dividerLine: 'bg-[#1e293b]',
+                        dividerText: 'text-[#94a3b8] text-xs uppercase tracking-wider font-semibold bg-[#0a1027]',
+                        formFieldInputShowPasswordButton: 'text-[#94a3b8] hover:text-[#fbbf24] h-10 pr-3',
+                        footer: 'hidden',
                       }
                     }}
                   />
@@ -153,6 +166,7 @@ export const Login = () => {
                     fallbackRedirectUrl="/dashboard" 
                     forceRedirectUrl="/dashboard" 
                     appearance={{
+                      baseTheme: dark,
                       variables: {
                         colorPrimary: '#fbbf24',
                         colorBackground: '#0a1027',
@@ -161,20 +175,26 @@ export const Login = () => {
                         colorInputBackground: '#020617',
                         colorInputText: '#f8fafc',
                         colorBorder: '#1e293b',
+                        colorTextOnPrimaryBackground: '#020617',
                       },
                       elements: {
-                        card: 'bg-transparent border-0 shadow-none p-0',
+                        card: 'bg-transparent border-0 shadow-none p-0 w-full',
+                        header: 'hidden',
                         headerTitle: 'hidden',
                         headerSubtitle: 'hidden',
-                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold',
+                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold h-11',
                         socialButtonsBlockButtonText: 'text-[#f8fafc]',
-                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all',
-                        formFieldLabel: 'text-[#94a3b8] font-medium',
-                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-2 focus:ring-[#fbbf24]/50 focus:border-[#fbbf24] outline-none transition-all',
+                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all h-11 text-sm shadow-md shadow-brand-gold/15',
+                        formFieldLabel: 'text-[#94a3b8] font-medium text-xs mb-1',
+                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-1 focus:ring-[#fbbf24] focus:border-[#fbbf24] outline-none transition-all py-2.5 px-3 text-sm',
                         footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
                         footerActionText: 'text-[#94a3b8]',
                         identityPreviewText: 'text-[#f8fafc]',
                         identityPreviewEditButtonIcon: 'text-[#fbbf24]',
+                        dividerLine: 'bg-[#1e293b]',
+                        dividerText: 'text-[#94a3b8] text-xs uppercase tracking-wider font-semibold bg-[#0a1027]',
+                        formFieldInputShowPasswordButton: 'text-[#94a3b8] hover:text-[#fbbf24] h-10 pr-3',
+                        footer: 'hidden',
                       }
                     }}
                   />

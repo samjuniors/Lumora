@@ -22,7 +22,7 @@ import { ReviewsManager } from '../components/admin/ReviewsManager';
 import { RechargesManager } from '../components/admin/RechargesManager';
 import { SettingsManager } from '../components/admin/SettingsManager';
 import { AssignmentsManager } from '../components/admin/AssignmentsManager';
-import { AdminAnalytics } from './AdminAnalytics';
+const AdminAnalytics = React.lazy(() => import('./AdminAnalytics').then(m => ({ default: m.AdminAnalytics })));
 
 export const AdminPanel = () => {
     const { user, isAdmin, isSuperAdmin } = useAuth();
@@ -86,7 +86,16 @@ export const AdminPanel = () => {
                     className="w-full"
                 >
                     {tab === 'overview' && <AnalyticsOverview />}
-                    {tab === 'analytics' && <AdminAnalytics />}
+                    {tab === 'analytics' && (
+                        <React.Suspense fallback={
+                            <div className="bg-bg-surface p-12 text-center rounded-[2rem] border border-border-main shadow-sm flex flex-col items-center justify-center min-h-[300px]">
+                                <div className="w-12 h-12 border-4 border-brand-gold/30 border-t-brand-gold rounded-full animate-spin mb-4"></div>
+                                <p className="text-text-secondary font-bold animate-pulse">Synchronizing Neural Core Analytics...</p>
+                            </div>
+                        }>
+                            <AdminAnalytics />
+                        </React.Suspense>
+                    )}
                     {tab === 'assignments' && (
                         <div className="space-y-16">
                             <AssignmentsManager />

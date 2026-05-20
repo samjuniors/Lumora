@@ -1,0 +1,117 @@
+name: "Project Lumina CI/CD Pipeline"
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - staging
+  pull_request:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  quality-gate:
+    name: "Code Verification & Testing"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: actions/checkout@v4
+
+      - name: "Establish Node.js Runtime"
+        uses: actions/setup-node@v4
+        with:
+          node-size: '20'
+          cache: 'npm'
+
+      - name: "Install dependencies"
+        run: npm ci
+
+      - name: "Execute Linter (Type Check)"
+        run: npm run lint
+
+      - name: "Prisma Client Generations"
+        run: npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      - name: "Assemble Production Artifact"
+        run: npm run build
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+
+  deploy-staging:
+    name: "Deploy to Staging (Cloud Run)"
+    needs: quality-gate
+    if: github.ref == 'refs/heads/staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_STAGING }}
+
+      - name: "Set up Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: "Authorize Docker for gcloud"
+        run: gcloud auth configure-docker --quiet
+
+      - name: "Build and Push Container"
+        run: |
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_STAGING }}/lumina-staging:${{ github.sha }} .
+          docker push gcr.io/${{ secrets.GCP_PROJECT_STAGING }}/lumina-staging:${{ github.sha }}
+
+      - name: "Deploy revision to Google Cloud Run"
+        run: |
+          gcloud run deploy lumina-staging \
+            --image gcr.io/${{ secrets.GCP_PROJECT_STAGING }}/lumina-staging:${{ github.sha }} \
+            --region asia-southeast1 \
+            --platform managed \
+            --port 3000 \
+            --allow-unauthenticated \
+            --update-env-vars="NODE_ENV=staging,DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }}"
+
+  deploy-prod:
+    name: "Deploy to Production (Cloud Run)"
+    needs: quality-gate
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout code"
+        uses: actions/checkout@v4
+
+      - name: "Authenticate to Google Cloud"
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY_PROD }}
+
+      - name: "Set up Cloud SDK"
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: "Authorize Docker for gcloud"
+        run: gcloud auth configure-docker --quiet
+
+      - name: "Build and Push Container"
+        run: |
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_PROD }}/lumina-prod:${{ github.sha }} .
+          docker push gcr.io/${{ secrets.GCP_PROJECT_PROD }}/lumina-prod:${{ github.sha }}
+
+      - name: "Deploy revision to Google Cloud Run"
+        run: |
+          gcloud run deploy lumina-prod \
+            --image gcr.io/${{ secrets.GCP_PROJECT_PROD }}/lumina-prod:${{ github.sha }} \
+            --region asia-southeast1 \
+            --platform managed \
+            --port 3000 \
+            --allow-unauthenticated \
+            --update-env-vars="NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL_PROD }}"

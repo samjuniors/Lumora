@@ -13,6 +13,8 @@ export function useProfile() {
     },
     enabled: !!user?.id,
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 30, // Fresh for 30s to allow instant back/forward navigation
+    gcTime: 1000 * 60 * 10, // Cache in memory for 10 minutes
     refetchInterval: 60000, // Poll every minute for updates
   });
 }

@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 
 // Import modules from our modular route directories
 import { requestIdMiddleware, requireAuth, logger } from "./routes/shared";
+import { prisma } from "./src/services/prisma/client";
 import usersRouter from "./routes/users";
 import assignmentsRouter from "./routes/assignments";
 import submissionsRouter from "./routes/submissions";
@@ -63,9 +64,26 @@ async function startServer() {
   // Request ID Tracing injector
   app.use(requestIdMiddleware);
 
-  // Health endpoint bypasses all rate and auth interceptors
-  app.get("/api/health", (req: Request, res: Response) => {
-    res.json({ status: "healthy", timestamp: Date.now() });
+  // Health endpoint bypasses all rate and auth interceptors and verifies database sanity
+  app.get("/api/health", async (req: Request, res: Response) => {
+    try {
+      // Run quick query to probe Neon/Postgres pool health
+      await prisma.$executeRawUnsafe("SELECT 1;");
+      res.json({ 
+        status: "healthy", 
+        database: "connected",
+        timestamp: Date.now(),
+        uptime: process.uptime()
+      });
+    } catch (e: any) {
+      logger.error({ error: e.message || String(e) }, "Health probe database failure");
+      res.status(503).json({ 
+        status: "degraded", 
+        database: "disconnected",
+        details: e.message || String(e),
+        timestamp: Date.now() 
+      });
+    }
   });
 
   // Enforce session check on all other client-facing API channels

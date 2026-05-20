@@ -15,6 +15,8 @@ export function useNotifications() {
     },
     enabled: !!user?.id,
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 15, // Fresh for 15s
+    gcTime: 1000 * 60 * 5, // Cache for 5 minutes
     refetchInterval: 60000, // Poll every minute instead of 30s
   });
 }

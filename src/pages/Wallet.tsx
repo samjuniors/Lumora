@@ -22,7 +22,7 @@ export const Wallet = () => {
   const [showTransfer, setShowTransfer] = useState(false);
   const [showRecharge, setShowRecharge] = useState(false);
   const [showConvert, setShowConvert] = useState(false);
-  const [showAllTransactions, setShowAllTransactions] = useState(false);
+  const [txPage, setTxPage] = useState(1);
   const [showRules, setShowRules] = useState(false);
 
   useEffect(() => {
@@ -174,67 +174,90 @@ export const Wallet = () => {
         />
 
         <Card variant="flat" className="overflow-hidden border-white/[0.03] divide-y divide-white/[0.03]">
-          {transactions.length > 0 ? (
-            (showAllTransactions ? transactions : transactions.slice(0, 10)).map((tx) => {
-              const isSender = tx.senderId === user?.id;
-              const status = tx.status || 'completed';
-              return (
-                <div 
-                  key={tx.id} 
-                  className="flex items-center justify-between p-5 bg-transparent hover:bg-white/[0.02] transition-colors group"
-                >
-                  <div className="flex items-center gap-5">
-                    <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-300",
-                      isSender 
-                        ? "bg-white/[0.02] border-white/5 text-text-muted group-hover:border-white/10" 
-                        : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:border-emerald-500/40"
-                    )}>
-                      {isSender ? <ArrowUpRight size={20}/> : <ArrowDownLeft size={20}/>}
-                    </div>
-                    <div className="space-y-1">
-                        <div className="flex items-center gap-3">
-                            <p className="font-black text-sm text-text-primary capitalize tracking-tight">
-                                {tx.type.replace(/_/g, ' ')}
-                            </p>
-                            {status !== 'completed' && (
-                                <span className={cn(
-                                    "text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest",
-                                    status === 'pending' ? "bg-brand-gold/20 text-brand-gold" : "bg-rose-500/20 text-rose-500"
-                                )}>
-                                    {status}
-                                </span>
-                            )}
+          {(() => {
+            const TX_ITEMS_PER_PAGE = 10;
+            const totalTxPages = Math.ceil(transactions.length / TX_ITEMS_PER_PAGE);
+            const paginatedTransactions = transactions.slice((txPage - 1) * TX_ITEMS_PER_PAGE, txPage * TX_ITEMS_PER_PAGE);
+
+            return (
+              <>
+                {paginatedTransactions.length > 0 ? (
+                  paginatedTransactions.map((tx) => {
+                    const isSender = tx.senderId === user?.id;
+                    const status = tx.status || 'completed';
+                    return (
+                      <div 
+                        key={tx.id} 
+                        className="flex items-center justify-between p-5 bg-transparent hover:bg-white/[0.02] transition-colors group"
+                      >
+                        <div className="flex items-center gap-5">
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all duration-300",
+                            isSender 
+                              ? "bg-white/[0.02] border-white/5 text-text-muted group-hover:border-white/10" 
+                              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:border-emerald-500/40"
+                          )}>
+                            {isSender ? <ArrowUpRight size={20}/> : <ArrowDownLeft size={20}/>}
+                          </div>
+                          <div className="space-y-1">
+                              <div className="flex items-center gap-3">
+                                  <p className="font-black text-sm text-text-primary capitalize tracking-tight">
+                                      {tx.type.replace(/_/g, ' ')}
+                                  </p>
+                                  {status !== 'completed' && (
+                                      <span className={cn(
+                                          "text-[8px] px-1.5 py-0.5 rounded uppercase font-black tracking-widest",
+                                          status === 'pending' ? "bg-brand-gold/20 text-brand-gold" : "bg-rose-500/20 text-rose-500"
+                                      )}>
+                                          {status}
+                                      </span>
+                                  )}
+                              </div>
+                              <p className="text-[10px] text-text-muted font-bold italic opacity-60">
+                                  {format(tx.timestamp, 'MMM d, yy • HH:mm')} • {tx.message || 'System-assigned audit'}
+                              </p>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-text-muted font-bold italic opacity-60">
-                            {format(tx.timestamp, 'MMM d, yy • HH:mm')} • {tx.message || 'System-assigned audit'}
-                        </p>
-                    </div>
+                        <div className={cn("text-xl font-black tabular-nums tracking-tighter", isSender ? "text-text-primary" : "text-emerald-500")}>
+                          {isSender ? "-" : "+"}{tx.amount.toLocaleString()}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="p-12">
+                    <EmptyState 
+                      icon={Receipt}
+                      title="Ledger Empty"
+                      description="Your transaction history is currently offline. Complete missions to initiate neural-link activity."
+                    />
                   </div>
-                  <div className={cn("text-xl font-black tabular-nums tracking-tighter", isSender ? "text-text-primary" : "text-emerald-500")}>
-                    {isSender ? "-" : "+"}{tx.amount.toLocaleString()}
+                )}
+                
+                {totalTxPages > 1 && (
+                  <div className="flex items-center justify-between px-6 py-4 bg-white/[0.01] border-t border-white/5">
+                    <button
+                      disabled={txPage === 1}
+                      onClick={() => setTxPage(p => Math.max(1, p - 1))}
+                      className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-white/5 bg-white/5 text-text-secondary disabled:opacity-30 disabled:pointer-events-none hover:text-[#D4AF37] transition-all cursor-pointer"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      Page {txPage} of {totalTxPages}
+                    </span>
+                    <button
+                      disabled={txPage === totalTxPages}
+                      onClick={() => setTxPage(p => Math.min(totalTxPages, p + 1))}
+                      className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-white/5 bg-white/5 text-text-secondary disabled:opacity-30 disabled:pointer-events-none hover:text-[#D4AF37] transition-all cursor-pointer"
+                    >
+                      Next
+                    </button>
                   </div>
-                </div>
-              )
-            })
-          ) : (
-            <div className="p-12">
-              <EmptyState 
-                icon={Receipt}
-                title="Ledger Empty"
-                description="Your transaction history is currently offline. Complete missions to initiate neural-link activity."
-              />
-            </div>
-          )}
-          
-          {transactions.length > 10 && (
-            <button 
-              onClick={() => setShowAllTransactions(!showAllTransactions)}
-              className="w-full py-4 text-[10px] font-black text-text-muted hover:text-brand-gold transition-all uppercase tracking-[0.3em] bg-white/[0.01] hover:bg-white/[0.03]"
-            >
-              {showAllTransactions ? "Compress Records" : `Audit All ${transactions.length} Records`}
-            </button>
-          )}
+                )}
+              </>
+            );
+          })()}
         </Card>
       </motion.div>
 

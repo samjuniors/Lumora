@@ -29,12 +29,11 @@ import { getCleanInventory } from "./lib/utils";
 import { Login } from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Assignments } from "./pages/Assignments";
-import { AssignmentDetail } from "./pages/AssignmentDetail";
+const AssignmentDetail = React.lazy(() => import("./pages/AssignmentDetail").then(m => ({ default: m.AssignmentDetail })));
 import { Wallet } from "./pages/Wallet";
 import { Leaderboard } from "./pages/Leaderboard";
-import { AdminPanel } from "./pages/Admin";
-import { AdminAnalytics } from "./pages/AdminAnalytics";
-import { Scorecard } from "./pages/Scorecard";
+const AdminPanel = React.lazy(() => import("./pages/Admin").then(m => ({ default: m.AdminPanel })));
+const Scorecard = React.lazy(() => import("./pages/Scorecard").then(m => ({ default: m.Scorecard })));
 import { Shop } from "./pages/Shop";
 import { Profile } from "./pages/Profile";
 import { Badges } from "./pages/Badges";
@@ -112,7 +111,9 @@ const AnimatedRoutes = () => {
         element={
           <RequireAuth>
             <PageWrapper>
-              <AssignmentDetail />
+              <React.Suspense fallback={<AssignmentDetailSkeleton />}>
+                <AssignmentDetail />
+              </React.Suspense>
             </PageWrapper>
           </RequireAuth>
         }
@@ -182,7 +183,9 @@ const AnimatedRoutes = () => {
         element={
           <RequireAuth>
             <PageWrapper>
-              <Scorecard />
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <Scorecard />
+              </React.Suspense>
             </PageWrapper>
           </RequireAuth>
         }
@@ -192,7 +195,9 @@ const AnimatedRoutes = () => {
         element={
           <RequireAuth>
             <PageWrapper>
-              <Scorecard />
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <Scorecard />
+              </React.Suspense>
             </PageWrapper>
           </RequireAuth>
         }
@@ -202,7 +207,9 @@ const AnimatedRoutes = () => {
         element={
           <RequireAuth adminOnly>
             <PageWrapper>
-              <AdminPanel />
+              <React.Suspense fallback={<DashboardSkeleton />}>
+                <AdminPanel />
+              </React.Suspense>
             </PageWrapper>
           </RequireAuth>
         }

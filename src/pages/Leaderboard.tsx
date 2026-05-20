@@ -142,6 +142,11 @@ export const Leaderboard = React.memo(() => {
   const activeTab = (searchParams.get('tab') as 'diamonds' | 'grades') || 'diamonds';
   const timeframe = (searchParams.get('time') as 'daily' | 'weekly' | 'overall') || 'overall';
 
+  const [page, setPage] = useState(1);
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, timeframe]);
+
   // Current system timing (once per memo cycle)
   const timing = useMemo(() => {
     const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -231,131 +236,161 @@ export const Leaderboard = React.memo(() => {
 
 
 
-  const renderList = (leadersList: any[], type: 'diamonds' | 'grades') => (
-    <div className="space-y-4 lg:space-y-6 relative mt-10">
-      <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} timeframe={timeframe} timing={timing} />
-      
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="show"
-        className="bg-bg-surface border border-border-main rounded-3xl overflow-hidden shadow-sm"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
-        
-        {leadersList.slice(3).map((student, idx) => {
-          const index = idx + 3;
-          const rankBadge = getRankBadge(index + 1);
-          const { currentLevel } = getUserLevelAndXP(student);
-          
-          return (
-            <motion.div 
-              variants={itemVariants}
-              key={student.id} 
-              className={cn(
-                "flex flex-col md:flex-row md:items-center px-4 md:px-8 py-5 md:py-6 border-b border-border-main/50 transition-all gap-4 relative group shrink-0 w-full min-w-0 max-w-full overflow-hidden hover:bg-bg-surface/50",
-                student.id === currentUser?.id ? "bg-amber-500/10" : "",
-                index === leadersList.length - 1 && "border-b-0"
-              )}
-            >
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D4AF37] transform scale-y-0 origin-bottom transition-transform group-hover:scale-y-100 rounded-r-full"></div>
-              {student.id === currentUser?.id && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D4AF37] rounded-r-full scale-y-100"></div>}
+  const renderList = (leadersList: any[], type: 'diamonds' | 'grades') => {
+    const ITEMS_PER_PAGE = 10;
+    const slicedList = leadersList.slice(3);
+    const totalPages = Math.ceil(slicedList.length / ITEMS_PER_PAGE);
+    const paginatedList = slicedList.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-              <div className="flex items-center gap-4 w-full md:w-auto min-w-0">
-                <div className="w-10 h-10 md:w-14 md:h-14 flex items-center justify-center font-bold text-text-secondary/70 text-lg md:text-xl shrink-0">
-                   #{index + 1}
+    return (
+      <div className="space-y-4 lg:space-y-6 relative mt-10">
+        <Podium leaders={leadersList} type={type} setSelectedUser={setSelectedUser} timeframe={timeframe} timing={timing} />
+        
+        <motion.div 
+          key={type + '-' + page}
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="bg-bg-surface border border-border-main rounded-3xl overflow-hidden shadow-sm"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+          
+          {paginatedList.map((student, idx) => {
+            const index = (page - 1) * ITEMS_PER_PAGE + idx + 3;
+            const rankBadge = getRankBadge(index + 1);
+            const { currentLevel } = getUserLevelAndXP(student);
+            
+            return (
+              <motion.div 
+                variants={itemVariants}
+                key={student.id} 
+                className={cn(
+                  "flex flex-col md:flex-row md:items-center px-4 md:px-8 py-5 md:py-6 border-b border-border-main/50 transition-all gap-4 relative group shrink-0 w-full min-w-0 max-w-full overflow-hidden hover:bg-bg-surface/50",
+                  student.id === currentUser?.id ? "bg-amber-500/10" : "",
+                  index === leadersList.length - 1 && "border-b-0"
+                )}
+              >
+                <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D4AF37] transform scale-y-0 origin-bottom transition-transform group-hover:scale-y-100 rounded-r-full"></div>
+                {student.id === currentUser?.id && <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#D4AF37] rounded-r-full scale-y-100"></div>}
+
+                <div className="flex items-center gap-4 w-full md:w-auto min-w-0">
+                  <div className="w-10 h-10 md:w-14 md:h-14 flex items-center justify-center font-bold text-text-secondary/70 text-lg md:text-xl shrink-0">
+                     #{index + 1}
+                  </div>
+                  
+                  <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-bg-main rounded-2xl border border-border-main shrink-0 shadow-sm relative overflow-hidden">
+                    {(student.avatar?.startsWith('http') || student.avatar?.startsWith('data:')) ? (
+                       <img src={student.avatar} key={student.avatar} alt={student.name} className="w-full h-full object-cover" />
+                    ) : (
+                       <span className="text-2xl md:text-3xl">{student.avatar || '👤'}</span>
+                    )}
+                    {student.inventory?.includes('avatar_frame_gold') && (
+                      <div className="absolute inset-0 border-[3px] border-[#D4AF37] rounded-2xl z-10 pointer-events-none"></div>
+                    )}
+                    <PresenceDot status={student.presence} className="absolute bottom-1 right-1 z-20 scale-75" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <button onClick={() => setSelectedUser(student)} className="text-lg md:text-xl font-bold truncate hover:text-[#D4AF37] transition-colors tracking-tight text-left text-text-primary">
+                        {student.name}
+                      </button>
+                      {student.luminaId && (
+                        <span className="text-[10px] font-mono text-text-secondary bg-bg-main px-1.5 py-0.5 rounded border border-border-main/50">
+                          {student.luminaId}
+                        </span>
+                      )}
+                      {student.id === currentUser?.id && <span className="text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded flex-shrink-0 font-bold">YOU</span>}
+                      <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border", rankBadge.bg, rankBadge.color, rankBadge.border)}>
+                        {rankBadge.name}
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border bg-bg-main border-border-main text-text-secondary">
+                        Lvl {currentLevel}
+                      </span>
+                    </div>
+                    <div className="text-xs text-text-secondary flex items-center gap-3">
+                       {student.achievements && student.achievements.length > 0 && (
+                         <span className="flex items-center font-medium"><Sparkles className="w-3.5 h-3.5 mr-1 text-[#D4AF37]" /> {student.achievements.length} Badges</span>
+                       )}
+                       {student.streak && student.streak > 0 ? (
+                          <span className="flex items-center font-medium"><Flame className="w-3.5 h-3.5 mr-1 text-orange-500" /> {student.streak} Streak</span>
+                       ) : null}
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center bg-bg-main rounded-2xl border border-border-main shrink-0 shadow-sm relative overflow-hidden">
-                  {(student.avatar?.startsWith('http') || student.avatar?.startsWith('data:')) ? (
-                     <img src={student.avatar} key={student.avatar} alt={student.name} className="w-full h-full object-cover" />
-                  ) : (
-                     <span className="text-2xl md:text-3xl">{student.avatar || '👤'}</span>
-                  )}
-                  {student.inventory?.includes('avatar_frame_gold') && (
-                    <div className="absolute inset-0 border-[3px] border-[#D4AF37] rounded-2xl z-10 pointer-events-none"></div>
-                  )}
-                  <PresenceDot status={student.presence} className="absolute bottom-1 right-1 z-20 scale-75" />
-                </div>
-                
-                <div className="flex-1 min-w-0 text-left">
-                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                    <button onClick={() => setSelectedUser(student)} className="text-lg md:text-xl font-bold truncate hover:text-[#D4AF37] transition-colors tracking-tight text-left text-text-primary">
-                      {student.name}
-                    </button>
-                    {student.luminaId && (
-                      <span className="text-[10px] font-mono text-text-secondary bg-bg-main px-1.5 py-0.5 rounded border border-border-main/50">
-                        {student.luminaId}
+                <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t border-border-main/50 md:border-0 pt-4 md:pt-0 mt-3 md:mt-0 relative z-10 shrink-0">
+                  <div className="font-bold text-2xl flex items-center gap-2 min-w-[120px] justify-end tracking-tight">
+                    {type === 'diamonds' ? (
+                      <span className="text-text-primary flex items-center gap-2">
+                         {(() => {
+                           const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+                           const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
+                           const d = new Date(nowIST);
+                           d.setHours(0,0,0,0);
+                           d.setDate(d.getDate() + 4 - (d.getDay() || 7));
+                           const yearStart = new Date(d.getFullYear(),0,1);
+                           const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+                           const thisWeek = `${d.getFullYear()}-W${weekNo}`;
+                           
+                           if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
+                           if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
+                           return student.lifetimeDiamonds || student.diamonds || 0;
+                         })()} <Gem className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"/>
+                      </span>
+                    ) : (
+                      <span className="text-text-primary flex items-center gap-2">
+                         {student.averageGrade}% <GraduationCap className="w-5 h-5 text-[#D4AF37]"/>
                       </span>
                     )}
-                    {student.id === currentUser?.id && <span className="text-[10px] uppercase tracking-wider bg-amber-100 text-amber-800 px-2 py-0.5 rounded flex-shrink-0 font-bold">YOU</span>}
-                    <span className={cn("text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border", rankBadge.bg, rankBadge.color, rankBadge.border)}>
-                      {rankBadge.name}
-                    </span>
-                    <span className="text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded border bg-bg-main border-border-main text-text-secondary">
-                      Lvl {currentLevel}
-                    </span>
                   </div>
-                  <div className="text-xs text-text-secondary flex items-center gap-3">
-                     {student.achievements && student.achievements.length > 0 && (
-                       <span className="flex items-center font-medium"><Sparkles className="w-3.5 h-3.5 mr-1 text-[#D4AF37]" /> {student.achievements.length} Badges</span>
-                     )}
-                     {student.streak && student.streak > 0 ? (
-                        <span className="flex items-center font-medium"><Flame className="w-3.5 h-3.5 mr-1 text-orange-500" /> {student.streak} Streak</span>
-                     ) : null}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end border-t border-border-main/50 md:border-0 pt-4 md:pt-0 mt-3 md:mt-0 relative z-10 shrink-0">
-                <div className="font-bold text-2xl flex items-center gap-2 min-w-[120px] justify-end tracking-tight">
-                  {type === 'diamonds' ? (
-                    <span className="text-text-primary flex items-center gap-2">
-                       {(() => {
-                         const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-                         const today = `${nowIST.getFullYear()}-${String(nowIST.getMonth() + 1).padStart(2, '0')}-${String(nowIST.getDate()).padStart(2, '0')}`;
-                         const d = new Date(nowIST);
-                         d.setHours(0,0,0,0);
-                         d.setDate(d.getDate() + 4 - (d.getDay() || 7));
-                         const yearStart = new Date(d.getFullYear(),0,1);
-                         const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-                         const thisWeek = `${d.getFullYear()}-W${weekNo}`;
-                         
-                         if (timeframe === 'daily') return student.lastResetDay === today ? (student.dailyDiamonds || 0) : 0;
-                         if (timeframe === 'weekly') return student.lastResetWeek === thisWeek ? (student.weeklyDiamonds || 0) : 0;
-                         return student.lifetimeDiamonds || student.diamonds || 0;
-                       })()} <Gem className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.5)]"/>
-                    </span>
-                  ) : (
-                    <span className="text-text-primary flex items-center gap-2">
-                       {student.averageGrade}% <GraduationCap className="w-5 h-5 text-[#D4AF37]"/>
-                    </span>
+
+                  {currentUser && student.id !== currentUser.id && (
+                    <button 
+                      onClick={() => setSelectedUser(student)}
+                      className="p-2.5 text-text-secondary/60 hover:text-text-primary hover:bg-bg-main rounded-full transition-all"
+                      title={`View ${student.name}'s profile`}
+                    >
+                      <Target className="w-5 h-5" />
+                    </button>
+                  )}
+                  {currentUser && student.id === currentUser.id && (
+                    <div className="w-10"></div>
                   )}
                 </div>
+              </motion.div>
+            );
+          })}
+          {leadersList.length <= 3 && leadersList.length > 0 && (
+            <div className="p-12 text-center text-text-secondary font-medium">Complete more missions to join the ranks!</div>
+          )}
+          {leadersList.length === 0 && <div className="p-12 text-center text-text-secondary font-medium">No students yet.</div>}
 
-                {currentUser && student.id !== currentUser.id && (
-                  <button 
-                    onClick={() => setSelectedUser(student)}
-                    className="p-2.5 text-text-secondary/60 hover:text-text-primary hover:bg-bg-main rounded-full transition-all"
-                    title={`View ${student.name}'s profile`}
-                  >
-                    <Target className="w-5 h-5" />
-                  </button>
-                )}
-                {currentUser && student.id === currentUser.id && (
-                  <div className="w-10"></div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
-        {leadersList.length <= 3 && leadersList.length > 0 && (
-          <div className="p-12 text-center text-text-secondary font-medium">Complete more missions to join the ranks!</div>
-        )}
-        {leadersList.length === 0 && <div className="p-12 text-center text-text-secondary font-medium">No students yet.</div>}
-      </motion.div>
-    </div>
-  );
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-white/5 px-6 py-4 bg-white/[0.01]">
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-white/5 bg-white/5 text-text-secondary disabled:opacity-30 disabled:pointer-events-none hover:text-[#D4AF37] transition-all cursor-pointer"
+              >
+                Previous
+              </button>
+              <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                disabled={page === totalPages}
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-white/5 bg-white/5 text-text-secondary disabled:opacity-30 disabled:pointer-events-none hover:text-[#D4AF37] transition-all cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </motion.div>
+      </div>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 md:space-y-12 relative pb-12 px-4 md:px-6">

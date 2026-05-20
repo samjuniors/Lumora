@@ -1,5 +1,6 @@
 import toast from 'react-hot-toast';
 import { auth } from '../services/firebase';
+import { captureException } from './errorMonitor';
 
 export enum OperationType {
   CREATE = 'create',
@@ -45,6 +46,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     path
   }
   console.error('Firestore Error: ', JSON.stringify(errInfo));
+  captureException(error, { errInfo, location: "firestore", operationType, path });
   showErrorMessage(`Permission/Network Error: ${operationType} on ${path}`);
   
   if (operationType === OperationType.UPDATE || operationType === OperationType.CREATE || operationType === OperationType.DELETE || operationType === OperationType.WRITE) {
@@ -67,6 +69,7 @@ export function showErrorMessage(message: string, defaultMessage = 'An unexpecte
 
 export function handleAsyncError(error: unknown, defaultMessage = 'An unexpected error occurred.') {
   console.error(error);
+  captureException(error, { location: "async-boundary" });
   if (error instanceof Error) {
     showErrorMessage(error.message, defaultMessage);
   } else {

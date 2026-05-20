@@ -105,6 +105,7 @@ export const Scorecard = () => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [isHistoryExpanded, setIsHistoryExpanded] = useState(true); // default open
+  const [historyPage, setHistoryPage] = useState(1);
 
   const viewingUserId = studentId || user?.id;
 
@@ -470,9 +471,41 @@ export const Scorecard = () => {
                       <p className="text-sm">This student hasn't been assigned any missions yet.</p>
                    </div>
                 )}
-                {stats.items.map((item) => (
-                   <ScorecardAssessmentItem key={item.assignment.id} item={item} />
-                ))}
+                {(() => {
+                  const HISTORY_ITEMS_PER_PAGE = 5;
+                  const totalHistoryPages = Math.ceil(stats.items.length / HISTORY_ITEMS_PER_PAGE);
+                  const paginatedItems = stats.items.slice((historyPage - 1) * HISTORY_ITEMS_PER_PAGE, historyPage * HISTORY_ITEMS_PER_PAGE);
+
+                  return (
+                    <>
+                      {paginatedItems.map((item) => (
+                         <ScorecardAssessmentItem key={item.assignment.id} item={item} />
+                      ))}
+                      
+                      {totalHistoryPages > 1 && (
+                        <div className="flex items-center justify-between px-8 py-5 bg-bg-main border-t border-border-main">
+                          <button
+                            disabled={historyPage === 1}
+                            onClick={() => setHistoryPage(p => Math.max(1, p - 1))}
+                            className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-border-main/50 bg-bg-surface text-[#D4AF37] disabled:opacity-30 disabled:pointer-events-none hover:bg-bg-main transition-all cursor-pointer"
+                          >
+                            Previous
+                          </button>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+                            Page {historyPage} of {totalHistoryPages}
+                          </span>
+                          <button
+                            disabled={historyPage === totalHistoryPages}
+                            onClick={() => setHistoryPage(p => Math.min(totalHistoryPages, p + 1))}
+                            className="px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl border border-border-main/50 bg-bg-surface text-[#D4AF37] disabled:opacity-30 disabled:pointer-events-none hover:bg-bg-main transition-all cursor-pointer"
+                          >
+                            Next
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </motion.div>
           )}

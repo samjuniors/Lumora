@@ -22,7 +22,8 @@ export function useAssignments() {
          return [];
        }
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
     placeholderData: (prev) => prev,
     retry: 1
   });
@@ -41,6 +42,8 @@ export function useAssignment(id: string) {
     },
     enabled: !!id,
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 15, // 15 minutes
     retry: 1
   });
 }
@@ -58,6 +61,8 @@ export function useStudentEnrollments(userId: string | undefined) {
     },
     enabled: !!userId,
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
     retry: 1
   });
 }
@@ -75,6 +80,8 @@ export function useStudentSubmissions(studentId: string | undefined) {
     queryFn: () => submissionService.getSubmissionsByStudent(studentId!),
     enabled: !!studentId,
     placeholderData: (prev) => prev,
+    staleTime: 1000 * 30, // 30 seconds
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
@@ -83,6 +90,8 @@ export function useAssignmentSubmissions(assignmentId: string | undefined) {
     queryKey: submissionKeys.byAssignment(assignmentId || ''),
     queryFn: () => submissionService.getSubmissionsByAssignment(assignmentId!),
     enabled: !!assignmentId,
+    staleTime: 1000 * 30, // 30 seconds
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 }
 
