@@ -3,13 +3,11 @@ import { IAssignmentService } from './interfaces/IAssignmentService';
 import { ISubmissionService } from './interfaces/ISubmissionService';
 import { IWalletService } from './interfaces/IWalletService';
 import { INotificationService } from './interfaces/INotificationService';
-import { IAuthService } from './interfaces/IAuthService';
 import { PrismaUserService } from './prisma/PrismaUserService';
 import { PrismaAssignmentService } from './prisma/PrismaAssignmentService';
 import { PrismaSubmissionService } from './prisma/PrismaSubmissionService';
 import { PrismaWalletService } from './prisma/PrismaWalletService';
 import { PrismaNotificationService } from './prisma/PrismaNotificationService';
-import { FirebaseAuthService } from './auth/FirebaseAuthService';
 import { ISyndicateService } from './interfaces/ISyndicateService';
 import { IAdminService } from './interfaces/IAdminService';
 import { IStorageService } from './interfaces/IStorageService';
@@ -26,7 +24,6 @@ class DbProvider {
   private static notificationServiceInstance: INotificationService;
   private static adminServiceInstance: IAdminService;
   private static syndicateServiceInstance: ISyndicateService;
-  private static authInstance: IAuthService;
   private static storageInstance: IStorageService;
 
   static getUserService(): IUserService {
@@ -78,13 +75,6 @@ class DbProvider {
     return this.syndicateServiceInstance;
   }
 
-  static getAuthService(): IAuthService {
-    if (!this.authInstance) {
-      this.authInstance = new FirebaseAuthService();
-    }
-    return this.authInstance;
-  }
-
   static getStorageService(): IStorageService {
     if (!this.storageInstance) {
       this.storageInstance = new CloudflareR2StorageService();
@@ -93,7 +83,6 @@ class DbProvider {
   }
 }
 
-export const authService = DbProvider.getAuthService();
 export const userService = DbProvider.getUserService();
 export const assignmentService = DbProvider.getAssignmentService();
 export const submissionService = DbProvider.getSubmissionService();

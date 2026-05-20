@@ -64,7 +64,7 @@ export const Navbar = React.memo(() => {
                   <NavLink to="/admin?tab=analytics" icon={BarChart3}>Analytics</NavLink>
                   <NavLink to="/admin?tab=users" icon={User}>Users</NavLink>
                   <NavLink to="/admin?tab=assignments" icon={Target}>Tasks</NavLink>
-                  <NavLink to="/admin?tab=overview" icon={ShieldAlert}>System</NavLink>
+                  <NavLink to="/admin?tab=settings" icon={Settings}>System</NavLink>
                   <NavLink to="/admin?tab=recharges" icon={Wallet}>Economy</NavLink>
                   <NavLink to="/admin?tab=reviews" icon={Zap}>Queue</NavLink>
                 </>
@@ -91,11 +91,11 @@ export const Navbar = React.memo(() => {
                 
                 <div className="flex items-center gap-2 sm:gap-3 ml-2 pl-2 border-l border-white/10">
                   {isAdmin && (
-                    <div className="hidden md:flex items-center gap-1">
-                      <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                    <div className="flex items-center gap-1">
+                      <Link to="/admin?tab=invites" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors" title="Invite Codes">
                         <UserPlus className="h-4 w-4" />
                       </Link>
-                      <Link to="/admin?tab=settings" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                      <Link to="/admin?tab=settings" className="flex w-8 h-8 items-center justify-center text-text-secondary hover:text-white hover:bg-white/5 rounded-lg transition-colors" title="Platform Settings">
                         <Settings className="h-4 w-4" />
                       </Link>
                     </div>
@@ -127,7 +127,7 @@ export const Navbar = React.memo(() => {
               <MobileNavLink to="/admin?tab=analytics" icon={BarChart3} label="Data" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=users" icon={User} label="Users" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=assignments" icon={Target} label="Tasks" currentPath={location.pathname} />
-              <MobileNavLink to="/admin?tab=overview" icon={ShieldAlert} label="System" currentPath={location.pathname} />
+              <MobileNavLink to="/admin?tab=settings" icon={Settings} label="System" currentPath={location.pathname} />
               <MobileNavLink to="/admin?tab=reviews" icon={Zap} label="Queue" currentPath={location.pathname} />
             </>
           ) : (

@@ -1,330 +1,99 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Link } from 'react-router-dom';
-import { LogIn, Key, AlertCircle, Sparkles, User as UserIcon, Mail, Lock } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Logo } from '../components/Logo';
-import { handleAsyncError } from '../lib/errorHandling';
-import { SignIn, SignUp } from '@clerk/clerk-react';
+import { SignIn } from '@clerk/clerk-react';
 import { dark } from '@clerk/themes';
 
-const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const isClerkEnabled = !!CLERK_PUBLISHABLE_KEY && 
-                       CLERK_PUBLISHABLE_KEY.trim() !== '' && 
-                       CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here' && 
-                       (CLERK_PUBLISHABLE_KEY.startsWith('pk_test_') || CLERK_PUBLISHABLE_KEY.startsWith('pk_live_'));
-
 export const Login = () => {
-  const { user, authUser, loading: authLoading, logOut, isAdmin, setUser, signInWithEmail, signUpWithEmail, signInWithProvider, verifyInviteCode } = useAuth();
-  const [inviteCode, setInviteCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
-  
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const { user, authUser, loading: authLoading } = useAuth();
 
-  if (authLoading) return <div className="fixed inset-0 z-50 bg-bg-main" />;
+  if (authLoading) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#101b2e] flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-brand-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // If already authenticated and fully synced, redirect to dashboard
   if (user) return <Navigate to="/dashboard" replace />;
 
-  const handleVerifyInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteCode.trim() || !authUser) return;
-    
-    setLoading(true);
-    setErrorMsg('');
-    
-    try {
-        await verifyInviteCode(inviteCode);
-        toast.success("Welcome aboard!");
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Failed to process invite code');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setLoading(true);
-    try {
-      if (isLogin) {
-        await signInWithEmail(email, password);
-      } else {
-        await signUpWithEmail(email, password);
-      }
-    } catch (err: any) {
-      if (err.code === 'auth/operation-not-allowed') {
-        setErrorMsg('Authentication provider not enabled. Please enable "Email/Password" and "Google" in your Firebase Console Settings.');
-      } else if (err.code === 'auth/email-already-in-use') {
-        setErrorMsg('This email is already in use. Please log in instead.');
-      } else {
-        setErrorMsg(err.message || 'Authentication failed');
-      }
-      handleAsyncError(err, 'Authentication failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleProviderSignIn = async (providerName: 'google' | 'apple') => {
-    setErrorMsg('');
-    try {
-      await signInWithProvider(providerName);
-    } catch (error: any) {
-      if (error?.code === 'auth/operation-not-allowed') {
-        setErrorMsg('This provider is not enabled in Firebase. Please enable it in the Firebase Console (Authentication > Sign-in method).');
-      } else if (error?.code !== 'auth/popup-closed-by-user' && error?.code !== 'auth/cancelled-popup-request' && error?.code !== 'auth/user-cancelled') {
-        setErrorMsg(error.message || 'Authentication failed');
-        handleAsyncError(error, 'Provider sign in failed');
-      }
-    }
-  };
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-bg-main antialiased font-sans">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-[#0a1027] antialiased font-sans">
       <div className="absolute inset-0 bg-grid-pattern opacity-[0.03] pointer-events-none" />
 
-      {/* Decorative gradient orbs */}
+      {/* Decorative gradient orbs for elite Academy style */}
       <div className="absolute top-[-10%] right-[-5%] w-[40vw] h-[40vw] rounded-full bg-brand-gold/10 blur-[100px] pointer-events-none animate-pulse-slow" />
       <div className="absolute bottom-[-10%] left-[-5%] w-[30vw] h-[30vw] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none animate-pulse-slow-delayed" />
 
-      <div className="w-full max-w-sm px-6 relative z-10">
+      <div className="w-full max-w-md px-4 py-8 relative z-10 flex flex-col items-center animate-in fade-in duration-500">
         
-        <div className="flex justify-center mb-8">
-          <Logo className="w-32 h-auto text-brand-gold drop-shadow-sm" />
+        <div className="flex justify-center mb-6">
+          <Logo className="w-28 h-auto text-brand-gold drop-shadow-sm" />
         </div>
 
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-          className="bg-bg-surface/80 backdrop-blur-xl p-8 rounded-3xl border border-border-main shadow-2xl"
+          transition={{ duration: 0.4 }}
+          className="w-full bg-[#101b2e]/80 backdrop-blur-xl p-6 sm:p-8 rounded-3xl border border-white/[0.08] shadow-2xl"
         >
           {authUser && !user ? (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="space-y-6 text-center py-8"
-            >
+            <div className="space-y-6 text-center py-6">
               <div className="w-16 h-16 bg-brand-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-brand-gold/20">
                 <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
               </div>
-              <h2 className="text-2xl font-bold text-text-primary tracking-tight">Setting up your profile...</h2>
-              <p className="text-text-secondary text-sm mt-2 font-medium">Please wait while we initialize your account.</p>
-            </motion.div>
-          ) : isClerkEnabled ? (
-            <div className="flex justify-center flex-col items-center w-full">
-               <div className="text-center mb-6 w-full">
-                 <h2 className="text-2xl font-bold text-text-primary tracking-tight">{isLogin ? 'Welcome back' : 'Create an account'}</h2>
-                 <p className="text-text-secondary text-sm mt-1">Enter your details to continue</p>
-               </div>
-
-               {isLogin ? (
-                  <SignIn 
-                    routing="hash" 
-                    fallbackRedirectUrl="/dashboard" 
-                    forceRedirectUrl="/dashboard" 
-                    appearance={{
-                      baseTheme: dark,
-                      variables: {
-                        colorPrimary: '#fbbf24',
-                        colorBackground: '#0a1027',
-                        colorText: '#f8fafc',
-                        colorTextSecondary: '#94a3b8',
-                        colorInputBackground: '#020617',
-                        colorInputText: '#f8fafc',
-                        colorBorder: '#1e293b',
-                        colorTextOnPrimaryBackground: '#020617',
-                      },
-                      elements: {
-                        card: 'bg-transparent border-0 shadow-none p-0 w-full',
-                        header: 'hidden',
-                        headerTitle: 'hidden',
-                        headerSubtitle: 'hidden',
-                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold h-11',
-                        socialButtonsBlockButtonText: 'text-[#f8fafc]',
-                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all h-11 text-sm shadow-md shadow-brand-gold/15',
-                        formFieldLabel: 'text-[#94a3b8] font-medium text-xs mb-1',
-                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-1 focus:ring-[#fbbf24] focus:border-[#fbbf24] outline-none transition-all py-2.5 px-3 text-sm',
-                        footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
-                        footerActionText: 'text-[#94a3b8]',
-                        identityPreviewText: 'text-[#f8fafc]',
-                        identityPreviewEditButtonIcon: 'text-[#fbbf24]',
-                        dividerLine: 'bg-[#1e293b]',
-                        dividerText: 'text-[#94a3b8] text-xs uppercase tracking-wider font-semibold bg-[#0a1027]',
-                        formFieldInputShowPasswordButton: 'text-[#94a3b8] hover:text-[#fbbf24] h-10 pr-3',
-                        footer: 'hidden',
-                      }
-                    }}
-                  />
-               ) : (
-                  <SignUp 
-                    routing="hash" 
-                    fallbackRedirectUrl="/dashboard" 
-                    forceRedirectUrl="/dashboard" 
-                    appearance={{
-                      baseTheme: dark,
-                      variables: {
-                        colorPrimary: '#fbbf24',
-                        colorBackground: '#0a1027',
-                        colorText: '#f8fafc',
-                        colorTextSecondary: '#94a3b8',
-                        colorInputBackground: '#020617',
-                        colorInputText: '#f8fafc',
-                        colorBorder: '#1e293b',
-                        colorTextOnPrimaryBackground: '#020617',
-                      },
-                      elements: {
-                        card: 'bg-transparent border-0 shadow-none p-0 w-full',
-                        header: 'hidden',
-                        headerTitle: 'hidden',
-                        headerSubtitle: 'hidden',
-                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold h-11',
-                        socialButtonsBlockButtonText: 'text-[#f8fafc]',
-                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all h-11 text-sm shadow-md shadow-brand-gold/15',
-                        formFieldLabel: 'text-[#94a3b8] font-medium text-xs mb-1',
-                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-1 focus:ring-[#fbbf24] focus:border-[#fbbf24] outline-none transition-all py-2.5 px-3 text-sm',
-                        footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
-                        footerActionText: 'text-[#94a3b8]',
-                        identityPreviewText: 'text-[#f8fafc]',
-                        identityPreviewEditButtonIcon: 'text-[#fbbf24]',
-                        dividerLine: 'bg-[#1e293b]',
-                        dividerText: 'text-[#94a3b8] text-xs uppercase tracking-wider font-semibold bg-[#0a1027]',
-                        formFieldInputShowPasswordButton: 'text-[#94a3b8] hover:text-[#fbbf24] h-10 pr-3',
-                        footer: 'hidden',
-                      }
-                    }}
-                  />
-               )}
-               <div className="text-center mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setErrorMsg('');
-                  }}
-                  className="text-sm text-text-secondary hover:text-text-primary transition-colors font-medium"
-                >
-                  {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
-                </button>
-              </div>
+              <h2 className="text-xl font-bold text-text-primary tracking-tight">Initializing Academy Profile...</h2>
+              <p className="text-text-secondary text-xs font-medium">Please wait while we establish your ledger credentials.</p>
             </div>
           ) : (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.1 }}
-              className="space-y-6"
-            >
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-text-primary tracking-tight">{isLogin ? 'Welcome back' : 'Create an account'}</h2>
-                <p className="text-text-secondary text-sm mt-1">Enter your details to continue</p>
-              </div>
-
-              <AnimatePresence>
-                {errorMsg && (
-                  <motion.div 
-                    key="error-msg-login"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="text-sm text-red-500 flex items-center gap-2 font-medium bg-red-500/10 p-3 rounded-xl border border-red-500/20"
-                  >
-                    <AlertCircle className="w-4 h-4 shrink-0"/> {errorMsg}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                <div className="space-y-3">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Mail className="h-5 w-5 text-text-secondary/50" />
-                    </div>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="name@example.com"
-                      className="w-full pl-10 pr-4 py-3 bg-bg-main border border-border-main rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-sm font-medium text-text-primary placeholder:text-text-secondary/50"
-                      required
-                    />
-                  </div>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-text-secondary/50" />
-                    </div>
-                    <input
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Password"
-                      className="w-full pl-10 pr-4 py-3 bg-bg-main border border-border-main rounded-xl focus:ring-2 focus:ring-brand-gold/50 focus:border-brand-gold outline-none transition-all text-sm font-medium text-text-primary placeholder:text-text-secondary/50"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  type="submit"
-                  disabled={loading || !email || !password}
-                  className="w-full flex items-center justify-center bg-text-primary text-bg-main px-4 py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-50 shadow-md"
-                >
-                  {loading ? 'Continuing...' : (isLogin ? 'Log in' : 'Create account')}
-                </motion.button>
-              </form>
-
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border-main"></span>
-                </div>
-                <div className="relative flex justify-center text-xs font-medium text-text-secondary uppercase tracking-widest">
-                  <span className="bg-bg-surface px-3">or continue with</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => handleProviderSignIn('google')}
-                  className="flex items-center justify-center gap-2 bg-bg-main border border-border-main text-text-primary px-4 py-2.5 rounded-xl font-semibold text-sm transition-all hover:bg-bg-surface-hover shadow-sm"
-                >
-                  <img src="https://www.google.com/favicon.ico" alt="Google" className="w-4 h-4 grayscale opacity-80 group-hover:grayscale-0 group-hover:opacity-100 transition-all" />
-                  Google
-                </motion.button>
-                <div
-                  className="flex items-center justify-center gap-2 bg-bg-main border border-border-main text-text-secondary px-4 py-2.5 rounded-xl font-semibold text-sm cursor-not-allowed opacity-60"
-                >
-                  <svg className="w-5 h-5 fill-current opacity-80" viewBox="0 0 24 24"><path d="M16.92 14.88c-.03-2.61 2.24-3.9 2.34-3.96-1.2-1.74-3.1-1.99-3.79-2.03-1.63-.16-3.18 1.04-4.02 1.04-.84 0-2.14-.99-3.48-.96-1.74.03-3.34 1.02-4.24 2.56-1.84 3.16-.48 7.82 1.3 10.37.87 1.25 1.9 2.65 3.25 2.61 1.32-.04 1.83-.84 3.42-.84 1.58 0 2.05.84 3.44.81 1.43-.02 2.32-1.28 3.18-2.52 1.01-1.46 1.43-2.88 1.46-2.95-.03-.01-2.85-1.07-2.86-4.13zm-2.52-6.52c.67-.84 1.13-2 1.01-3.16-1.01.04-2.22.68-2.91 1.51-.55.65-1.09 1.83-.94 2.97 1.13.08 2.2-.55 2.84-1.32z"/></svg>
-                  Coming Soon
-                </div>
-              </div>
-
-              <div className="text-center mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsLogin(!isLogin);
-                    setErrorMsg('');
-                  }}
-                  className="text-sm text-text-secondary hover:text-text-primary transition-colors font-medium"
-                >
-                  {isLogin ? "Don't have an account? Sign up" : 'Already have an account? Log in'}
-                </button>
-              </div>
-
-            </motion.div>
+            <div className="w-full flex flex-col items-center">
+              <SignIn 
+                routing="hash" 
+                fallbackRedirectUrl="/dashboard" 
+                forceRedirectUrl="/dashboard" 
+                appearance={{
+                  baseTheme: dark,
+                  variables: {
+                    colorPrimary: '#fbbf24', // Gold high contrast accent
+                    colorBackground: 'transparent', // Inherit premium container bg
+                    colorText: '#f8fafc',
+                    colorTextSecondary: '#94a3b8',
+                    colorInputBackground: '#0a1027',
+                    colorInputText: '#f8fafc',
+                    colorBorder: 'rgba(255,255,255,0.08)',
+                    colorTextOnPrimaryBackground: '#0a1027', // Crisp readable custom navy on primary yellow button
+                  },
+                  elements: {
+                    card: 'bg-transparent border-0 shadow-none p-0 w-full',
+                    socialButtonsBlockButton: 'bg-[#0a1027] hover:bg-[#111827] text-[#f8fafc] border border-white/[0.08] rounded-xl transition-all font-semibold h-11',
+                    socialButtonsBlockButtonText: 'text-[#f8fafc] font-semibold text-sm',
+                    formButtonPrimary: 'bg-[#fbbf24] text-[#0a1027] hover:bg-[#fbbf24]/90 font-bold rounded-xl transition-all h-11 text-sm shadow-md shadow-brand-gold/15',
+                    formFieldLabel: 'text-[#94a3b8] font-medium text-xs mb-1.5',
+                    formFieldInput: 'bg-[#0a1027] border border-white/[0.08] rounded-xl text-[#f8fafc] focus:ring-1 focus:ring-[#fbbf24] focus:border-[#fbbf24] outline-none transition-all py-2.5 px-3 text-sm',
+                    footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
+                    footerActionText: 'text-[#94a3b8]',
+                    identityPreviewText: 'text-[#f8fafc]',
+                    identityPreviewEditButtonIcon: 'text-[#fbbf24]',
+                    dividerLine: 'bg-white/[0.08]',
+                    dividerText: 'text-[#94a3b8] text-xs uppercase tracking-wider font-semibold bg-[#101b2e]',
+                    formFieldInputShowPasswordButton: 'text-[#94a3b8] hover:text-[#fbbf24] h-10 pr-3',
+                    header: 'w-full mb-6 font-sans text-center',
+                    headerTitle: 'text-xl font-bold text-[#f8fafc] tracking-tight',
+                    headerSubtitle: 'text-xs text-[#94a3b8] mt-1',
+                    footer: 'w-full flex justify-center mt-6 text-xs text-[#94a3b8]',
+                    formResendCodeLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
+                  }
+                }}
+              />
+            </div>
           )}
         </motion.div>
 
-        {/* Legal Footer Links */}
-        <div className="text-center mt-6 space-x-3 text-[10px] font-black text-text-muted/50 uppercase tracking-[0.15em] relative z-20">
+        {/* Premium Covenant Footer */}
+        <div className="text-center mt-6 space-x-3 text-[10px] font-black text-text-muted/40 uppercase tracking-[0.12em] relative z-20">
           <Link to="/legal?tab=terms" className="hover:text-brand-gold transition-colors">Terms of Engagement</Link>
           <span>•</span>
           <Link to="/legal?tab=privacy" className="hover:text-brand-gold transition-colors">Privacy Protocol</Link>
@@ -333,4 +102,3 @@ export const Login = () => {
     </div>
   );
 };
-

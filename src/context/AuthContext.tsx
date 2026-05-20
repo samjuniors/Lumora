@@ -1,14 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import { authService, userService, adminService } from '../services/dbProvider';
+import { userService, adminService } from '../services/dbProvider';
 import { User } from '../types';
 import { isSuperAdmin, isAdmin, isStudent } from '../lib/permissions';
 import { ClerkSync } from './ClerkSync';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const isClerkEnabled = !!CLERK_PUBLISHABLE_KEY && 
-                       CLERK_PUBLISHABLE_KEY.trim() !== '' && 
-                       CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here' && 
-                       (CLERK_PUBLISHABLE_KEY.startsWith('pk_test_') || CLERK_PUBLISHABLE_KEY.startsWith('pk_live_'));
 
 export interface AuthUser {
   uid: string;
@@ -66,6 +62,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Initialized to null by default if Clerk publishable key doesn't load or if it loads instantly
+  const [clerkUser, setClerkUser] = useState<AuthUser | null | undefined>(undefined);
+
   const authValues = useMemo(() => ({
     isAdmin: isAdmin(user),
     isSuperAdmin: isSuperAdmin(user),
@@ -92,61 +91,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const unsubscribeSnapshot = React.useRef<(() => void) | null>(null);
   const isMounted = React.useRef(true);
-
-  // Track sources so they don't overwrite each other chaotically
-  const [firebaseUser, setFirebaseUser] = useState<AuthUser | null | undefined>(undefined);
-  const [clerkUser, setClerkUser] = useState<AuthUser | null | undefined>(isClerkEnabled ? undefined : null);
-
-  useEffect(() => {
-    // Failsafe to prevent infinite loading if either auth source stalls
-    const failsafe = setTimeout(() => {
-      setFirebaseUser(prev => prev === undefined ? null : prev);
-      setClerkUser(prev => prev === undefined ? null : prev);
-    }, 5000);
-    return () => clearTimeout(failsafe);
-  }, []);
-
-  const activeAuthSource = clerkUser ? 'clerk' : (firebaseUser ? 'firebase' : null);
-  const activeSessionUser = clerkUser || firebaseUser;
-  const isAuthInitialized = firebaseUser !== undefined && clerkUser !== undefined;
+  const clerkSignOutRef = React.useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     isMounted.current = true;
-    const unsubscribeAuth = authService.onAuthStateChanged(async (fUser) => {
-      if (!isMounted.current) return;
-      
-      if (fUser) {
-        console.info(`[AuthContext:Diagnostic] Firebase Auth Listener fired. UID: ${fUser.uid}`);
-        if (CLERK_PUBLISHABLE_KEY) {
-          console.warn("[AuthContext:Diagnostic] Legacy Firebase Auth path active alongside Clerk. This is a deprecated fallback, prepare for full Firebase Auth removal.");
-        }
-      }
-
-      setFirebaseUser(prev => {
-        if (!fUser && prev === undefined) return null;
-        if (!fUser && !prev) return prev;
-        if (fUser && prev && fUser.uid === prev.uid && fUser.email === prev.email) {
-          return prev;
-        }
-        return fUser ? {
-          uid: fUser.uid,
-          email: fUser.email,
-          displayName: fUser.displayName,
-          source: 'firebase'
-        } : null;
-      });
-    });
-
     return () => {
       isMounted.current = false;
-      unsubscribeAuth();
       if (unsubscribeSnapshot.current) {
         unsubscribeSnapshot.current();
       }
     };
   }, []);
-
-  const clerkSignOutRef = React.useRef<(() => Promise<void>) | null>(null);
 
   const handleClerkStateChange = React.useCallback(async (cUser: any, signOutFn: (() => Promise<void>) | null = null, firebaseToken?: string | null) => {
     if (!isMounted.current) return;
@@ -155,10 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setClerkUser(prev => {
       if (!cUser && !prev) return prev;
       if (cUser && prev && cUser.id === prev.uid && cUser.primaryEmailAddress?.emailAddress === prev.email) {
-        return prev; // Prevent unnecessary object creation and re-renders
-      }
-      if (cUser) {
-        console.info(`[AuthContext:Diagnostic] Clerk state change fired. UID: ${cUser.id}`);
+        return prev;
       }
       return cUser ? {
         uid: cUser.id,
@@ -167,24 +119,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         source: 'clerk'
       } : null;
     });
-
-    // If Clerk provided a Firebase custom token, use it to automatically sign in to Firebase
-    if (firebaseToken && authService.signInWithCustomToken) {
-      try {
-        await authService.signInWithCustomToken(firebaseToken);
-      } catch (err) {
-        console.error("Failed to sign in to Firebase with Clerk token:", err);
-      }
-    }
   }, []);
 
   useEffect(() => {
     if (!isMounted.current) return;
-    setAuthUser(activeSessionUser);
+    // Set active auth session based exclusively on Clerk
+    setAuthUser(clerkUser || null);
 
-    if (activeSessionUser) {
-      localStorage.setItem('lumora_user_id', activeSessionUser.uid);
-      (window as any).__LUMORA_USER_ID__ = activeSessionUser.uid;
+    if (clerkUser) {
+      localStorage.setItem('lumora_user_id', clerkUser.uid);
+      (window as any).__LUMORA_USER_ID__ = clerkUser.uid;
     } else {
       localStorage.removeItem('lumora_user_id');
       delete (window as any).__LUMORA_USER_ID__;
@@ -195,17 +139,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       unsubscribeSnapshot.current = null;
     }
 
-    if (activeSessionUser) {
-      console.info(`[AuthContext:Diagnostic] Hydrating Firestore profile using source: ${activeSessionUser.source || 'unknown'} for UID: ${activeSessionUser.uid}`);
+    if (clerkUser) {
+      console.info(`[AuthContext] Hydrating profile for Clerk UID: ${clerkUser.uid}`);
       
       let initialLoadTimeout: any = setTimeout(() => {
         if (isMounted.current) {
-          console.warn("[AuthContext:Diagnostic] Session hydration timed out. Generating fallback profile to unblock runtime.");
-          const isDefaultAdmin = isSuperAdmin({ email: activeSessionUser.email || '' } as User);
+          console.warn("[AuthContext:Diagnostic] Session hydration timed out. Generating sandbox default to unblock runtime.");
+          const isDefaultAdmin = isSuperAdmin({ email: clerkUser.email || '' } as User);
           setUser({
-            id: activeSessionUser.uid,
-            email: activeSessionUser.email || '',
-            name: activeSessionUser.displayName || activeSessionUser.email?.split('@')[0] || 'User',
+            id: clerkUser.uid,
+            email: clerkUser.email || '',
+            name: clerkUser.displayName || clerkUser.email?.split('@')[0] || 'User',
             role: isDefaultAdmin ? 'superadmin' : 'student',
             coins: isDefaultAdmin ? 1000 : 50,
             diamonds: isDefaultAdmin ? 500 : 50,
@@ -220,9 +164,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
           setLoading(false);
         }
-      }, 7000); // 7-second max block
+      }, 3000); // reduced from 7s to 3s for ultra snappy initial loading times
 
-      unsubscribeSnapshot.current = userService.subscribeToUser(activeSessionUser.uid, (data) => {
+      unsubscribeSnapshot.current = userService.subscribeToUser(clerkUser.uid, (data) => {
         if (initialLoadTimeout) {
           clearTimeout(initialLoadTimeout);
           initialLoadTimeout = null;
@@ -231,15 +175,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!isMounted.current) return;
         
         if (data) {
-          if (isSuperAdmin({ ...data, email: activeSessionUser.email || data.email }) && data.role !== 'superadmin') {
-            userService.updateUser(activeSessionUser.uid, { role: 'superadmin' });
+          if (isSuperAdmin({ ...data, email: clerkUser.email || data.email }) && data.role !== 'superadmin') {
+            userService.updateUser(clerkUser.uid, { role: 'superadmin' });
             data.role = 'superadmin';
           }
           
           setUser(data);
           setLoading(false);
 
-          // Background SQL synchronization (Non-blocking migration step)
+          // Background SQL synchronization
           fetch('/api/sync/user', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -264,9 +208,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const initUser = async () => {
             try {
               const claimed = await adminService.checkAndClaimPreRegistration(
-                activeSessionUser.email || '', 
-                activeSessionUser.uid, 
-                activeSessionUser.displayName || activeSessionUser.email?.split('@')[0] || 'User'
+                clerkUser.email || '', 
+                clerkUser.uid, 
+                clerkUser.displayName || clerkUser.email?.split('@')[0] || 'User'
               );
               
               if (claimed) {
@@ -277,12 +221,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 return;
               }
 
-              const isDefaultAdmin = isSuperAdmin({ email: activeSessionUser.email || '' } as User);
+              const isDefaultAdmin = isSuperAdmin({ email: clerkUser.email || '' } as User);
               
               const newUser: User = {
-                id: activeSessionUser.uid,
-                email: activeSessionUser.email || '',
-                name: activeSessionUser.displayName || activeSessionUser.email?.split('@')[0] || 'User',
+                id: clerkUser.uid,
+                email: clerkUser.email || '',
+                name: clerkUser.displayName || clerkUser.email?.split('@')[0] || 'User',
                 role: isDefaultAdmin ? 'superadmin' : 'student',
                 coins: isDefaultAdmin ? 1000 : 50,
                 diamonds: isDefaultAdmin ? 500 : 50,
@@ -296,20 +240,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                 xp: 0
               };
 
-              await userService.createUser(activeSessionUser.uid, newUser);
+              await userService.createUser(clerkUser.uid, newUser);
               
               if (isMounted.current) {
                 setUser(newUser);
                 setLoading(false);
               }
 
-              // Background SQL synchronization (Non-blocking migration step)
+              // Background SQL synchronization
               fetch('/api/sync/user', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  uid: activeSessionUser.uid,
-                  email: activeSessionUser.email,
+                  uid: clerkUser.uid,
+                  email: clerkUser.email,
                   name: newUser.name,
                   role: newUser.role,
                   coins: newUser.coins,
@@ -328,11 +272,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           initUser().catch((err) => {
             console.error("Failed to initialize user in Firestore:", err);
             if (isMounted.current) {
-              // Gracefully fallback to a synthetic user if Firestore fails (e.g. missing Firebase Clerk integration)
               const fallbackUser: User = {
-                id: activeSessionUser.uid,
-                email: activeSessionUser.email || '',
-                name: activeSessionUser.displayName || 'Demo User',
+                id: clerkUser.uid,
+                email: clerkUser.email || '',
+                name: clerkUser.displayName || 'Demo User',
                 role: 'student',
                 coins: 50,
                 diamonds: 50,
@@ -351,32 +294,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           });
         }
       });
-    } else if (isAuthInitialized) {
-      // Both sources are conclusively null
+    } else {
       setUser(null);
-      setLoading(false);
+      if (clerkUser === null || !CLERK_PUBLISHABLE_KEY) {
+        setLoading(false);
+      }
     }
-  }, [activeSessionUser?.uid, activeSessionUser?.email, isAuthInitialized]);
+  }, [clerkUser]);
 
   const signInWithProvider = async (provider: 'google' | 'apple') => {
-    if (isClerkEnabled) {
-      console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signInWithProvider. If using Clerk, this path should be updated or bypassed.");
-    }
-    await authService.signInWithProvider(provider);
+    console.warn("Firebase Auth is completely removed. Please interact with the Clerk UI form on-screen instead.");
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
-    if (isClerkEnabled) {
-      console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signInWithEmail. If using Clerk, this path should be updated or bypassed.");
-    }
-    await authService.signInWithEmailAndPassword(email, pass);
+    console.warn("Firebase Auth is completely removed. Please interact with the Clerk UI form on-screen instead.");
   };
 
   const signUpWithEmail = async (email: string, pass: string) => {
-    if (isClerkEnabled) {
-      console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signUpWithEmail. If using Clerk, this path should be updated or bypassed.");
-    }
-    await authService.createUserWithEmailAndPassword(email, pass);
+    console.warn("Firebase Auth is completely removed. Please interact with the Clerk UI form on-screen instead.");
   };
 
   const verifyInviteCode = async (code: string) => {
@@ -391,12 +326,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logOut = async () => {
-    // Sign out from Clerk if active
+    setUser(null);
+    setAuthUser(null);
+    setClerkUser(null);
+    setLoading(false);
+    
     if (clerkSignOutRef.current) {
-      await clerkSignOutRef.current();
+      try {
+        await clerkSignOutRef.current();
+      } catch (err) {
+        console.warn("Clerk sign out error:", err);
+      }
     }
-    // Sign out from Firebase Auth
-    await authService.signOut();
   };
 
   return (
@@ -413,7 +354,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       updateResources, 
       setUser 
     }}>
-      {isClerkEnabled && <ClerkSync onClerkStateChange={handleClerkStateChange} />}
+      <ClerkSync onClerkStateChange={handleClerkStateChange} />
       {children}
     </AuthContext.Provider>
   );
