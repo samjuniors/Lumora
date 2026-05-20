@@ -6,8 +6,10 @@ import { userService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
+import { useConfirm } from '../context/ConfirmContext';
 
 export const TheOracle = ({ submissions }: { submissions: any[] }) => {
+  const { confirm } = useConfirm();
   const { user, updateResources } = useAuth();
   const [analyzing, setAnalyzing] = useState(false);
   const [roadmap, setRoadmap] = useState<string | null>(user?.academicRoadmap || null);
@@ -25,7 +27,12 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
       return;
     }
 
-    if (!window.confirm(`Spend ${UNLOCK_FEE} Coins for permanent Oracle access? (Diamond members get this for free)`)) return;
+    const confirmed = await confirm({
+      title: "Unlock The Oracle",
+      message: `Spend ${UNLOCK_FEE} Coins for permanent Oracle access? (Diamond members get this for free)`,
+      type: "info"
+    });
+    if (!confirmed) return;
 
     try {
       const newCoins = user.coins - UNLOCK_FEE;
@@ -54,7 +61,12 @@ export const TheOracle = ({ submissions }: { submissions: any[] }) => {
       return;
     }
 
-    if (!window.confirm(roadmap ? "Consult The Oracle for 1 Diamond?" : "Unlock your Personal Academic Roadmap for 1 Diamond?")) return;
+    const confirmed = await confirm({
+      title: roadmap ? "Consult The Oracle" : "Unlock Academic Roadmap",
+      message: roadmap ? "Consult The Oracle for 1 Diamond?" : "Unlock your Personal Academic Roadmap for 1 Diamond?",
+      type: "info"
+    });
+    if (!confirmed) return;
 
     setAnalyzing(true);
     try {

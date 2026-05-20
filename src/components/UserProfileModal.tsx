@@ -23,7 +23,7 @@ export const UserProfileModal = ({
   const { user: currentUser } = useAuth();
   const [showGiftModal, setShowGiftModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'achievements'>('overview');
-  const { currentLevel } = getUserLevelAndXP(profileUser);
+  const { currentLevel, xpCurrent, xpMax, xpProgress } = getUserLevelAndXP(profileUser);
   const perfScore = calculatePerformanceScore(profileUser);
   const badge = getPerformanceBadge(perfScore);
   const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(null);
@@ -75,12 +75,16 @@ export const UserProfileModal = ({
 
   return (
     <>
-      <div className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[200] flex items-center justify-center p-2 sm:p-4 pt-safe-top pb-safe-bottom">
+      <div 
+        className="fixed inset-0 bg-text-primary/60 backdrop-blur-sm z-[1050] flex items-center justify-center p-2 sm:p-4 pt-safe-top pb-safe-bottom"
+        onClick={onClose}
+      >
         <motion.div 
+          onClick={(e) => e.stopPropagation()}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-bg-surface rounded-2xl w-[90%] max-w-[240px] sm:w-full sm:max-w-[260px] p-3 sm:p-4 overflow-y-auto max-h-[80vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
+          className="bg-bg-surface rounded-2xl w-[90%] max-w-[288px] sm:w-full sm:max-w-[320px] p-4 sm:p-5 overflow-y-auto max-h-[85vh] shadow-2xl relative border border-border-main no-scrollbar flex flex-col"
         >
           <button 
             onClick={onClose} 
@@ -131,7 +135,7 @@ export const UserProfileModal = ({
             </div>
 
             {currentUser && currentUser.id !== profileUser.id && (
-              <div className="flex gap-2 w-full mb-4">
+              <div className="flex gap-2 w-full mb-3">
                 <button 
                   onClick={handleFollowToggle}
                   className={cn(
@@ -156,6 +160,20 @@ export const UserProfileModal = ({
                 </button>
               </div>
             )}
+
+            {/* clearance level / rank progress bar of this profile user */}
+            <div className="w-full bg-[#1A2B48]/5 border border-border-main rounded-xl p-3 mb-3 text-left">
+              <div className="flex justify-between items-center mb-1">
+                <span className="text-[9px] font-black text-text-secondary uppercase tracking-wider">CLEARANCE PROGRESS</span>
+                <span className="text-[9px] font-bold text-[#D4AF37]">{xpCurrent} / {xpMax} XP</span>
+              </div>
+              <div className="h-2 w-full bg-border-main/50 rounded-full overflow-hidden p-[1px]">
+                <div 
+                  className="h-full bg-gradient-to-r from-[#D4AF37] to-amber-500 rounded-full shadow-glow-gold transition-all duration-300" 
+                  style={{ width: `${xpProgress}%` }} 
+                />
+              </div>
+            </div>
 
             <div className="flex w-full bg-border-main/80 p-1 rounded-xl mb-3">
               <button 
@@ -206,28 +224,19 @@ export const UserProfileModal = ({
                       </p>
                     )}
                     <div className="w-full grid grid-cols-2 gap-2 mb-4 mt-2">
-                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
-                        <Trophy className="w-5 h-5 text-yellow-500 mb-1" />
-                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Coins</span>
-                        <span className="text-lg font-black text-text-primary">{profileUser.coins}</span>
-                      </div>
-                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 text-cyan-400 mb-1" fill="currentColor">
-                          <path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L5.5 12 12 5.5l6.5 6.5L12 19.5z" />
-                        </svg>
-                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Diamonds</span>
-                        <span className="text-lg font-black text-text-primary">{profileUser.diamonds || 0}</span>
-                      </div>
-                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
-                        <Sparkles className="w-5 h-5 text-indigo-500 mb-1" />
-                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Lifetime</span>
-                        <span className="text-lg font-black text-text-primary">{profileUser.lifetimeDiamonds || 0}</span>
-                      </div>
-                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main">
-                        <Target className="w-5 h-5 text-brand-gold mb-1" />
-                        <span className="text-xs text-text-secondary font-semibold mb-0.5">Avg Grade</span>
-                        <span className="text-lg font-black text-text-primary flex items-center gap-1 px-1.5 py-0.5 rounded-lg">
-                          <span className={cn("text-xs px-1 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
+                       <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main text-center">
+                          <span className="text-[10px] uppercase tracking-widest text-text-secondary font-bold mb-1">Followers</span>
+                          <span className="text-xl font-black text-text-primary">{(profileUser.followerIds || []).length}</span>
+                       </div>
+                       <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main text-center">
+                          <span className="text-[10px] uppercase tracking-widest text-text-secondary font-bold mb-1">Following</span>
+                          <span className="text-xl font-black text-text-primary">{(profileUser.followingIds || []).length}</span>
+                       </div>
+                      <div className="bg-bg-main rounded-xl p-3 flex flex-col items-center border border-border-main text-center col-span-2">
+                        <Target className="w-6 h-6 text-brand-gold mb-1" />
+                        <span className="text-xs text-text-secondary font-semibold mb-1">Academic Grade</span>
+                        <span className="text-xl font-black text-text-primary flex items-center gap-1.5 px-2 py-1 rounded-lg">
+                          <span className={cn("text-sm px-1.5 py-0.5 rounded-md border ring-1 font-black", letterGrade.color)}>{letterGrade.letter}</span>
                           {profileUser.averageGrade ?? 0}%
                         </span>
                       </div>

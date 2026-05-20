@@ -22,6 +22,7 @@ import { Syndicate, User } from '../types';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 
 import { Card, Button } from '../components/CommonUI';
 
@@ -53,7 +54,7 @@ export const Syndicates = () => {
                 if (my) setMySyndicate(my);
             }
         } catch (err) {
-            console.error(err);
+            handleFirestoreError(err, OperationType.LIST, 'syndicates');
         } finally {
             setLoading(false);
         }

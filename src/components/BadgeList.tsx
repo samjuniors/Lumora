@@ -24,6 +24,7 @@ export const BadgeList = () => {
         setSubmissions(subList);
         setEnrollments(enrList);
       } catch(e) {
+        toast.error('Failed to synchronize badge eligibility.');
         console.error(e);
       } finally {
         setLoading(false);

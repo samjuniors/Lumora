@@ -40,6 +40,7 @@ export const Assignments = () => {
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [sortBy, setSortBy] = useState<string>('campaign');
 
+    const isLoading = isAssignmentsLoading || (isStudent && isEnrollmentsLoading);
     const hasData = assignments.length > 0 && (!isStudent || studentEnrollments.length > 0);
     const showSkeleton = isLoading && !hasData;
 

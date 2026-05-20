@@ -9,6 +9,10 @@ import { handleAsyncError } from '../lib/errorHandling';
 import { SignIn, SignUp } from '@clerk/clerk-react';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const isClerkEnabled = !!CLERK_PUBLISHABLE_KEY && 
+                       CLERK_PUBLISHABLE_KEY.trim() !== '' && 
+                       CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here' && 
+                       (CLERK_PUBLISHABLE_KEY.startsWith('pk_test_') || CLERK_PUBLISHABLE_KEY.startsWith('pk_live_'));
 
 export const Login = () => {
   const { user, authUser, loading: authLoading, logOut, isAdmin, setUser, signInWithEmail, signUpWithEmail, signInWithProvider, verifyInviteCode } = useAuth();
@@ -110,13 +114,70 @@ export const Login = () => {
               <h2 className="text-2xl font-bold text-text-primary tracking-tight">Setting up your profile...</h2>
               <p className="text-text-secondary text-sm mt-2 font-medium">Please wait while we initialize your account.</p>
             </motion.div>
-          ) : CLERK_PUBLISHABLE_KEY ? (
+          ) : isClerkEnabled ? (
             <div className="flex justify-center flex-col items-center max-w-sm">
-                <h2 className="text-2xl font-bold text-text-primary tracking-tight text-center mb-6">{isLogin ? 'Welcome back' : 'Create an account'}</h2>
                {isLogin ? (
-                  <SignIn routing="hash" fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard" />
+                  <SignIn 
+                    routing="hash" 
+                    fallbackRedirectUrl="/dashboard" 
+                    forceRedirectUrl="/dashboard" 
+                    appearance={{
+                      variables: {
+                        colorPrimary: '#fbbf24',
+                        colorBackground: '#0a1027',
+                        colorText: '#f8fafc',
+                        colorTextSecondary: '#94a3b8',
+                        colorInputBackground: '#020617',
+                        colorInputText: '#f8fafc',
+                        colorBorder: '#1e293b',
+                      },
+                      elements: {
+                        card: 'bg-transparent border-0 shadow-none p-0',
+                        headerTitle: 'hidden',
+                        headerSubtitle: 'hidden',
+                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold',
+                        socialButtonsBlockButtonText: 'text-[#f8fafc]',
+                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all',
+                        formFieldLabel: 'text-[#94a3b8] font-medium',
+                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-2 focus:ring-[#fbbf24]/50 focus:border-[#fbbf24] outline-none transition-all',
+                        footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
+                        footerActionText: 'text-[#94a3b8]',
+                        identityPreviewText: 'text-[#f8fafc]',
+                        identityPreviewEditButtonIcon: 'text-[#fbbf24]',
+                      }
+                    }}
+                  />
                ) : (
-                  <SignUp routing="hash" fallbackRedirectUrl="/dashboard" forceRedirectUrl="/dashboard" />
+                  <SignUp 
+                    routing="hash" 
+                    fallbackRedirectUrl="/dashboard" 
+                    forceRedirectUrl="/dashboard" 
+                    appearance={{
+                      variables: {
+                        colorPrimary: '#fbbf24',
+                        colorBackground: '#0a1027',
+                        colorText: '#f8fafc',
+                        colorTextSecondary: '#94a3b8',
+                        colorInputBackground: '#020617',
+                        colorInputText: '#f8fafc',
+                        colorBorder: '#1e293b',
+                      },
+                      elements: {
+                        card: 'bg-transparent border-0 shadow-none p-0',
+                        headerTitle: 'hidden',
+                        headerSubtitle: 'hidden',
+                        socialButtonsBlockButton: 'bg-[#020617] hover:bg-[#111827] text-[#f8fafc] border border-[#1e293b] rounded-xl transition-all font-semibold',
+                        socialButtonsBlockButtonText: 'text-[#f8fafc]',
+                        formButtonPrimary: 'bg-[#fbbf24] text-[#020617] hover:opacity-90 font-bold rounded-xl transition-all',
+                        formFieldLabel: 'text-[#94a3b8] font-medium',
+                        formFieldInput: 'bg-[#020617] border border-[#1e293b] rounded-xl text-[#f8fafc] focus:ring-2 focus:ring-[#fbbf24]/50 focus:border-[#fbbf24] outline-none transition-all',
+                        footerActionLink: 'text-[#fbbf24] hover:text-[#fbbf24]/80 font-semibold',
+                        footerActionText: 'text-[#94a3b8]',
+                        identityPreviewText: 'text-[#f8fafc]',
+                        identityPreviewEditButtonIcon: 'text-[#fbbf24]',
+                      }
+                    }}
+                  />
                )}
                <div className="text-center mt-6">
                 <button

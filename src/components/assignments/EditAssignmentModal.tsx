@@ -13,6 +13,7 @@ import { Assignment, Role } from '../../types';
 import { useAuth } from '../../context/AuthContext';
 import { cn } from '../../lib/utils';
 import { notifyStudentsOfNewAssignment } from '../../services/notificationService';
+import { useConfirm } from '../../context/ConfirmContext';
 
 interface EditAssignmentModalProps {
     assignment: Assignment;
@@ -21,6 +22,7 @@ interface EditAssignmentModalProps {
 }
 
 export const EditAssignmentModal = ({ assignment, onClose, onUpdated }: EditAssignmentModalProps) => {
+    const { confirm } = useConfirm();
     const { user } = useAuth();
     const [title, setTitle] = useState(assignment.title);
     const [description, setDescription] = useState(assignment.description);
@@ -132,7 +134,12 @@ export const EditAssignmentModal = ({ assignment, onClose, onUpdated }: EditAssi
     };
 
     const handleDelete = async () => {
-        if (!window.confirm("Are you sure you want to delete this mission? This cannot be undone.")) return;
+        const confirmed = await confirm({
+            title: "Delete Mission",
+            message: "Are you sure you want to delete this mission? This cannot be undone.",
+            type: "danger"
+        });
+        if (!confirmed) return;
         setLoading(true);
         try {
             await assignmentService.updateAssignment(assignment.id, { status: 'archived', updatedAt: Date.now() });

@@ -5,6 +5,10 @@ import { isSuperAdmin, isAdmin, isStudent } from '../lib/permissions';
 import { ClerkSync } from './ClerkSync';
 
 const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const isClerkEnabled = !!CLERK_PUBLISHABLE_KEY && 
+                       CLERK_PUBLISHABLE_KEY.trim() !== '' && 
+                       CLERK_PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here' && 
+                       (CLERK_PUBLISHABLE_KEY.startsWith('pk_test_') || CLERK_PUBLISHABLE_KEY.startsWith('pk_live_'));
 
 export interface AuthUser {
   uid: string;
@@ -91,7 +95,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Track sources so they don't overwrite each other chaotically
   const [firebaseUser, setFirebaseUser] = useState<AuthUser | null | undefined>(undefined);
-  const [clerkUser, setClerkUser] = useState<AuthUser | null | undefined>(CLERK_PUBLISHABLE_KEY ? undefined : null);
+  const [clerkUser, setClerkUser] = useState<AuthUser | null | undefined>(isClerkEnabled ? undefined : null);
 
   useEffect(() => {
     // Failsafe to prevent infinite loading if either auth source stalls
@@ -177,6 +181,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!isMounted.current) return;
     setAuthUser(activeSessionUser);
+
+    if (activeSessionUser) {
+      localStorage.setItem('lumora_user_id', activeSessionUser.uid);
+      (window as any).__LUMORA_USER_ID__ = activeSessionUser.uid;
+    } else {
+      localStorage.removeItem('lumora_user_id');
+      delete (window as any).__LUMORA_USER_ID__;
+    }
 
     if (unsubscribeSnapshot.current) {
       unsubscribeSnapshot.current();
@@ -347,21 +359,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [activeSessionUser?.uid, activeSessionUser?.email, isAuthInitialized]);
 
   const signInWithProvider = async (provider: 'google' | 'apple') => {
-    if (CLERK_PUBLISHABLE_KEY) {
+    if (isClerkEnabled) {
       console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signInWithProvider. If using Clerk, this path should be updated or bypassed.");
     }
     await authService.signInWithProvider(provider);
   };
 
   const signInWithEmail = async (email: string, pass: string) => {
-    if (CLERK_PUBLISHABLE_KEY) {
+    if (isClerkEnabled) {
       console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signInWithEmail. If using Clerk, this path should be updated or bypassed.");
     }
     await authService.signInWithEmailAndPassword(email, pass);
   };
 
   const signUpWithEmail = async (email: string, pass: string) => {
-    if (CLERK_PUBLISHABLE_KEY) {
+    if (isClerkEnabled) {
       console.warn("[AuthContext:Diagnostic] Triggering legacy Firebase Auth signUpWithEmail. If using Clerk, this path should be updated or bypassed.");
     }
     await authService.createUserWithEmailAndPassword(email, pass);
@@ -401,7 +413,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       updateResources, 
       setUser 
     }}>
-      {CLERK_PUBLISHABLE_KEY && <ClerkSync onClerkStateChange={handleClerkStateChange} />}
+      {isClerkEnabled && <ClerkSync onClerkStateChange={handleClerkStateChange} />}
       {children}
     </AuthContext.Provider>
   );

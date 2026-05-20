@@ -6,8 +6,10 @@ import { useAuth } from '../context/AuthContext';
 import { walletService } from '../services/dbProvider';
 import { getUserLevelAndXP } from '../lib/utils';
 import { motion } from 'motion/react';
+import { useConfirm } from '../context/ConfirmContext';
 
 export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClose: () => void }) => {
+  const { confirm } = useConfirm();
   const [amount, setAmount] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const { user, isStudent, isAdmin } = useAuth();
@@ -36,7 +38,12 @@ export const SendCoinsModal = ({ recipient, onClose }: { recipient: User, onClos
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to send ${amount} coins to ${recipient.name}?`)) {
+    const confirmed = await confirm({
+      title: "Confirm Coin Sending",
+      message: `Are you sure you want to send ${amount} coins to ${recipient.name}?`,
+      type: "warning"
+    });
+    if (!confirmed) {
         return;
     }
 

@@ -58,10 +58,13 @@ import { ExpandableText } from "../components/ExpandableText";
 import { ProgressBar, Card, Button } from "../components/CommonUI";
 import { AssignmentDetailSkeleton } from "../components/Skeletons";
 
+import { useConfirm } from "../context/ConfirmContext";
+
 // Note: we're using base64 for simplicity in prototype due to Firebase Storage Rules constraint
 // In production, upload to Storage and use Firebase Functions + Vertex AI for larger max payload.
 
 export const AssignmentDetail = () => {
+  const { confirm } = useConfirm();
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, updateResources, setUser, isStudent, isAdmin } = useAuth();
@@ -250,8 +253,13 @@ export const AssignmentDetail = () => {
         feeMessage += ` PLUS a 30 coin late fee. Total: ${totalFee} coins.`;
     }
 
-    if (totalFee > 0 && !window.confirm(`${feeMessage} Are you sure you want to enroll?`)) {
-        return;
+    if (totalFee > 0) {
+      const confirmed = await confirm({
+        title: "Confirm Enrollment",
+        message: `${feeMessage} Are you sure you want to enroll?`,
+        type: "info"
+      });
+      if (!confirmed) return;
     }
 
     if (user.coins < totalFee) {
@@ -367,7 +375,12 @@ export const AssignmentDetail = () => {
           return;
         }
 
-        if (!window.confirm("Submitting late will cost a 30 coin late fee. Do you want to proceed?")) {
+        const confirmed = await confirm({
+          title: "Late Submission Fee",
+          message: "Submitting late will cost a 30 coin late fee. Do you want to proceed?",
+          type: "warning"
+        });
+        if (!confirmed) {
             return;
         }
         

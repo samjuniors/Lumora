@@ -14,12 +14,17 @@ export const ClerkSync = ({
       if (!user) {
         onClerkStateChange(null, () => signOut());
       } else {
-        // Try fetching Firebase integration token
+        // Optimistically trigger state transition immediately to ensure sub-second loads!
+        onClerkStateChange(user, () => signOut(), null);
+
+        // Fetch integration token in the background, updating only if valid
         getToken({ template: 'integration_firebase' }).then((token) => {
-          onClerkStateChange(user, () => signOut(), token);
+          if (token) {
+            onClerkStateChange(user, () => signOut(), token);
+          }
         }).catch((err) => {
-          console.warn("Could not fetch firebase integration token from Clerk:", err);
-          onClerkStateChange(user, () => signOut(), null);
+          // Failure to fetch integration token is expected for standard setups
+          console.debug("Optional Clerk-Firebase integration token not found/enabled:", err);
         });
       }
     }

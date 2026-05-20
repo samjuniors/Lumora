@@ -201,7 +201,9 @@ export interface Notification {
   read: boolean;
   metadata?: {
     url?: string;
-    [key: string]: any;
+    actionType?: string;
+    actionPayload?: string;
+    [key: string]: unknown;
   };
   createdAt: number;
 }

@@ -57,12 +57,39 @@ model User {
   
   // Optional relations IDs without full relations yet to keep it minimal
   syndicateId      String?
+  syndicate        Syndicate? @relation("SyndicateMembers", fields: [syndicateId], references: [id])
   luminaId         String?
 
   // Social
   followingIds     String[]
   followerIds      String[]
   presence         String   @default("offline")
+
+  academicRoadmap  String?  @db.Text
+
+  // Missing fields synchronized from types.ts
+  taxWallet             Int      @default(0)
+  rechargedCoins        Int      @default(0)
+  inviteCodeUsed        String?
+  achievements          String[]
+  badgesClaimed         String[]
+  inventory             String[]
+  lastMissedSweep       Float?
+  lastSeenVersion       String?
+  lifetimeDiamonds      Int      @default(0)
+  dailyDiamonds         Int      @default(0)
+  weeklyDiamonds        Int      @default(0)
+  lastResetDay          String?
+  lastResetWeek         String?
+  xpBoosterUntil        Float?
+  vipExp                Int      @default(0)
+  vipLevel              Int      @default(0)
+  isOracleUnlocked      Boolean  @default(false)
+  taxHavenUntil         Float?
+  doubleDownShieldUntil Float?
+  badgeIds              String[]
+  totalScore            Int      @default(0)
+  gradedCount           Int      @default(0)
 
   @@index([role])
 }
@@ -144,20 +171,34 @@ model Assignment {
   id               String   @id
   title            String
   description      String   @db.Text
-  dueDate          String
-  points           Int      @default(0)
-  status           String   @default("draft")
-  createdBy        String?
-  createdAt        String?
-  hasAiFeedback    Boolean? @default(false)
-  requireUpload    Boolean? @default(false)
-  allowedFileTypes String[]
-  difficulty       String?
-  category         String?
-  timeLimit        Int?
-  maxAttempts      Int?
+  instructions     String?  @db.Text
+  rubric           Json?
+  subject          String?
+  frequency        String?
+  startDate        Float?
+  timeLimitMinutes Int?
+  dueDate          Float
+  entryFee         Int      @default(0)
+  bonusReward      Int      @default(0)
+  penaltyFee       Int      @default(0)
+  xpReward         Int      @default(0)
+  isBonus          Boolean  @default(false)
+  isDuoBonus       Boolean? @default(false)
+  duoId            String?
+  bonusType        String?
+  missionNumber    Int?
+  allowedStudents  String[]
+  isGlobal         Boolean? @default(false)
+  status           String   @default("active")
+  campaignId       String?
+  creatorId        String
+  gradedCount      Int?     @default(0)
+  totalScore       Int?     @default(0)
+  createdAt        Float
+  updatedAt        Float
 
   @@index([status])
+  @@index([creatorId])
 }
 
 model Submission {
@@ -199,31 +240,33 @@ model RechargeRequest {
 model Syndicate {
   id          String   @id
   name        String
-  motto       String?
-  emblem      String?
+  description String   @default("") @db.Text
+  tag         String   @default("")
   leaderId    String
-  members     String[] 
-  score       Int      @default(0)
+  memberIds   String[] 
+  totalScore  Int      @default(0)
+  coinsStaked Int      @default(0)
+  logo        String?
   level       Int      @default(1)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   Float    @default(0)
+  updatedAt   Float    @default(0)
   
+  users       User[]   @relation("SyndicateMembers")
+
   @@index([leaderId])
 }
 
 model AssignmentTemplate {
   id               String   @id
+  label            String   @default("")
   title            String
+  subject          String   @default("")
   description      String   @db.Text
-  defaultPoints    Int      @default(0)
-  difficulty       String?
-  category         String?
-  allowedFileTypes String[]
-  hasAiFeedback    Boolean? @default(false)
-  requireUpload    Boolean? @default(false)
-  tags             String[]
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  instructions     String   @default("") @db.Text
+  timeLimitMinutes Int      @default(0)
+  rubric           Json?
+  creatorId        String?
+  createdAt        Float?
 }
 
 model PreRegisteredUser {
@@ -238,4 +281,15 @@ model PreRegisteredUser {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model PushSubscription {
+  id        String   @id
+  userId    String
+  endpoint  String   @unique
+  keys      Json
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 

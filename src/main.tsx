@@ -3,8 +3,50 @@ import {createRoot} from 'react-dom/client';
 import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App.tsx';
 
+// Global fetch interceptor to inject Authorization headers automatically
+const originalFetch = window.fetch;
+Object.defineProperty(window, 'fetch', {
+  value: async function (input: RequestInfo | URL, init?: RequestInit) {
+    const userId = localStorage.getItem('lumora_user_id') || (window as any).__LUMORA_USER_ID__;
+    let url = '';
+    if (typeof input === 'string') {
+      url = input;
+    } else if (input instanceof URL) {
+      url = input.toString();
+    } else if (input && typeof input === 'object' && 'url' in input) {
+      url = (input as any).url || '';
+    }
+
+    const isApi = url.startsWith('/api/') || url.includes('/api/');
+    if (isApi) {
+      init = init || {};
+      const headers = new Headers(init.headers || {});
+      
+      if (userId) {
+        if (!headers.has('Authorization')) {
+          headers.set('Authorization', `Bearer ${userId}`);
+        }
+        if (!headers.has('x-user-id')) {
+          headers.set('x-user-id', userId);
+        }
+      }
+      
+      headers.set('x-lumora-request', 'true');
+      init.headers = headers;
+    }
+    return originalFetch.call(this, input, init);
+  },
+  writable: true,
+  configurable: true
+});
+
 // Import your Publishable Key
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const isClerkEnabled = !!PUBLISHABLE_KEY && 
+                       PUBLISHABLE_KEY.trim() !== '' && 
+                       PUBLISHABLE_KEY !== 'your_clerk_publishable_key_here' && 
+                       (PUBLISHABLE_KEY.startsWith('pk_test_') || PUBLISHABLE_KEY.startsWith('pk_live_'));
+
 import './index.css';
 
 class ErrorBoundary extends Component<{children: ReactNode}, {hasError: boolean, error: Error | null}> {
@@ -52,8 +94,12 @@ const appContent = (
 );
 
 createRoot(document.getElementById('root')!).render(
-  PUBLISHABLE_KEY ? (
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+  isClerkEnabled ? (
+    <ClerkProvider 
+      publishableKey={PUBLISHABLE_KEY!} 
+      afterSignOutUrl="/"
+      clerkJSUrl="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js"
+    >
       {appContent}
     </ClerkProvider>
   ) : (

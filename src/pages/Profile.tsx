@@ -8,6 +8,7 @@ import {
   Users, UserPlus, Heart, Search, Trophy
 } from 'lucide-react';
 import { storageService, userService, assignmentService } from '../services/dbProvider';
+import { handleFirestoreError, OperationType } from '../lib/errorHandling';
 import { toast } from 'react-hot-toast';
 import { SHOP_ITEMS } from './Shop';
 import { cn, getUserLevelAndXP, getShortId, getVIPLevel } from '../lib/utils';
@@ -22,6 +23,7 @@ import { BADGES } from '../lib/badges';
 import { UserProfileModal } from '../components/UserProfileModal';
 import { PresenceDot } from '../components/PresenceDot';
 import { User, Enrollment } from '../types';
+import { useConfirm } from '../context/ConfirmContext';
 
 const AVATARS = [
   '🐶', '🐱', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🦄', '🐝', '🐛', '🦋', '🐙', '🐢', '🦖', '🐉', '👽', '👻', '🤖'
@@ -63,6 +65,7 @@ const compressImage = (file: File, maxWidth: number = 800): Promise<string> => {
 };
 
 export const Profile = () => {
+  const { confirm } = useConfirm();
   const { user, logOut, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.name || '');
@@ -99,7 +102,7 @@ export const Profile = () => {
             setFollowers(allUsers.filter(u => user.followerIds?.includes(u.id)));
             setFollowing(allUsers.filter(u => user.followingIds?.includes(u.id)));
           } catch (err) {
-            console.error("Failed to fetch social data", err);
+            handleFirestoreError(err, OperationType.LIST, 'users/social');
           } finally {
             setLoadingSocial(false);
           }
@@ -117,7 +120,7 @@ export const Profile = () => {
                     retest: enrs.filter(e => e.status === 'active' && e.graceDeadline && e.graceDeadline > Date.now()).length
                 });
             } catch (err: any) {
-                console.error("Failed to fetch mission stats", err);
+                handleFirestoreError(err, OperationType.LIST, 'enrollments/stats');
             }
         };
         fetchMissionStats();
@@ -184,7 +187,12 @@ export const Profile = () => {
     if (!user.inventory) return;
     
     if (itemId === 'mystery_gift_box' || itemId === 'streak_repair' || itemId === 'streak_freeze' || itemId === 'xp_booster_2x') {
-       if (!window.confirm(`Are you sure you want to use ${itemId.replace(/_/g, ' ')}?`)) return;
+       const confirmed = await confirm({
+         title: "Confirm Activation",
+         message: `Are you sure you want to use ${itemId.replace(/_/g, ' ')}?`,
+         type: "info"
+       });
+       if (!confirmed) return;
     }
 
     const itemIndex = user.inventory.findIndex((i: any) => (typeof i === 'string' ? i : i.id) === itemId);

@@ -123,7 +123,7 @@ export const NotificationManager: React.FC = () => {
       
       await fetch('/api/push/subscribe', {
         method: 'POST',
-        body: JSON.stringify(subscription),
+        body: JSON.stringify({ subscription, userId: user?.id }),
         headers: { 'content-type': 'application/json' }
       });
     } catch (err) {

@@ -16,6 +16,7 @@ import { userService, walletService } from '../services/dbProvider';
 import { toast } from 'react-hot-toast';
 import { cn } from '../lib/utils';
 import { handleFirestoreError, OperationType } from '../lib/errorHandling';
+import { useConfirm } from '../context/ConfirmContext';
 
 export const SHOP_ITEMS = [
   {
@@ -141,6 +142,7 @@ export const SHOP_ITEMS = [
 ];
 
 export const Shop = () => {
+  const { confirm } = useConfirm();
   const { user, setUser } = useAuth();
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const { playSound } = useSound();
@@ -249,7 +251,12 @@ export const Shop = () => {
       return;
     }
 
-    if (!window.confirm(`Confirm purchase of ${item.name} for ${item.price} ${currencyName}?`)) {
+    const confirmed = await confirm({
+      title: "Confirm Purchase",
+      message: `Confirm purchase of ${item.name} for ${item.price} ${currencyName}?`,
+      type: "info"
+    });
+    if (!confirmed) {
       return;
     }
 

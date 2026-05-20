@@ -5,7 +5,6 @@ export const unlockAudio = () => {
   const audio = new Audio();
   audio.play().then(() => {
     isAudioUnlocked = true;
-    console.log("Audio unlocked");
   }).catch(() => {
     // Still locked
   });

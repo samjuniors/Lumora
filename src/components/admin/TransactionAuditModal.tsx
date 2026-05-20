@@ -7,8 +7,10 @@ import { useAuth } from '../../context/AuthContext';
 import { walletService, adminService, userService } from '../../services/dbProvider';
 import { User, Transaction } from '../../types';
 import { cn } from '../../lib/utils';
+import { useConfirm } from '../../context/ConfirmContext';
 
 export const TransactionAuditModal = ({ u, onClose }: { u: User, onClose: () => void }) => {
+    const { confirm } = useConfirm();
     const { user: currentAdmin } = useAuth();
     const [history, setHistory] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
@@ -31,7 +33,12 @@ export const TransactionAuditModal = ({ u, onClose }: { u: User, onClose: () => 
     }, [u.id]);
 
     const handleRevoke = async (tx: Transaction) => {
-        if (!window.confirm("Are you sure you want to revoke this transaction? This will reverse the coin balances and mark the transaction as revoked. (Audit trail is preserved)")) return;
+        const confirmed = await confirm({
+            title: "Revoke Transaction",
+            message: "Are you sure you want to revoke this transaction? This will reverse the coin balances and mark the transaction as revoked. (Audit trail is preserved)",
+            type: "danger"
+        });
+        if (!confirmed) return;
         
         try {
             await adminService.revokeTransaction(tx.id, currentAdmin?.id || 'admin');

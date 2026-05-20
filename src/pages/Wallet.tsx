@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { RulesModal } from '../components/RulesModal';
 import { Card, Button, SectionHeader, EmptyState, ProgressBar } from '../components/CommonUI';
 import { Modal } from '../components/Modal';
+import { useConfirm } from '../context/ConfirmContext';
 
 export const Wallet = () => {
   const { user, updateResources } = useAuth();
@@ -286,7 +287,6 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   const payeeName = settings?.payeeName || 'Admin Test';
   const paymentLink = settings?.paymentLink || '';
   
-  const isVPA = upiHandle ? upiHandle.includes('@') : mobileNumber.includes('@');
   const targetHandle = upiHandle || mobileNumber;
   
   const encodedHandle = encodeURIComponent(targetHandle);
@@ -294,10 +294,10 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
   
   const upiParams = `pa=${encodedHandle}&pn=${encodedName}&am=${amount}&cu=INR`;
   
-  const upiUrl = isVPA ? `upi://pay?${upiParams}` : '';
-  const gpayUrl = isVPA ? `gpay://upi/pay?${upiParams}` : '';
-  const phonepeUrl = isVPA ? `phonepe://pay?${upiParams}` : '';
-  const paytmUrl = isVPA ? `paytmmp://pay?${upiParams}` : '';
+  const upiUrl = targetHandle ? `upi://pay?${upiParams}` : '';
+  const gpayUrl = targetHandle ? `gpay://upi/pay?${upiParams}` : '';
+  const phonepeUrl = targetHandle ? `phonepe://pay?${upiParams}` : '';
+  const paytmUrl = targetHandle ? `paytmmp://pay?${upiParams}` : '';
   
   const hasPaymentMethod = targetHandle || paymentLink;
 
@@ -523,7 +523,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
                 </Card>
               )}
               
-              {targetHandle && isVPA && (
+              {targetHandle && (
                 <Card variant="flat" className="p-6 border-brand-gold/20 bg-brand-gold/[0.02] space-y-4">
                    <div className="flex flex-col items-center text-center space-y-4">
                       <div className="bg-white p-3 rounded-2xl border-2 border-brand-gold shadow-[0_0_30px_rgba(251,191,36,0.1)]">
@@ -538,7 +538,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
               )}
             </div>
             
-            {targetHandle && isVPA && (
+            {targetHandle && (
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                    <div className="h-px bg-white/5 flex-1" />
@@ -655,6 +655,7 @@ const RechargeModal = ({ onClose, onComplete, settings }: any) => {
 }
 
 const TransferModal = ({ onClose, onComplete }: any) => {
+  const { confirm } = useConfirm();
   const { user, updateResources } = useAuth();
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState<{id: string, name: string, email: string} | null>(null);
@@ -689,7 +690,12 @@ const TransferModal = ({ onClose, onComplete }: any) => {
     
     if (val > (user?.coins || 0)) return toast.error("Insufficient coins!");
 
-    if (!window.confirm(`Are you sure you want to send ${val} coins to ${selectedStudent.name}?`)) {
+    const confirmed = await confirm({
+      title: "Confirm Peer Transfer",
+      message: `Are you sure you want to send ${val} coins to ${selectedStudent.name}?`,
+      type: "warning"
+    });
+    if (!confirmed) {
         return;
     }
 
@@ -823,6 +829,7 @@ const TransferModal = ({ onClose, onComplete }: any) => {
 }
 
 const ConvertModal = ({ onClose, onComplete }: any) => {
+  const { confirm } = useConfirm();
   const { user, updateResources } = useAuth();
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -835,7 +842,12 @@ const ConvertModal = ({ onClose, onComplete }: any) => {
     if (val > (user?.diamonds || 0)) return toast.error("Insufficient diamonds!");
 
     const coinsToAdd = Math.floor(val / 7);
-    if (!window.confirm(`Convert ${val} diamonds into ${coinsToAdd} coins?`)) {
+    const confirmed = await confirm({
+      title: "Liquidation Authorization",
+      message: `Convert ${val} diamonds into ${coinsToAdd} coins?`,
+      type: "warning"
+    });
+    if (!confirmed) {
         return;
     }
 

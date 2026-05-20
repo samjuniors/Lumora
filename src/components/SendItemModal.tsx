@@ -7,6 +7,7 @@ import { userService, adminService } from '../services/dbProvider';
 import { SHOP_ITEMS } from '../pages/Shop';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
+import { useConfirm } from '../context/ConfirmContext';
 
 interface SendItemModalProps {
   itemId: string;
@@ -14,6 +15,7 @@ interface SendItemModalProps {
 }
 
 export const SendItemModal: React.FC<SendItemModalProps> = ({ itemId, onClose }) => {
+  const { confirm } = useConfirm();
   const { user, setUser } = useAuth();
   const [recipientId, setRecipientId] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,7 +52,12 @@ export const SendItemModal: React.FC<SendItemModalProps> = ({ itemId, onClose })
   const handleSend = async () => {
     if (!user || !recipientUser || !shopItem) return;
 
-    if (!window.confirm(`Are you sure you want to send "${shopItem.name}" to ${recipientUser.name}?`)) {
+    const confirmed = await confirm({
+      title: "Confirm Gifting",
+      message: `Are you sure you want to send "${shopItem.name}" to ${recipientUser.name}?`,
+      type: "warning"
+    });
+    if (!confirmed) {
       return;
     }
 
