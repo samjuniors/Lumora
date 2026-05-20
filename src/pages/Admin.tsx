@@ -63,6 +63,8 @@ export const AdminPanel = () => {
         { id: 'invites', label: 'Invites', icon: UserPlus },
     ] as const;
 
+    const visibleTabs = ALL_TABS.filter(t => t.id !== 'settings' || isSuperAdmin);
+
     return (
         <div className="max-w-7xl mx-auto space-y-8 pb-32 pt-6 px-4">
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2 border-b border-white/5">
@@ -76,6 +78,36 @@ export const AdminPanel = () => {
                 </div>
             </div>
 
+            {/* Premium Mobile-Responsive Scrollable Operational Navigation Bar */}
+            <div className="border-b border-white/[0.06] pb-2 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+                <nav className="flex gap-2 min-w-max" aria-label="Admin Operations Navigation">
+                    {visibleTabs.map((item) => {
+                        const IconComponent = item.icon;
+                        const isActive = tab === item.id;
+                        return (
+                            <button
+                                key={item.id}
+                                onClick={() => setTab(item.id)}
+                                className={`group relative flex items-center gap-2.5 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer border ${
+                                    isActive
+                                        ? 'text-brand-gold bg-brand-gold/10 border-brand-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.05)]'
+                                        : 'text-text-muted hover:text-white bg-white/[0.01] hover:bg-white/[0.04] border-white/5'
+                                }`}
+                            >
+                                <IconComponent className={`w-3.5 h-3.5 ${isActive ? 'text-brand-gold' : 'text-text-muted group-hover:text-white transition-colors'}`} />
+                                <span>{item.label}</span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeAdminTabIndicator"
+                                        className="absolute bottom-[-9px] left-0 right-0 h-[2px] bg-brand-gold"
+                                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
+                </nav>
+            </div>
 
             <div className="relative z-10">
                 <motion.div 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { LogIn, Key, AlertCircle, Sparkles, User as UserIcon, Mail, Lock } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
@@ -322,6 +322,13 @@ export const Login = () => {
             </motion.div>
           )}
         </motion.div>
+
+        {/* Legal Footer Links */}
+        <div className="text-center mt-6 space-x-3 text-[10px] font-black text-text-muted/50 uppercase tracking-[0.15em] relative z-20">
+          <Link to="/legal?tab=terms" className="hover:text-brand-gold transition-colors">Terms of Engagement</Link>
+          <span>•</span>
+          <Link to="/legal?tab=privacy" className="hover:text-brand-gold transition-colors">Privacy Protocol</Link>
+        </div>
       </div>
     </div>
   );

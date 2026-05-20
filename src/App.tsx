@@ -38,6 +38,7 @@ import { Shop } from "./pages/Shop";
 import { Profile } from "./pages/Profile";
 import { Badges } from "./pages/Badges";
 import { Syndicates } from "./pages/Syndicates";
+import { Legal } from "./pages/Legal";
 
 import { useMaintenance } from "./hooks/useMaintenance";
 
@@ -212,6 +213,14 @@ const AnimatedRoutes = () => {
               </React.Suspense>
             </PageWrapper>
           </RequireAuth>
+        }
+      />
+      <Route
+        path="/legal"
+        element={
+          <PageWrapper>
+            <Legal />
+          </PageWrapper>
         }
       />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
